@@ -1,0 +1,18 @@
+django>=5.1,<5.2
+djangorestframework>=3.15,<4.0
+djangorestframework-simplejwt>=5.3,<6.0
+django-cors-headers>=4.3,<5.0
+# PhonePe PG uses only Python stdlib (urllib, hashlib, base64, json) — no extra package needed
+python-dotenv>=1.0,<2.0
+Pillow>=10.0,<11.0
+argon2-cffi>=23.1,<24.0
+celery>=5.3,<6.0
+
+# Production Requirements
+gunicorn>=21.2,<22.0
+whitenoise>=6.6,<7.0
+dj-database-url>=2.1,<3.0
+psycopg2-binary>=2.9,<3.0
+redis>=5.0,<6.0
+django-redis>=5.4,<6.0
+python-json-logger>=2.0,<3.0

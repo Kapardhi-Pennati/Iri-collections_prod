@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Product — Iri Collections{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div id="product-detail-content">
+            <div class="page-loader"><div class="spinner"></div></div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let productData = null;
+let selectedQuantity = 1;
+
+async function loadProduct() {
+    const slug = window.location.pathname.split('/product/')[1].replace('/', '');
+    try {
+        const product = await API.get(`/store/products/${slug}/`);
+        if (!product || product.detail) {
+            document.getElementById('product-detail-content').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="ph ph-smiley-sad"></i></div>
+                    <h3>Product not found</h3>
+                    <p><a href="/catalog/" class="btn btn-secondary mt-1">Back to Shop</a></p>
+                </div>`;
+            return;
+        }
+        productData = product;
+        document.title = `${product.name} — Iri Collections`;
+        renderProduct(product);
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function renderProduct(p) {
+    const discount = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
+    const imgSrc = p.display_image || p.image_url || p.image || '';
+
+    let stockClass = 'in-stock', stockText = `In Stock (${p.stock} available)`;
+    if (p.stock === 0) { stockClass = 'out-of-stock'; stockText = 'Out of Stock'; }
+    else if (p.stock <= 5) { stockClass = 'low-stock'; stockText = `Only ${p.stock} left`; }
+
+    const isInWishlist = window.wishlistItems ? window.wishlistItems.has(p.id) : false;
+    const heartIcon = isInWishlist ? '<i class="ph-fill ph-heart"></i>' : '<i class="ph ph-heart"></i>';
+
+    document.getElementById('product-detail-content').innerHTML = `
+        <div class="product-detail fade-in">
+            <div class="product-detail-image">
+                <img src="${imgSrc}" alt="${p.name}">
+            </div>
+            <div class="product-detail-info">
+                <a href="/catalog/?category=${p.category_name?.toLowerCase() || ''}" 
+                   style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--gold); margin-bottom:var(--space-sm); display:inline-block;">
+                    <i class="ph ph-arrow-left"></i> ${p.category_name || 'Shop'}
+                </a>
+                <h1>${p.name}</h1>
+                <div class="product-detail-price">
+                    ${formatPrice(p.price)}
+                    ${p.compare_price ? `<span class="original">${formatPrice(p.compare_price)}</span>` : ''}
+                    ${discount > 0 ? `<span style="font-size:0.9rem; color:var(--success); margin-left:0.5rem;">${discount}% off</span>` : ''}
+                </div>
+                <span class="stock-badge ${stockClass}"><i class="ph-fill ph-circle" style="font-size: 0.6em; vertical-align: middle;"></i> ${stockText}</span>
+
+                <div class="product-meta">
+                    ${p.material ? `<div class="product-meta-item"><div class="label">Material</div><div>${p.material}</div></div>` : ''}
+                    ${p.weight ? `<div class="product-meta-item"><div class="label">Weight</div><div>${p.weight}</div></div>` : ''}
+                    <div class="product-meta-item"><div class="label">Category</div><div>${p.category_name}</div></div>
+                    <div class="product-meta-item"><div class="label">SKU</div><div>IRI-${String(p.id).padStart(4, '0')}</div></div>
+                </div>
+
+                <p class="product-detail-description">${p.description}</p>
+
+                ${p.stock > 0 ? `
+                <div class="quantity-control">
+                    <button onclick="changeQty(-1)"><i class="ph ph-minus"></i></button>
+                    <input type="number" id="qty-input" value="1" min="1" max="${p.stock}" readonly>
+                    <button onclick="changeQty(1)"><i class="ph ph-plus"></i></button>
+                </div>
+                <div style="display:flex; gap:var(--space-md);">
+                    <button class="btn btn-primary btn-lg" onclick="addToCartDetail()" style="flex:1;">
+                        <i class="ph ph-shopping-cart"></i> Add to Cart
+                    </button>
+                    <button class="wishlist-btn" onclick="toggleWishlist(${p.id})" id="btn-wishlist-${p.id}" style="font-size: 1.5rem; background: transparent; border: 1px solid var(--border); border-radius: 8px; width: 50px; cursor: pointer; color: var(--gold);">${heartIcon}</button>
+                    <button class="btn btn-secondary btn-lg" onclick="buyNow()">
+                        Buy Now
+                    </button>
+                </div>
+                ` : `
+                <div style="display:flex; gap:var(--space-md);">
+                    <button class="btn btn-primary btn-lg btn-block" disabled style="flex:1;">Out of Stock</button>
+                    <button class="wishlist-btn" onclick="toggleWishlist(${p.id})" id="btn-wishlist-${p.id}" style="font-size: 1.5rem; background: transparent; border: 1px solid var(--border); border-radius: 8px; width: 50px; cursor: pointer; color: var(--gold);">${heartIcon}</button>
+                </div>
+                `}
+            </div>
+        </div>
+    `;
+}
+
+function changeQty(delta) {
+    const inp = document.getElementById('qty-input');
+    let val = parseInt(inp.value) + delta;
+    if (val < 1) val = 1;
+    if (val > productData.stock) val = productData.stock;
+    inp.value = val;
+    selectedQuantity = val;
+}
+
+async function addToCartDetail() {
+    await addToCart(productData.id, selectedQuantity);
+}
+
+async function buyNow() {
+    if (!API.isLoggedIn()) {
+        Toast.info('Please login to purchase');
+        setTimeout(() => window.location.href = '/login/', 1000);
+        return;
+    }
+    await addToCart(productData.id, selectedQuantity);
+    window.location.href = '/checkout/';
+}
+
+document.addEventListener('DOMContentLoaded', loadProduct);
+</script>
+{% endblock %}

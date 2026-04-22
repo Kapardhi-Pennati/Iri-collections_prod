@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Login — Iri Collections{% endblock %}
+{% block meta_description %}Login to your Iri Collections account to shop exquisite jewelry.{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card card-glass">
+        <h1 id="form-title">Welcome <span class="text-gold">Back</span></h1>
+        <p class="subtitle" id="form-subtitle">Sign in to your account</p>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="you@example.com" required autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+            <div style="text-align:right; margin-bottom: 1rem; font-size: 0.9rem;">
+                <a href="#" id="forgot-password-link">Forgot Password?</a>
+            </div>
+            <div id="login-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg" id="login-btn">Sign In</button>
+        </form>
+
+        <form id="forgot-email-form" style="display:none;">
+            <div class="form-group">
+                <label for="reset-email">Email Address</label>
+                <input type="email" id="reset-email" placeholder="you@example.com" required>
+            </div>
+            <div id="forgot-email-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg" id="send-reset-otp-btn">Send OTP</button>
+            <div style="text-align:center; margin-top: 1rem; font-size: 0.9rem;">
+                <a href="#" id="back-to-login-link">Back to Sign In</a>
+            </div>
+        </form>
+
+        <form id="reset-password-form" style="display:none; margin-top:1rem;">
+            <p style="font-size:0.9rem; margin-bottom:1rem;">Enter the 6-digit OTP sent to your email and your new password.</p>
+            <div class="form-group">
+                <label for="reset-otp">Verification Code</label>
+                <input type="text" id="reset-otp" placeholder="123456" required maxlength="6" pattern="\d{6}">
+            </div>
+            <div class="form-group">
+                <label for="new-password">New Password</label>
+                <input type="password" id="new-password" placeholder="Min. 8 characters" required minlength="8">
+            </div>
+            <div id="reset-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg" id="reset-btn">Reset Password</button>
+        </form>
+
+        <div class="auth-footer" id="auth-footer" style="margin-top:2rem;">
+            Don't have an account? <a href="/signup/">Create one</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let resetEmail = "";
+
+// Toggle views
+document.getElementById('forgot-password-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('form-title').innerHTML = 'Reset <span class="text-gold">Password</span>';
+    document.getElementById('form-subtitle').textContent = 'Enter email to receive OTP';
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('auth-footer').style.display = 'none';
+    document.getElementById('forgot-email-form').style.display = 'block';
+});
+
+document.getElementById('back-to-login-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('form-title').innerHTML = 'Welcome <span class="text-gold">Back</span>';
+    document.getElementById('form-subtitle').textContent = 'Sign in to your account';
+    document.getElementById('forgot-email-form').style.display = 'none';
+    document.getElementById('reset-password-form').style.display = 'none';
+    document.getElementById('login-form').style.display = 'block';
+    document.getElementById('auth-footer').style.display = 'block';
+});
+
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('login-btn');
+    const errEl = document.getElementById('login-error');
+    btn.disabled = true;
+    btn.textContent = 'Signing in...';
+    errEl.style.display = 'none';
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    const res = await API.post('/auth/login/', { email, password });
+
+    if (res && res.ok) {
+        API.setTokens(res.data.tokens);
+        API.setUser(res.data.user);
+        Toast.success('Welcome back!');
+        setTimeout(() => {
+            window.location.href = res.data.user.role === 'admin' ? '/admin-dashboard/' : '/';
+        }, 500);
+    } else {
+        errEl.textContent = res?.data?.error || 'Invalid credentials. Please try again.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+    }
+});
+
+document.getElementById('forgot-email-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('send-reset-otp-btn');
+    const errEl = document.getElementById('forgot-email-error');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    errEl.style.display = 'none';
+
+    resetEmail = document.getElementById('reset-email').value;
+
+    const res = await API.post('/auth/request-otp/', { email: resetEmail, action: 'reset' });
+
+    if (res && res.ok) {
+        Toast.success('OTP sent to your email!');
+        document.getElementById('forgot-email-form').style.display = 'none';
+        document.getElementById('reset-password-form').style.display = 'block';
+        document.getElementById('form-subtitle').textContent = 'Verify OTP and set new password';
+    } else {
+        errEl.textContent = res?.data?.error || 'Failed to send OTP. Account may not exist.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Send OTP';
+    }
+});
+
+document.getElementById('reset-password-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('reset-btn');
+    const errEl = document.getElementById('reset-error');
+    btn.disabled = true;
+    btn.textContent = 'Resetting...';
+    errEl.style.display = 'none';
+
+    const otp_code = document.getElementById('reset-otp').value;
+    const new_password = document.getElementById('new-password').value;
+
+    // Step 1: Verify OTP
+    const verifyRes = await API.post('/auth/verify-otp/', { email: resetEmail, otp_code });
+    if (!verifyRes || !verifyRes.ok) {
+        errEl.textContent = verifyRes?.data?.error || 'Invalid OTP. Try again.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Reset Password';
+        return;
+    }
+
+    // Step 2: Set New Password
+    const resetRes = await API.post('/auth/reset-password/', { email: resetEmail, new_password });
+    if (resetRes && resetRes.ok) {
+        Toast.success('Password reset successfully! You can now log in.');
+        document.getElementById('back-to-login-link').click(); // Back to login view
+    } else {
+        errEl.textContent = resetRes?.data?.error || 'Failed to reset password.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Reset Password';
+    }
+});
+</script>
+{% endblock %}

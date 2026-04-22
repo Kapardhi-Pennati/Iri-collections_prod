@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - Iri Collections</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #1a1a24;
+            --text-muted: #666666;
+            --border: #e0e0e0;
+            --gold: #A8863A;
+            --font-display: 'Bodoni Moda', serif;
+            --font-sans: 'Montserrat', sans-serif;
+        }
+        
+        body {
+            font-family: var(--font-sans);
+            color: var(--text);
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--bg);
+            padding: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-top: 6px solid var(--gold);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .brand {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .brand span {
+            color: var(--gold);
+        }
+
+        .company-info {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .invoice-meta {
+            text-align: right;
+        }
+
+        .invoice-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--border);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0 0 10px 0;
+        }
+
+        .meta-group {
+            margin-bottom: 8px;
+        }
+
+        .meta-label {
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-right: 10px;
+        }
+
+        .billing-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+
+        .billing-block {
+            width: 45%;
+        }
+
+        .billing-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .billing-details {
+            color: var(--text);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 2px solid var(--border);
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .col-qty, .col-price, .col-total {
+            text-align: right;
+        }
+
+        th.col-qty, th.col-price, th.col-total {
+            text-align: right;
+        }
+
+        .item-name {
+            font-weight: 600;
+        }
+
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .totals-table {
+            width: 350px;
+            border: none;
+        }
+
+        .totals-table td {
+            padding: 10px 15px;
+            border: none;
+            text-align: right;
+        }
+
+        .totals-table .label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .row-total td {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--gold);
+            border-top: 2px solid var(--border) !important;
+            padding-top: 15px !important;
+        }
+
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            background: #eee;
+        }
+
+        .badge.paid { background: #e6f4ea; color: #1e8e3e; }
+        .badge.pending { background: #fef7e0; color: #b06000; }
+
+        .btn-print {
+            display: block;
+            margin: 0 auto 30px auto;
+            padding: 12px 30px;
+            background: var(--gold);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(168, 134, 58, 0.3);
+        }
+        
+        .btn-print:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(168, 134, 58, 0.4);
+        }
+
+        @media print {
+            body { 
+                background: none; 
+                padding: 0;
+            }
+            .invoice-container { 
+                box-shadow: none; 
+                padding: 0;
+                border-top: none;
+            }
+            .btn-print { 
+                display: none; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="btn-print" onclick="window.print()"><i class="ph ph-printer"></i> Print Invoice</button>
+
+    <div class="invoice-container" id="invoice">
+        <div style="text-align: center; padding: 50px;">
+            <p>Loading invoice details...</p>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParts = window.location.pathname.split('/');
+            const orderIdStr = urlParts[urlParts.length - 2]; 
+            const orderId = parseInt(orderIdStr);
+
+            if (!orderId || isNaN(orderId)) {
+                document.getElementById('invoice').innerHTML = '<p style="text-align:center; color:red;">Invalid Order ID</p>';
+                return;
+            }
+
+            if (!API.isLoggedIn()) {
+                window.location.href = '/login/?next=' + window.location.pathname;
+                return;
+            }
+
+            try {
+                // Fetch order details
+                // If the user is an admin they can fetch any order because of how we built OrderDetailView
+                const order = await API.get(`/store/orders/${orderId}/`);
+                
+                if (!order) throw new Error('Order not found');
+
+                const date = new Date(order.created_at).toLocaleDateString('en-IN', {
+                    day: 'numeric', month: 'long', year: 'numeric'
+                });
+
+                const isPaid = order.transaction && order.transaction.status === 'paid';
+                const statusBadge = isPaid ? '<span class="badge paid">PAID</span>' : '<span class="badge pending">UNPAID</span>';
+
+                const html = `
+                    <div class="header">
+                        <div>
+                            <h1 class="brand">Iri <span>Collections</span></h1>
+                            <div class="company-info">
+                                No.86, MG Road, Manapakkam<br>
+                                Chennai, Tamil Nadu 600125<br>
+                                +91 93611 51712<br>
+                            </div>
+                        </div>
+                        <div class="invoice-meta">
+                            <h2 class="invoice-title">INVOICE</h2>
+                            <div class="meta-group"><span class="meta-label">Invoice / Order #</span> ${escapeHTML(order.order_number)}</div>
+                            <div class="meta-group"><span class="meta-label">Date</span> ${date}</div>
+                            <div class="meta-group"><span class="meta-label">Payment Status</span> ${statusBadge}</div>
+                            ${order.tracking_image ? `<div class="meta-group"><span class="meta-label">Tracking</span> <a href="${order.tracking_image}" target="_blank" style="color:var(--gold);">View Proof</a></div>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="billing-section">
+                        <div class="billing-block">
+                            <h3 class="billing-title">Billed To</h3>
+                            <div class="billing-details">
+                                <strong>Customer</strong><br>
+                                ${escapeHTML(order.shipping_address).replace(/\n/g, '<br>')}<br>
+                                Phone: ${escapeHTML(order.phone) || 'N/A'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item Description</th>
+                                <th class="col-price">Price</th>
+                                <th class="col-qty">Quantity</th>
+                                <th class="col-total">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${order.items.map(item => `
+                                <tr>
+                                    <td>
+                                        <div class="item-name">${escapeHTML(item.product_name)}</div>
+                                    </td>
+                                    <td class="col-price">${formatPrice(item.price_at_purchase)}</td>
+                                    <td class="col-qty">${item.quantity}</td>
+                                    <td class="col-total">${formatPrice(item.subtotal)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+
+                    <div class="totals-section">
+                        <table class="totals-table">
+                            <tr>
+                                <td class="label">Subtotal</td>
+                                <td>${formatPrice(order.total_amount - (order.shipping_fee || 0))}</td>
+                            </tr>
+                            ${order.shipping_fee > 0 ? `
+                            <tr>
+                                <td class="label">Shipping Fee</td>
+                                <td>${formatPrice(order.shipping_fee)}</td>
+                            </tr>
+                            ` : ''}
+                            <tr class="row-total">
+                                <td class="label">Total Amount</td>
+                                <td>${formatPrice(order.total_amount)}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="footer">
+                        <p>Thank you for choosing Iri Collections. For any queries regarding this invoice, please contact support.</p>
+                        <p style="margin-top:5px; font-weight:600; color:#aaa;">This is a computer generated invoice and does not require a physical signature.</p>
+                    </div>
+                `;
+
+                document.getElementById('invoice').innerHTML = html;
+
+                // Auto-trigger print after rendering
+                setTimeout(() => {
+                    window.print();
+                }, 500);
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('invoice').innerHTML = '<div style="text-align:center; padding:50px;"><h3>Error loading invoice</h3><p>Could not fetch order data or you do not have permission.</p></div>';
+            }
+        });
+    </script>
+</body>
+</html>

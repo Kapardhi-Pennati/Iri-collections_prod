@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your OTP Code</title>
+</head>
+<body style="margin:0; padding:0; background-color:#0e0e14; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0e0e14; padding:40px 20px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#16161f; border-radius:12px; overflow:hidden; border:1px solid #2a2a3d;">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#c9a84c,#d4af5a); padding:32px; text-align:center;">
+                            <h1 style="margin:0; color:#0e0e14; font-size:28px; letter-spacing:1px;">Iri Collections</h1>
+                        </td>
+                    </tr>
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding:40px 32px; text-align:center;">
+                            <h2 style="color:#c9a84c; margin:0 0 16px; font-size:22px;">Your Verification Code</h2>
+                            <p style="color:#a0a0b8; line-height:1.8; margin:0 0 32px; font-size:15px;">
+                                Use the code below to complete your verification. This code is valid for {{ expiry_minutes }} minutes.
+                            </p>
+                            <!-- OTP Code Display -->
+                            <div style="background-color:#1e1e2e; border-radius:12px; padding:24px; margin:0 auto; max-width:280px; border:2px solid #c9a84c;">
+                                <span style="font-size:36px; font-weight:700; letter-spacing:12px; color:#c9a84c; font-family:'Courier New',monospace;">
+                                    {{ otp_code }}
+                                </span>
+                            </div>
+                            <p style="color:#6b6b80; font-size:13px; line-height:1.6; margin:32px 0 0;">
+                                If you didn't request this code, you can safely ignore this email.
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- Security Notice -->
+                    <tr>
+                        <td style="padding:0 32px 24px;">
+                            <div style="background-color:#1e1e2e; border-radius:8px; padding:16px; border-left:3px solid #c9a84c;">
+                                <p style="color:#a0a0b8; font-size:12px; margin:0; line-height:1.6;">
+                                    🔒 <strong style="color:#c9a84c;">Never share this code.</strong> Iri Collections will never ask you for this code via phone or chat. If someone requests it, it may be a scam.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding:24px 32px; border-top:1px solid #2a2a3d; text-align:center;">
+                            <p style="color:#6b6b80; font-size:12px; margin:0; line-height:1.6;">
+                                © {{ current_year }} Iri Collections. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

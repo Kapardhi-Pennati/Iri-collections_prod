@@ -1,0 +1,686 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout — Iri Collections{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <h1 style="font-family: var(--font-display); font-size: 2.2rem;">Secure <span class="text-gold">Checkout</span></h1>
+            <div class="section-divider"></div>
+        </div>
+
+        <!-- Checkout Steps Indicator -->
+        <div class="checkout-steps">
+            <div class="checkout-step active" id="step-indicator-1">
+                <div class="checkout-step-number">1</div>
+                <div class="checkout-step-label">Shipping</div>
+            </div>
+            <div class="checkout-step" id="step-indicator-2">
+                <div class="checkout-step-number">2</div>
+                <div class="checkout-step-label">Review</div>
+            </div>
+            <div class="checkout-step" id="step-indicator-3">
+                <div class="checkout-step-number">3</div>
+                <div class="checkout-step-label">Payment</div>
+            </div>
+        </div>
+
+        <div class="checkout-panel" id="checkout-content">
+            <!-- Step 1: Shipping -->
+            <div id="step-1" class="card-glass">
+                <h2 style="font-family:var(--font-display); margin-bottom:var(--space-lg);">Shipping Details</h2>
+                
+                <div id="saved-addresses-container" style="margin-bottom: var(--space-xl); display: none;">
+                    <label style="font-weight:600; font-size: 0.9rem;">Saved Addresses</label>
+                    <select id="saved-address-select" class="form-control" style="margin-bottom: var(--space-md); padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); border-color: var(--gold);" onchange="fillSavedAddress()">
+                        <option value="">-- Choose a saved address or enter a new one --</option>
+                    </select>
+                    <hr style="border-color: var(--border); margin: 20px 0;">
+                </div>
+
+                <form id="shipping-form">
+                    <div class="form-group">
+                        <label for="ship-name">Full Name</label>
+                        <input type="text" id="ship-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ship-phone">Phone Number</label>
+                        <input type="tel" id="ship-phone" required placeholder="+91 9876543210">
+                    </div>
+                    <div class="form-group">
+                        <label for="ship-address">Complete Address</label>
+                        <textarea id="ship-address" rows="3" required placeholder="House/Flat No., Street, Landmark"></textarea>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
+                        <div class="form-group">
+                            <label for="ship-city">City</label>
+                            <input type="text" id="ship-city" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ship-pincode">Pincode</label>
+                            <input type="text" id="ship-pincode" required maxlength="6" pattern="[0-9]{6}">
+                        </div>
+                    </div>
+                    <div id="shipping-estimate" style="margin-top:0.25rem; margin-bottom:var(--space-md); padding:0.85rem 1rem; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--bg-elevated); color:var(--text-muted); font-size:0.9rem;">
+                        Shipping charge will appear after you enter a valid pincode.
+                    </div>
+                    <div class="form-group">
+                        <label for="ship-notes">Order Notes <span style="color:var(--text-muted); text-transform:none;">(optional)</span></label>
+                        <textarea id="ship-notes" rows="2" placeholder="Any special instructions..."></textarea>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.9rem; font-weight:normal;">
+                            <input type="checkbox" id="ship-save-address" checked> Save this address for future orders
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg">Continue to Review <i class="ph ph-arrow-right"></i></button>
+                </form>
+            </div>
+
+            <!-- Step 2: Review (hidden initially) -->
+            <div id="step-2" class="card-glass hidden">
+                <h2 style="font-family:var(--font-display); margin-bottom:var(--space-lg);">Review Your Order</h2>
+                <div id="review-items"></div>
+                <div id="review-shipping" style="margin-top:var(--space-lg); padding:var(--space-lg); background:var(--bg-elevated); border-radius:var(--radius-md);"></div>
+                <div id="review-total" style="margin-top:var(--space-lg);"></div>
+                <div style="display:flex; gap:var(--space-md); margin-top:var(--space-xl);">
+                    <button class="btn btn-ghost btn-lg" onclick="goToStep(1)"><i class="ph ph-arrow-left"></i> Back</button>
+                    <button class="btn btn-primary btn-lg" style="flex:1;" id="pay-now-btn" onclick="proceedToPayment()">Pay Now <i class="ph ph-lock-key"></i></button>
+                </div>
+            </div>
+
+            <!-- Step 3: Payment Confirmation (hidden initially) -->
+            <div id="step-3" class="card-glass hidden text-center">
+                <!-- Dynamic icon: set by showConfirmation() -->
+                <div style="font-size:4rem; margin-bottom:var(--space-lg);" id="confirmation-icon"><i class="ph ph-confetti"></i></div>
+                <h2 style="font-family:var(--font-display); margin-bottom:var(--space-sm);" id="confirmation-title">Order Confirmed!</h2>
+                <p class="text-muted mb-2" id="confirmation-msg">Your order has been placed successfully.</p>
+                <div id="confirmation-details" style="text-align:left; background:var(--bg-elevated); border-radius:var(--radius-md); padding:var(--space-lg); margin-bottom:var(--space-xl);"></div>
+                <div style="display:flex; gap:var(--space-md); justify-content:center;">
+                    <a href="/orders/" class="btn btn-primary btn-lg">View My Orders</a>
+                    <a href="/catalog/" class="btn btn-secondary btn-lg">Continue Shopping</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CHECKOUT FLOW — PhonePe Redirect (Verified Status)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Flow:
+ *   1. User fills shipping form → validated, pincode checked
+ *   2. Review step → user sees order summary
+ *   3. "Pay Now" → health check → create order → initiate PhonePe → REDIRECT
+ *   4. User pays on PhonePe hosted page
+ *   5. PhonePe redirects back with ?payment=result&merchant_transaction_id=...
+ *   6. We call our backend /payments/status/<merchant_txn_id>/ for verified status
+ *   7. Show confirmation based on BACKEND response (never trust redirect params alone)
+ *
+ * Security:
+ *   ✅ Payment status trusted ONLY from our backend, not from URL params
+ *   ✅ Gateway health check before initiating payment
+ *   ✅ Cart state cleared only after backend confirms payment
+ */
+
+let cartData = null;
+let currentStep = 1;
+let createdOrder = null;
+let checkoutShippingState = "";
+let shippingQuoteTimer = null;
+let shippingQuote = {
+    fee: 80,
+    state: '',
+    pincode: '',
+    verified: false,
+    error: '',
+};
+
+
+// ─── Page Load ─────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+    bindShippingEstimateListeners();
+    renderShippingEstimate();
+
+    // Check if this is a return from PhonePe redirect
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get('payment');
+    const merchantTxnId =
+        params.get('merchant_transaction_id') ||
+        localStorage.getItem('pending_phonepe_txn');
+
+    if (paymentStatus === 'result' && merchantTxnId) {
+        await handlePaymentReturn(merchantTxnId);
+        return;
+    }
+
+    if (paymentStatus === 'result' && !merchantTxnId) {
+        Toast.error('Could not verify payment session. Please check your orders page.');
+        window.history.replaceState({}, '', '/checkout/');
+        return;
+    }
+
+    if (paymentStatus === 'cancelled') {
+        // User exited payment page before completion
+        localStorage.removeItem('pending_phonepe_txn');
+        Toast.info('Payment was cancelled. Your order has been saved.');
+        // Clean the URL without reloading
+        window.history.replaceState({}, '', '/checkout/');
+    }
+
+    // Normal checkout flow — load cart
+    await loadCheckoutCart();
+});
+
+
+// ─── Handle Return from PhonePe ────────────────────────────────────────
+async function handlePaymentReturn(merchantTxnId) {
+    /**
+    * ✅ SECURITY: We do NOT trust redirect query params alone.
+    * We always verify status from our backend, which queries PhonePe.
+     * 
+     * Instead, we call our backend which:
+    *   1. Verifies the merchant transaction belongs to the current user
+    *   2. Retrieves payment status from PhonePe's status API
+     *   3. Returns the actual order/payment status from our DB
+     */
+
+    // Show loading state while we verify
+    document.getElementById('checkout-content').innerHTML = `
+        <div class="card-glass text-center" style="padding: var(--space-2xl);">
+            <div style="font-size: 3rem; margin-bottom: var(--space-lg); animation: pulse 1.5s infinite;"><i class="ph ph-hourglass"></i></div>
+            <h2 style="font-family: var(--font-display);">Verifying Payment...</h2>
+            <p class="text-muted">Please wait while we confirm your payment with the bank.</p>
+        </div>`;
+
+    if (!API.isLoggedIn()) {
+        window.location.href = '/login/';
+        return;
+    }
+
+    try {
+        const res = await API.get(`/payments/status/${encodeURIComponent(merchantTxnId)}/`);
+
+        if (!res || res.error) {
+            showPaymentResult('failed', null, res?.error || 'Unable to verify payment.');
+            return;
+        }
+
+        const verifiedStatus = String(res.payment_status || '').toUpperCase();
+        updateCartCount();
+
+        if (verifiedStatus === 'COMPLETED') {
+            showPaymentResult('confirmed', res);
+            localStorage.removeItem('pending_phonepe_txn');
+        } else if (verifiedStatus === 'PENDING') {
+            showPaymentResult('processing', res);
+        } else {
+            showPaymentResult('failed', res, res.message || 'Payment was not completed.');
+            localStorage.removeItem('pending_phonepe_txn');
+        }
+    } catch (err) {
+        console.error('Payment verification error:', err);
+        showPaymentResult('failed', null, 'An error occurred while verifying your payment.');
+    }
+
+    // ✅ Clean the URL to prevent re-verification on refresh
+    window.history.replaceState({}, '', '/checkout/');
+}
+
+
+// ─── Show Payment Result ───────────────────────────────────────────────
+function showPaymentResult(status, data, errorMsg) {
+    /**
+     * Renders the appropriate confirmation UI based on verified backend status.
+     *
+     * States:
+     *   'confirmed'  — Payment verified, order confirmed (green ✅)
+        *   'processing' — Payment initiated, confirmation pending (amber ⏳)
+     *   'failed'     — Payment failed or verification error (red ❌)
+     */
+    const configs = {
+        confirmed: {
+            icon: '<i class="ph ph-check-circle" style="color: var(--success);"></i>',
+            title: 'Payment Confirmed!',
+            message: 'Your payment has been verified and your order is confirmed. Thank you for your purchase!',
+            statusClass: 'confirmed',
+            statusText: 'Confirmed',
+        },
+        processing: {
+            icon: '<i class="ph ph-hourglass" style="color: var(--gold);"></i>',
+            title: 'Payment Received!',
+            message: 'Your payment has been received and is being processed. Your order will be confirmed shortly.',
+            statusClass: 'confirmed',
+            statusText: 'Processing',
+        },
+        failed: {
+            icon: '<i class="ph ph-x-circle" style="color: var(--error);"></i>',
+            title: 'Payment Failed',
+            message: errorMsg || 'Your payment could not be verified. Please try again or contact support.',
+            statusClass: 'cancelled',
+            statusText: 'Failed',
+        },
+    };
+
+    const config = configs[status] || configs.failed;
+
+    // Rebuild the confirmation panel
+    document.getElementById('checkout-content').innerHTML = `
+        <div class="card-glass text-center">
+            <div style="font-size:4rem; margin-bottom:var(--space-lg);">${config.icon}</div>
+            <h2 style="font-family:var(--font-display); margin-bottom:var(--space-sm);">${config.title}</h2>
+            <p class="text-muted mb-2">${config.message}</p>
+            ${data ? `
+            <div style="text-align:left; background:var(--bg-elevated); border-radius:var(--radius-md); padding:var(--space-lg); margin-bottom:var(--space-xl);">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
+                    <div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Order Number</div>
+                        <div style="font-weight:700; color:var(--gold-light); font-size:1.1rem;">${data.order_number || '—'}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Total Amount</div>
+                        <div style="font-weight:700; font-size:1.1rem;">${data.total_amount ? formatPrice(data.total_amount) : '—'}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Status</div>
+                        <div><span class="order-status ${config.statusClass}">${config.statusText}</span></div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Date</div>
+                        <div>${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                    </div>
+                </div>
+            </div>` : ''}
+            <div style="display:flex; gap:var(--space-md); justify-content:center; flex-wrap: wrap;">
+                <a href="/orders/" class="btn btn-primary btn-lg">View My Orders</a>
+                <a href="/catalog/" class="btn btn-secondary btn-lg">Continue Shopping</a>
+                ${status === 'failed' ? '<a href="/checkout/" class="btn btn-ghost btn-lg">Try Again</a>' : ''}
+            </div>
+        </div>`;
+
+    // Hide step indicators for result pages
+    document.querySelector('.checkout-steps').style.display = 'none';
+}
+
+
+// ─── Load Cart ─────────────────────────────────────────────────────────
+async function loadCheckoutCart() {
+    if (!API.isLoggedIn()) {
+        window.location.href = '/login/';
+        return;
+    }
+    cartData = await API.get('/store/cart/');
+    if (!cartData || !cartData.items || cartData.items.length === 0) {
+        document.getElementById('checkout-content').innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="ph ph-shopping-cart"></i></div>
+                <h3>Your cart is empty</h3>
+                <a href="/catalog/" class="btn btn-primary mt-2">Browse Products</a>
+            </div>`;
+        return;
+    }
+    // Pre-fill user info
+    const user = API.getUser();
+    if (user) {
+        document.getElementById('ship-name').value = user.full_name || '';
+        document.getElementById('ship-phone').value = user.phone || '';
+    }
+
+    // Fetch saved addresses
+    try {
+        const addrRes = await API.get('/auth/addresses/');
+        if (addrRes && addrRes.length > 0) {
+            window.userAddresses = addrRes;
+            const container = document.getElementById('saved-addresses-container');
+            const select = document.getElementById('saved-address-select');
+            container.style.display = 'block';
+            addrRes.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.id;
+                opt.textContent = `${a.name || 'Address'} - ${a.street}, ${a.city} - ${a.pincode}`;
+                select.appendChild(opt);
+            });
+            
+            // Auto select default if exists
+            const defAddr = addrRes.find(a => a.is_default) || addrRes[0];
+            if (defAddr) {
+                select.value = defAddr.id;
+                fillSavedAddress();
+            }
+        }
+    } catch (e) { console.error('Error fetching addresses', e); }
+}
+
+function fillSavedAddress() {
+    const id = document.getElementById('saved-address-select').value;
+    if (!id || !window.userAddresses) {
+        document.getElementById('shipping-form').reset();
+        const user = API.getUser();
+        if (user) {
+            document.getElementById('ship-name').value = user.full_name || '';
+            document.getElementById('ship-phone').value = user.phone || '';
+        }
+        renderShippingEstimate();
+        return;
+    }
+    const a = window.userAddresses.find(x => x.id == id);
+    if (a) {
+        document.getElementById('ship-address').value = a.street;
+        document.getElementById('ship-city').value = a.city;
+        document.getElementById('ship-pincode').value = a.pincode;
+        if (a.phone) document.getElementById('ship-phone').value = a.phone;
+        const user = API.getUser();
+        if (user) {
+            document.getElementById('ship-name').value = a.name || user.full_name || '';
+        }
+        refreshShippingEstimate(true);
+    }
+}
+
+
+// ─── Shipping Estimate (Step 1) ──────────────────────────────────────────
+function bindShippingEstimateListeners() {
+    const pincodeInput = document.getElementById('ship-pincode');
+    const addressInput = document.getElementById('ship-address');
+    const cityInput = document.getElementById('ship-city');
+
+    if (pincodeInput) {
+        pincodeInput.addEventListener('input', () => {
+            if (shippingQuoteTimer) clearTimeout(shippingQuoteTimer);
+            shippingQuoteTimer = setTimeout(() => refreshShippingEstimate(true), 350);
+        });
+        pincodeInput.addEventListener('blur', () => refreshShippingEstimate(true));
+    }
+
+    const rerender = () => renderShippingEstimate();
+    if (addressInput) addressInput.addEventListener('input', rerender);
+    if (cityInput) cityInput.addEventListener('input', rerender);
+}
+
+function renderShippingEstimate() {
+    const el = document.getElementById('shipping-estimate');
+    if (!el) return;
+
+    const pincode = (document.getElementById('ship-pincode')?.value || '').trim();
+
+    if (!pincode || pincode.length < 6) {
+        el.style.borderColor = 'var(--border)';
+        el.style.color = 'var(--text-muted)';
+        el.innerHTML = 'Shipping charge will appear after you enter a valid pincode.';
+        return;
+    }
+
+    if (shippingQuote.error) {
+        el.style.borderColor = 'var(--error)';
+        el.style.color = 'var(--error)';
+        el.innerHTML = `Shipping not available: ${escapeHTML(shippingQuote.error)}`;
+        return;
+    }
+
+    if (shippingQuote.verified && shippingQuote.pincode === pincode) {
+        const stateLabel = shippingQuote.state || 'India';
+        const tierLabel = stateLabel.toLowerCase() === 'tamil nadu' ? 'Tamil Nadu rate' : 'Rest of India rate';
+        el.style.borderColor = 'var(--gold)';
+        el.style.color = 'var(--text)';
+        el.innerHTML = `Shipping Charge: <strong>${formatPrice(shippingQuote.fee)}</strong> · ${escapeHTML(stateLabel)} (${tierLabel})`;
+        return;
+    }
+
+    el.style.borderColor = 'var(--border)';
+    el.style.color = 'var(--text-muted)';
+    el.innerHTML = 'Checking shipping charge...';
+}
+
+async function refreshShippingEstimate(forceApi = false) {
+    const pincode = (document.getElementById('ship-pincode')?.value || '').trim();
+
+    if (!/^\d{6}$/.test(pincode)) {
+        shippingQuote = { ...shippingQuote, pincode, verified: false, state: '', error: '' };
+        renderShippingEstimate();
+        return { ok: false, data: { error: 'Please enter a valid 6-digit pincode.' } };
+    }
+
+    if (!forceApi && shippingQuote.verified && shippingQuote.pincode === pincode) {
+        renderShippingEstimate();
+        return {
+            ok: true,
+            data: {
+                shipping_fee: shippingQuote.fee,
+                state: shippingQuote.state,
+                pincode: shippingQuote.pincode,
+            },
+        };
+    }
+
+    const res = await API.post('/store/orders/pincode-verify/', { pincode });
+    if (res && res.ok) {
+        shippingQuote = {
+            fee: Number(res.data.shipping_fee || 80),
+            state: String(res.data.state || '').trim(),
+            pincode,
+            verified: true,
+            error: '',
+        };
+        checkoutShippingState = shippingQuote.state;
+    } else {
+        shippingQuote = {
+            ...shippingQuote,
+            pincode,
+            verified: false,
+            state: '',
+            error: res?.data?.error || 'Cannot verify serviceability.',
+        };
+    }
+
+    renderShippingEstimate();
+    return res;
+}
+
+
+// ─── Step Navigation ───────────────────────────────────────────────────
+function goToStep(step) {
+    currentStep = step;
+    for (let i = 1; i <= 3; i++) {
+        document.getElementById(`step-${i}`).classList.toggle('hidden', i !== step);
+        const ind = document.getElementById(`step-indicator-${i}`);
+        ind.classList.remove('active', 'completed');
+        if (i < step) ind.classList.add('completed');
+        if (i === step) ind.classList.add('active');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+
+// ─── Step 1 → Step 2: Shipping → Review ────────────────────────────────
+document.getElementById('shipping-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Check if any OOS items
+    const hasOOS = cartData.items.some(i => i.is_out_of_stock);
+    if (hasOOS) {
+        Toast.error("Please remove out-of-stock items from your cart before proceeding.");
+        return;
+    }
+
+    const btn = e.submitter;
+    if (btn) { btn.disabled = true; btn.textContent = 'Verifying Pincode...'; }
+
+    const pincode = document.getElementById('ship-pincode').value;
+    const res = await refreshShippingEstimate(true);
+    
+    if (btn) { btn.disabled = false; btn.textContent = 'Continue to Review →'; }
+
+    let shippingFee = 80;
+    let shippingState = '';
+    if (res && res.ok) {
+        shippingFee = Number(res.data.shipping_fee || 80);
+        shippingState = String(res.data.state || '').trim();
+        checkoutShippingState = shippingState;
+        
+        // Save Address if checked
+        const saveAddr = document.getElementById('ship-save-address')?.checked;
+        const selId = document.getElementById('saved-address-select')?.value;
+        if (saveAddr && !selId) {
+            API.post('/auth/addresses/', {
+                street: document.getElementById('ship-address').value,
+                city: document.getElementById('ship-city').value,
+                pincode: pincode,
+                phone: document.getElementById('ship-phone').value,
+                state: shippingState || "India",
+                name: document.getElementById('ship-name').value || "Address"
+            }).catch(e => console.error("Could not save address", e));
+        }
+
+    } else {
+        Toast.error("Invalid Pincode: " + (res?.data?.error || 'Cannot verify serviceability.'));
+        return;
+    }
+
+    // Render review
+    const items = cartData.items.map(item => {
+        const p = item.product_detail;
+        return `<div style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid var(--border);">
+            <div>
+                <div style="font-weight:600;">${p.name}</div>
+                <div style="font-size:0.85rem; color:var(--text-muted);">Qty: ${item.quantity} × ${formatPrice(p.price)}</div>
+            </div>
+            <div style="font-weight:600; color:var(--gold-light);">${formatPrice(item.subtotal)}</div>
+        </div>`;
+    }).join('');
+    document.getElementById('review-items').innerHTML = items;
+
+    const addr = `${document.getElementById('ship-name').value}<br>
+        ${document.getElementById('ship-address').value}<br>
+        ${document.getElementById('ship-city').value}${shippingState ? ', ' + escapeHTML(shippingState) : ''} - ${document.getElementById('ship-pincode').value}<br>
+        <i class="ph ph-phone"></i> ${document.getElementById('ship-phone').value}`;
+    document.getElementById('review-shipping').innerHTML = `
+        <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:0.5rem;">Shipping To</div>
+        <div style="line-height:1.8;">${addr}</div>`;
+
+    const total = cartData.total + shippingFee;
+    document.getElementById('review-total').innerHTML = `
+        <div class="cart-summary-row"><span>Subtotal</span><span>${formatPrice(cartData.total)}</span></div>
+        <div class="cart-summary-row"><span>Shipping</span><span style="color:var(--success);">${shippingFee === 0 ? 'Free' : formatPrice(shippingFee)}</span></div>
+        <div class="cart-summary-row total"><span>Total</span><span>${formatPrice(total)}</span></div>`;
+
+    goToStep(2);
+});
+
+
+// ─── Step 2 → Payment: PhonePe Redirect ─────────────────────────────────
+async function proceedToPayment() {
+    /**
+     * Full payment initiation flow:
+        *   1. Health check — verify payment gateway is operational
+     *   2. Create order — backend validates stock & creates order
+        *   3. Initiate PhonePe payment — backend returns payment URL
+        *   4. Redirect — browser navigates to PhonePe hosted page
+     *
+        * ✅ SECURITY: Payment status is confirmed only from backend verification.
+     */
+
+    const btn = document.getElementById('pay-now-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Processing...'; }
+
+    try {
+        // ── Step 1: Gateway health check ─────────────────────────────
+        // Prevents sending the user to a broken checkout page.
+        const healthRes = await API.get('/payments/health-check/');
+        if (!healthRes || healthRes.status !== 'healthy') {
+            Toast.error(
+                healthRes?.error ||
+                'Payment gateway is temporarily unavailable. Please try again later.'
+            );
+            if (btn) { btn.disabled = false; btn.textContent = 'Pay Now'; }
+            return;
+        }
+
+        // ── Step 2: Create the order ─────────────────────────────────
+        // Stock is validated but NOT deducted — deferred to webhook.
+        const state = checkoutShippingState || shippingQuote.state || '';
+        const address = `${document.getElementById('ship-name').value}, ${document.getElementById('ship-address').value}, ${document.getElementById('ship-city').value}${state ? ', ' + state : ''} - ${document.getElementById('ship-pincode').value}, India`;
+        const phone = document.getElementById('ship-phone').value;
+        const notes = document.getElementById('ship-notes').value;
+
+        const orderRes = await API.post('/store/orders/create/', {
+            shipping_address: address,
+            state: state,
+            phone: phone,
+            notes: notes,
+        });
+
+        if (!orderRes || !orderRes.ok) {
+            Toast.error(orderRes?.data?.error || 'Failed to create order.');
+            if (btn) { btn.disabled = false; btn.textContent = 'Pay Now'; }
+            return;
+        }
+
+        createdOrder = orderRes.data;
+
+        // ── Step 3: Initiate PhonePe payment ─────────────────────────
+        const sessionRes = await API.post('/payments/initiate/', {
+            order_id: createdOrder.id,
+        });
+
+        if (!sessionRes || !sessionRes.ok || !sessionRes.data?.payment_url) {
+            Toast.error(
+                sessionRes?.data?.error ||
+                'Failed to initialize payment. Please try again.'
+            );
+            // Order was created but payment failed — show as pending
+            Toast.info('Your order has been saved. You can complete payment from your Orders page.');
+            showConfirmation(createdOrder, 'pending');
+            return;
+        }
+
+        if (sessionRes.data?.merchant_transaction_id) {
+            localStorage.setItem('pending_phonepe_txn', sessionRes.data.merchant_transaction_id);
+        }
+
+        // ── Step 4: Redirect to PhonePe payment page ─────────────────
+        Toast.info('Redirecting to secure payment page...');
+        window.location.href = sessionRes.data.payment_url;
+
+    } catch (err) {
+        console.error('Payment error:', err);
+        Toast.error('An unexpected error occurred. Please try again.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Pay Now'; }
+    }
+}
+
+
+// ─── Legacy Confirmation (for pending orders when payment init fails) ──
+function showConfirmation(order, paymentStatus) {
+    updateCartCount();
+    document.getElementById('confirmation-icon').innerHTML =
+        paymentStatus === 'confirmed' ? '<i class="ph ph-check-circle" style="color: var(--success);"></i>' : '<i class="ph ph-hourglass" style="color: var(--gold);"></i>';
+    document.getElementById('confirmation-title').textContent =
+        paymentStatus === 'confirmed' ? 'Order Confirmed!' : 'Order Created';
+    document.getElementById('confirmation-msg').textContent =
+        paymentStatus === 'confirmed'
+            ? 'Your payment has been confirmed. Thank you for your purchase!'
+            : 'Your order has been placed. Complete payment to confirm.';
+
+    document.getElementById('confirmation-details').innerHTML = `
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
+            <div><div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Order Number</div>
+                <div style="font-weight:700; color:var(--gold-light); font-size:1.1rem;">${order.order_number}</div></div>
+            <div><div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Total Amount</div>
+                <div style="font-weight:700; font-size:1.1rem;">${formatPrice(order.total_amount)}</div></div>
+            <div><div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Status</div>
+                <div><span class="order-status ${paymentStatus}">${paymentStatus}</span></div></div>
+            <div><div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Date</div>
+                <div>${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</div></div>
+        </div>`;
+
+    goToStep(3);
+}
+</script>
+{% endblock %}

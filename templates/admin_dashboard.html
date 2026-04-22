@@ -1,0 +1,837 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard — Iri Collections{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+    <!-- Mobile Header -->
+    <div class="admin-mobile-header">
+        <div style="font-family:var(--font-display); font-weight:700; color:var(--text-primary);">IRI <span class="text-gold">ADMIN</span></div>
+        <button class="admin-menu-toggle" onclick="toggleAdminSidebar()">☰</button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+        <div class="sidebar-header">
+            <div style="font-family:var(--font-display); font-size:1.1rem; color:var(--gold); margin-bottom:var(--space-2xl);">Admin Panel</div>
+            <button class="admin-sidebar-close" onclick="toggleAdminSidebar()">✕</button>
+        </div>
+        <ul class="admin-sidebar-nav">
+            <li><a href="#" onclick="showSection('overview')" class="active" id="nav-overview">📊 Overview</a></li>
+            <li><a href="#" onclick="showSection('products')" id="nav-products">📦 Products</a></li>
+            <li><a href="#" onclick="showSection('orders')" id="nav-orders">🛒 Orders</a></li>
+            <li><a href="#" onclick="showSection('categories')" id="nav-categories">🏷️ Categories</a></li>
+            <li><a href="#" onclick="showSection('traffic')" id="nav-traffic">📈 Traffic</a></li>
+        </ul>
+        <div style="margin-top:auto; padding-top:var(--space-2xl); border-top:1px solid var(--border);">
+            <a href="/" style="color:var(--text-muted); font-size:0.85rem;">← Back to Store</a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <!-- Section: Overview -->
+        <div id="section-overview">
+            <h2 style="font-family:var(--font-display); margin-bottom:var(--space-xl);">Dashboard <span class="text-gold">Overview</span></h2>
+            <div class="stat-cards" id="stat-cards">
+                <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">Total Revenue</div><div class="stat-value" id="stat-revenue">—</div></div>
+                <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-label">Total Orders</div><div class="stat-value" id="stat-orders">—</div></div>
+                <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-label">Pending Orders</div><div class="stat-value" id="stat-pending">—</div></div>
+                <div class="stat-card"><div class="stat-icon">💎</div><div class="stat-label">Active Products</div><div class="stat-value" id="stat-products">—</div></div>
+                <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-label">Low Stock</div><div class="stat-value" id="stat-lowstock">—</div></div>
+            </div>
+
+            <div class="charts-grid" style="display:grid; grid-template-columns:2fr 1fr; gap:var(--space-xl); margin-bottom:var(--space-xl);">
+                <div class="chart-container">
+                    <h3>Revenue (Last 30 Days)</h3>
+                    <canvas id="revenue-chart" height="240"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Orders by Status</h3>
+                    <canvas id="status-chart" height="240"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3>Top Selling Products</h3>
+                <div id="top-products-list"></div>
+            </div>
+        </div>
+
+        <!-- Section: Traffic -->
+        <div id="section-traffic" class="hidden">
+            <h2 style="font-family:var(--font-display); margin-bottom:var(--space-xl);">Website <span class="text-gold">Traffic</span></h2>
+            <div class="stat-cards" id="traffic-stat-cards">
+                <div class="stat-card"><div class="stat-icon">👁️</div><div class="stat-label">Total Views (30d)</div><div class="stat-value" id="traffic-total">—</div></div>
+                <div class="stat-card"><div class="stat-icon">👤</div><div class="stat-label">Unique Visitors (30d)</div><div class="stat-value" id="traffic-unique">—</div></div>
+                <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-label">Today's Views</div><div class="stat-value" id="traffic-today">—</div></div>
+                <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-label">Top Page Today</div><div class="stat-value" id="traffic-toppage" style="font-size:1rem; word-break:break-all;">—</div></div>
+            </div>
+
+            <div class="chart-container" style="margin-bottom:var(--space-xl);">
+                <h3>Daily Visitors (Last 30 Days)</h3>
+                <canvas id="traffic-chart" height="200"></canvas>
+            </div>
+
+            <div class="traffic-grid">
+                <div class="chart-container">
+                    <h3>Top Pages</h3>
+                    <div style="overflow-y:auto; max-height:320px;">
+                        <table class="top-pages-table" id="top-pages-table">
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h3>Device Breakdown</h3>
+                    <canvas id="device-chart" height="240"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Products -->
+        <div id="section-products" class="hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xl);">
+                <h2 style="font-family:var(--font-display);">Manage <span class="text-gold">Products</span></h2>
+                <button class="btn btn-primary" onclick="openProductModal()">+ Add Product</button>
+            </div>
+            <div class="admin-table-responsive">
+                <table class="admin-table" id="products-table">
+                    <thead>
+                        <tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="products-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Orders -->
+        <div id="section-orders" class="hidden">
+            <h2 style="font-family:var(--font-display); margin-bottom:var(--space-xl);">Manage <span class="text-gold">Orders</span></h2>
+            <div class="admin-table-responsive">
+                <table class="admin-table" id="orders-table">
+                    <thead>
+                        <tr><th>Order #</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="orders-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Categories -->
+        <div id="section-categories" class="hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xl);">
+                <h2 style="font-family:var(--font-display);">Manage <span class="text-gold">Categories</span></h2>
+                <button class="btn btn-primary" onclick="openCategoryModal()">+ Add Category</button>
+            </div>
+            <div id="categories-list"></div>
+        </div>
+    </main>
+</div>
+
+<!-- Product Modal -->
+<div class="modal-overlay" id="product-modal">
+    <div class="modal">
+        <h2 id="product-modal-title">Add Product</h2>
+        <form id="product-form">
+            <input type="hidden" id="product-edit-id">
+            <div class="form-group"><label>Name</label><input type="text" id="pf-name" required></div>
+            <div class="form-group"><label>Description</label><textarea id="pf-desc" rows="3" required></textarea></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
+                <div class="form-group"><label>Price (₹)</label><input type="number" id="pf-price" step="0.01" required></div>
+                <div class="form-group"><label>Compare Price (₹)</label><input type="number" id="pf-compare" step="0.01"></div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
+                <div class="form-group"><label>Stock</label><input type="number" id="pf-stock" required></div>
+                <div class="form-group"><label>Category</label><select id="pf-category" required></select></div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md); align-items: end;">
+                <div class="form-group"><label>Image URL</label><input type="url" id="pf-image" placeholder="https://..."></div>
+                <div class="form-group"><label>Or Upload Image</label><input type="file" id="pf-image-file" accept="image/*"></div>
+            </div>
+            <div id="pf-image-preview" style="margin-bottom: var(--space-md); display: none;">
+                <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Preview</label>
+                <img src="" alt="Preview" style="max-width: 100px; max-height: 100px; border-radius: var(--radius-sm); object-fit: cover; border: 1px solid var(--border);">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
+                <div class="form-group"><label>Material</label><input type="text" id="pf-material"></div>
+                <div class="form-group"><label>Weight</label><input type="text" id="pf-weight" placeholder="e.g. 5.2g"></div>
+            </div>
+            <div style="display:flex; gap:var(--space-md);">
+                <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.9rem;">
+                    <input type="checkbox" id="pf-active" checked> Active
+                </label>
+                <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.9rem;">
+                    <input type="checkbox" id="pf-featured"> Featured
+                </label>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('product-modal')">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="product-submit-btn">Save Product</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Category Modal -->
+<div class="modal-overlay" id="category-modal">
+    <div class="modal">
+        <h2 id="category-modal-title">Add Category</h2>
+        <form id="category-form">
+            <input type="hidden" id="cat-edit-id">
+            <div class="form-group"><label>Name</label><input type="text" id="cf-name" required></div>
+            <div class="form-group"><label>Description</label><textarea id="cf-desc" rows="2"></textarea></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('category-modal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Category</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Order Status Modal -->
+<div class="modal-overlay" id="order-modal">
+    <div class="modal">
+        <h2>Update Order Status</h2>
+        <input type="hidden" id="order-edit-id">
+        <div class="form-group">
+            <label>New Status</label>
+            <select id="order-status-select">
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal('order-modal')">Cancel</button>
+            <button class="btn btn-primary" onclick="updateOrderStatus()">Update Status</button>
+        </div>
+    </div>
+</div>
+
+<!-- Tracking Modal -->
+<div class="modal-overlay" id="tracking-modal">
+    <div class="modal">
+        <h2>Upload Tracking Image</h2>
+        <form id="tracking-form">
+            <input type="hidden" id="tracking-order-id">
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">Uploading a tracking slip will automatically change the order status to Delivered.</p>
+            <div class="form-group">
+                <label>Tracking Slip Image</label>
+                <input type="file" id="track-image-file" accept="image/*" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('tracking-modal')">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="track-submit-btn">Upload</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let revenueChart = null;
+let statusChart = null;
+let allCategories = [];
+
+// ─── Auth guard ─────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    if (!API.isLoggedIn() || !API.isAdmin()) {
+        Toast.error('Access denied. Admin only.');
+        setTimeout(() => window.location.href = '/', 1000);
+        return;
+    }
+    loadOverview();
+    loadAdminProducts();
+    loadAdminOrders();
+    loadAdminCategories();
+});
+
+// ─── Section navigation ────────────────────────
+function showSection(name) {
+    ['overview', 'products', 'orders', 'categories', 'traffic'].forEach(s => {
+        document.getElementById(`section-${s}`).classList.toggle('hidden', s !== name);
+        document.getElementById(`nav-${s}`).classList.toggle('active', s === name);
+    });
+    if (name === 'traffic' && !window._trafficLoaded) {
+        loadTrafficData();
+        window._trafficLoaded = true;
+    }
+}
+
+function toggleAdminSidebar() {
+    document.getElementById('admin-sidebar').classList.toggle('active');
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+}
+
+// ─── Overview / Analytics ──────────────────────
+async function loadOverview() {
+    try {
+        const data = await API.get('/store/admin/analytics/');
+        if (!data) return;
+
+        document.getElementById('stat-revenue').textContent = formatPrice(data.total_revenue);
+        document.getElementById('stat-orders').textContent = data.total_orders;
+        document.getElementById('stat-pending').textContent = data.pending_orders;
+        document.getElementById('stat-products').textContent = data.total_products;
+        document.getElementById('stat-lowstock').textContent = data.low_stock_products;
+
+        // Revenue chart
+        const ctx1 = document.getElementById('revenue-chart').getContext('2d');
+        const labels = data.daily_revenue.map(d => {
+            const dt = new Date(d.date);
+            return dt.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+        });
+        const revenues = data.daily_revenue.map(d => parseFloat(d.revenue));
+
+        if (revenueChart) revenueChart.destroy();
+        revenueChart = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: labels.length ? labels : ['No data'],
+                datasets: [{
+                    label: 'Revenue (₹)',
+                    data: revenues.length ? revenues : [0],
+                    borderColor: '#c9a84c',
+                    backgroundColor: 'rgba(201, 168, 76, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#c9a84c',
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b6660' } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b6660', callback: v => '₹' + v.toLocaleString() } }
+                }
+            }
+        });
+
+        // Status chart
+        const ctx2 = document.getElementById('status-chart').getContext('2d');
+        const statusLabels = data.status_breakdown.map(s => s.status);
+        const statusCounts = data.status_breakdown.map(s => s.count);
+        const statusColors = { pending: '#fbbf24', confirmed: '#60a5fa', shipped: '#c9a84c', delivered: '#4ade80', cancelled: '#f87171' };
+
+        if (statusChart) statusChart.destroy();
+        statusChart = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: statusLabels.length ? statusLabels : ['No orders'],
+                datasets: [{
+                    data: statusCounts.length ? statusCounts : [1],
+                    backgroundColor: statusLabels.length ? statusLabels.map(s => statusColors[s] || '#6b6660') : ['#1c1c28'],
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#a09b8f', padding: 15, font: { size: 12 } } }
+                },
+                cutout: '65%',
+            }
+        });
+
+        // Top products
+        const topList = document.getElementById('top-products-list');
+        if (data.top_products.length > 0) {
+            topList.innerHTML = data.top_products.map((p, i) => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; ${i < data.top_products.length - 1 ? 'border-bottom:1px solid var(--border);' : ''}">
+                    <div style="display:flex; align-items:center; gap:var(--space-md);">
+                        <span style="color:var(--gold); font-weight:700; width:24px;">#${i+1}</span>
+                        <span>${escapeHTML(p.product_name)}</span>
+                    </div>
+                    <div style="display:flex; gap:var(--space-xl); color:var(--text-secondary); font-size:0.9rem;">
+                        <span>${p.total_sold} sold</span>
+                        <span style="color:var(--gold-light); font-weight:600;">${formatPrice(p.total_revenue)}</span>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            topList.innerHTML = '<p class="text-muted">No sales data yet</p>';
+        }
+    } catch (err) {
+        console.error('Analytics error:', err);
+    }
+}
+
+// ─── Traffic Analytics ─────────────────────────
+let trafficChart = null;
+let deviceChart = null;
+
+async function loadTrafficData() {
+    try {
+        const data = await API.get('/store/admin/traffic/');
+        if (!data) return;
+
+        document.getElementById('traffic-total').textContent = data.total_views.toLocaleString();
+        document.getElementById('traffic-unique').textContent = data.unique_visitors.toLocaleString();
+        document.getElementById('traffic-today').textContent = data.today_views.toLocaleString();
+        document.getElementById('traffic-toppage').textContent = data.top_page || '—';
+
+        // Daily visitors chart
+        const tCtx = document.getElementById('traffic-chart').getContext('2d');
+        const tLabels = data.daily_views.map(d => {
+            const dt = new Date(d.date);
+            return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        });
+        if (trafficChart) trafficChart.destroy();
+        trafficChart = new Chart(tCtx, {
+            type: 'line',
+            data: {
+                labels: tLabels.length ? tLabels : ['No data'],
+                datasets: [
+                    {
+                        label: 'Page Views',
+                        data: data.daily_views.map(d => d.views),
+                        borderColor: '#c9a84c',
+                        backgroundColor: 'rgba(201,168,76,0.12)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#c9a84c',
+                    },
+                    {
+                        label: 'Unique Visitors',
+                        data: data.daily_views.map(d => d.unique),
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96,165,250,0.08)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#60a5fa',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top', labels: { color: '#6b6660', font: { size: 12 } } } },
+                scales: {
+                    x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#999' } },
+                    y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#999' }, beginAtZero: true }
+                }
+            }
+        });
+
+        // Top pages table
+        const tBody = document.querySelector('#top-pages-table tbody');
+        tBody.innerHTML = data.top_pages.length
+            ? data.top_pages.map((p, i) => `
+                <tr>
+                    <td style="color:var(--gold); font-weight:700; width:28px;">${i + 1}</td>
+                    <td class="page-path">${escapeHTML(p.path)}</td>
+                    <td class="page-count">${p.count.toLocaleString()}</td>
+                </tr>`).join('')
+            : '<tr><td colspan="3" style="color:var(--text-muted); padding:1rem;">No data yet — browse the site first</td></tr>';
+
+        // Device doughnut
+        const dCtx = document.getElementById('device-chart').getContext('2d');
+        const { mobile, desktop, tablet } = data.device_breakdown;
+        if (deviceChart) deviceChart.destroy();
+        deviceChart = new Chart(dCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Desktop', 'Mobile', 'Tablet'],
+                datasets: [{
+                    data: [desktop, mobile, tablet],
+                    backgroundColor: ['#c9a84c', '#60a5fa', '#4ade80'],
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#6b6660', padding: 16, font: { size: 12 } } }
+                },
+                cutout: '65%',
+            }
+        });
+    } catch (err) {
+        console.error('Traffic error:', err);
+    }
+}
+
+// ─── Products CRUD ─────────────────────────────
+async function loadAdminProducts() {
+    try {
+        const data = await API.get('/store/admin/products/');
+        if (!data) return;
+        const products = data.results || data;
+        const tbody = document.getElementById('products-tbody');
+        tbody.innerHTML = products.map(p => `
+            <tr>
+                <td>
+                    <div style="display:flex; align-items:center; gap:var(--space-md);">
+                        <img src="${p.display_image || p.image_url || ''}" alt="" style="width:40px; height:40px; border-radius:var(--radius-sm); object-fit:cover; background:var(--bg-elevated);">
+                        <div>
+                            <div style="font-weight:600;">${escapeHTML(p.name)}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${escapeHTML(p.material || '')}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>${escapeHTML(p.category_name || '')}</td>
+                <td style="color:var(--gold-light); font-weight:600;">${formatPrice(p.price)}</td>
+                <td><span class="stock-badge ${p.stock === 0 ? 'out-of-stock' : p.stock <= 5 ? 'low-stock' : 'in-stock'}" style="font-size:0.8rem;">${p.stock}</span></td>
+                <td>${p.is_active ? '<span style="color:var(--success);">Active</span>' : '<span style="color:var(--text-muted);">Inactive</span>'}</td>
+                <td>
+                    <div style="display:flex; gap:var(--space-sm);">
+                        <button class="btn btn-ghost btn-sm" onclick="editProduct(${p.id})">Edit</button>
+                        <button class="btn btn-ghost btn-sm" style="color:var(--error);" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Delete</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function loadCategoryOptions() {
+    try {
+        const cats = await API.get('/store/categories/');
+        allCategories = cats || [];
+        const sel = document.getElementById('pf-category');
+        sel.innerHTML = allCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    } catch {}
+}
+
+function openProductModal(product = null) {
+    loadCategoryOptions();
+    const form = document.getElementById('product-form');
+    form.reset();
+    document.getElementById('product-edit-id').value = '';
+    
+    // Reset preview
+    const preview = document.getElementById('pf-image-preview');
+    const img = preview.querySelector('img');
+    preview.style.display = 'none';
+    img.src = '';
+    document.getElementById('pf-image-file').value = '';
+
+    if (product) {
+        document.getElementById('product-modal-title').textContent = 'Edit Product';
+        document.getElementById('product-edit-id').value = product.id;
+        document.getElementById('pf-name').value = product.name;
+        document.getElementById('pf-desc').value = product.description;
+        document.getElementById('pf-price').value = product.price;
+        document.getElementById('pf-compare').value = product.compare_price || '';
+        document.getElementById('pf-stock').value = product.stock;
+        document.getElementById('pf-image').value = product.image_url || '';
+        document.getElementById('pf-material').value = product.material || '';
+        document.getElementById('pf-weight').value = product.weight || '';
+        document.getElementById('pf-active').checked = product.is_active;
+        document.getElementById('pf-featured').checked = product.is_featured;
+
+        // Show existing image preview if available
+        const existingImg = product.display_image || product.image_url;
+        if (existingImg) {
+            img.src = existingImg;
+            preview.style.display = 'block';
+        }
+
+        setTimeout(() => {
+            document.getElementById('pf-category').value = product.category;
+        }, 200);
+    } else {
+        document.getElementById('product-modal-title').textContent = 'Add Product';
+    }
+    openModal('product-modal');
+}
+
+// Image preview logic — stores base64 for later submission
+let pendingImageBase64 = null;
+
+document.getElementById('pf-image-file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('pf-image-preview');
+    const img = preview.querySelector('img');
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            pendingImageBase64 = e.target.result; // store the base64 data URL
+            img.src = pendingImageBase64;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        pendingImageBase64 = null;
+        preview.style.display = 'none';
+    }
+});
+
+document.getElementById('product-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const editId = document.getElementById('product-edit-id').value;
+    const btn = document.getElementById('product-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    // Build JSON payload (no FormData / no multipart file upload)
+    const payload = {
+        name: document.getElementById('pf-name').value,
+        description: document.getElementById('pf-desc').value,
+        price: document.getElementById('pf-price').value,
+        stock: document.getElementById('pf-stock').value,
+        category: document.getElementById('pf-category').value,
+        material: document.getElementById('pf-material').value,
+        weight: document.getElementById('pf-weight').value,
+        is_active: document.getElementById('pf-active').checked,
+        is_featured: document.getElementById('pf-featured').checked,
+    };
+
+    const comparePrice = document.getElementById('pf-compare').value;
+    if (comparePrice) payload.compare_price = comparePrice;
+
+    // Image priority: uploaded file (as base64) > typed URL > keep existing
+    if (pendingImageBase64) {
+        payload.image_url = pendingImageBase64;
+    } else {
+        const imageUrl = document.getElementById('pf-image').value;
+        if (imageUrl) payload.image_url = imageUrl;
+    }
+
+    let res;
+    if (editId) {
+        res = await API.patch(`/store/admin/products/${editId}/`, payload);
+    } else {
+        res = await API.post('/store/admin/products/', payload);
+    }
+
+    if (res && res.ok) {
+        Toast.success(editId ? 'Product updated!' : 'Product created!');
+        closeModal('product-modal');
+        loadAdminProducts();
+        pendingImageBase64 = null; // reset
+    } else {
+        Toast.error(JSON.stringify(res?.data) || 'Failed to save product.');
+    }
+    btn.disabled = false;
+    btn.textContent = 'Save Product';
+});
+
+async function editProduct(id) {
+    const res = await API.get(`/store/admin/products/${id}/`);
+    if (res) openProductModal(res);
+}
+
+async function deleteProduct(id, name) {
+    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    const res = await API.request(`/store/admin/products/${id}/`, { method: 'DELETE' });
+    if (res && res.ok) {
+        Toast.success('Product deleted');
+        loadAdminProducts();
+    } else {
+        Toast.error('Failed to delete product.');
+    }
+}
+
+// ─── Orders Management ────────────────────────
+async function loadAdminOrders() {
+    try {
+        const data = await API.get('/store/admin/orders/');
+        if (!data) return;
+        const orders = data.results || data;
+        const tbody = document.getElementById('orders-tbody');
+        tbody.innerHTML = orders.map(o => {
+            const date = new Date(o.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+            return `
+                <tr>
+                    <td><span style="font-weight:600; color:var(--gold-light);">${escapeHTML(o.order_number)}</span></td>
+                    <td>${escapeHTML(o.shipping_address?.split(',')[0] || '—')}</td>
+                    <td style="font-weight:600;">${formatPrice(o.total_amount)}</td>
+                    <td><span class="order-status ${o.status}">${o.status}</span></td>
+                    <td style="color:var(--text-muted); font-size:0.85rem;">${date}</td>
+                    <td>
+                        <div style="display:flex; gap:var(--space-sm); align-items:center;">
+                            <a href="/invoice/${o.id}/" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;" title="Print Invoice">🖨️</a>
+                            ${o.status === 'shipped' ? `<button class="btn btn-ghost btn-sm" onclick="openTrackingModal(${o.id})">Tracking</button>` : ''}
+                            <button class="btn btn-ghost btn-sm" onclick="openOrderStatusModal(${o.id}, '${o.status}')">Update</button>
+                            <button class="btn btn-ghost btn-sm" style="color:var(--error);" onclick="deleteOrder(${o.id}, '${o.order_number}')">Delete</button>
+                        </div>
+                    </td>
+                </tr>`;
+        }).join('');
+        if (orders.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">No orders yet</td></tr>';
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function openOrderStatusModal(orderId, currentStatus) {
+    document.getElementById('order-edit-id').value = orderId;
+    document.getElementById('order-status-select').value = currentStatus;
+    openModal('order-modal');
+}
+
+async function updateOrderStatus() {
+    const orderId = document.getElementById('order-edit-id').value;
+    const newStatus = document.getElementById('order-status-select').value;
+    const res = await API.patch(`/store/admin/orders/${orderId}/status/`, { status: newStatus });
+    if (res && res.ok) {
+        Toast.success(`Order updated to ${newStatus}`);
+        closeModal('order-modal');
+        loadAdminOrders();
+        loadOverview();
+    } else {
+        Toast.error(res?.data?.error || 'Failed to update order.');
+    }
+}
+
+async function deleteOrder(id, orderNumber) {
+    if (!confirm(`Delete order ${orderNumber}? This will remove it permanently.`)) return;
+    const res = await API.request(`/store/admin/orders/${id}/`, { method: 'DELETE' });
+    if (res && res.ok) {
+        Toast.success('Order deleted');
+        loadAdminOrders();
+        loadOverview();
+    } else {
+        Toast.error('Failed to delete order.');
+    }
+}
+
+function openTrackingModal(orderId) {
+    document.getElementById('tracking-form').reset();
+    document.getElementById('tracking-order-id').value = orderId;
+    openModal('tracking-modal');
+}
+
+document.getElementById('tracking-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('track-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Uploading...';
+    
+    const orderId = document.getElementById('tracking-order-id').value;
+    const file = document.getElementById('track-image-file').files[0];
+    const formData = new FormData();
+    formData.append('tracking_image', file);
+
+    const token = API.getToken();
+    const res = await fetch(`/api/store/admin/orders/${orderId}/tracking/`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+    });
+
+    if (res.ok) {
+        Toast.success('Tracking image uploaded. Status is now Delivered.');
+        closeModal('tracking-modal');
+        loadAdminOrders();
+        loadOverview();
+    } else {
+        const err = await res.json();
+        Toast.error(err.error || 'Failed to upload tracking image.');
+    }
+    btn.disabled = false;
+    btn.textContent = 'Upload';
+});
+
+// ─── Categories Management ─────────────────────
+async function loadAdminCategories() {
+    try {
+        const cats = await API.get('/store/categories/');
+        if (!cats) return;
+        allCategories = cats;
+        const container = document.getElementById('categories-list');
+        container.innerHTML = cats.map(c => `
+            <div class="order-card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:600; font-size:1.05rem;">${escapeHTML(c.name)}</div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">${c.product_count} products · /${escapeHTML(c.slug)}</div>
+                </div>
+                <div style="display:flex; gap:var(--space-sm);">
+                    <button class="btn btn-ghost btn-sm" onclick="editCategory(${c.id}, '${c.name.replace(/'/g, "\\'")}', '${(c.description || '').replace(/'/g, "\\'")}')">Edit</button>
+                    <button class="btn btn-ghost btn-sm" style="color:var(--error);" onclick="deleteCategory(${c.id}, '${c.name.replace(/'/g, "\\'")}')">Delete</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function openCategoryModal(cat = null) {
+    document.getElementById('category-form').reset();
+    document.getElementById('cat-edit-id').value = '';
+    if (cat) {
+        document.getElementById('category-modal-title').textContent = 'Edit Category';
+        document.getElementById('cat-edit-id').value = cat.id;
+        document.getElementById('cf-name').value = cat.name;
+        document.getElementById('cf-desc').value = cat.description || '';
+    } else {
+        document.getElementById('category-modal-title').textContent = 'Add Category';
+    }
+    openModal('category-modal');
+}
+
+function editCategory(id, name, desc) {
+    openCategoryModal({ id, name, description: desc });
+}
+
+document.getElementById('category-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const editId = document.getElementById('cat-edit-id').value;
+    const data = {
+        name: document.getElementById('cf-name').value,
+        description: document.getElementById('cf-desc').value,
+    };
+
+    let res;
+    if (editId) {
+        res = await API.request(`/store/admin/categories/${editId}/`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' }
+        });
+    } else {
+        res = await API.request('/store/admin/categories/', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    if (res && res.ok) {
+        Toast.success(editId ? 'Category updated!' : 'Category created!');
+        closeModal('category-modal');
+        loadAdminCategories();
+    } else {
+        Toast.error('Failed to save category.');
+    }
+});
+
+async function deleteCategory(id, name) {
+    if (!confirm(`Delete category "${name}"? Products in this category may be affected.`)) return;
+    const res = await API.request(`/store/admin/categories/${id}/`, { method: 'DELETE' });
+    if (res && res.ok) {
+        Toast.success('Category deleted');
+        loadAdminCategories();
+    } else {
+        Toast.error('Failed to delete category. Remove associated products first.');
+    }
+}
+</script>
+{% endblock %}

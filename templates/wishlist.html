@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Wishlist — Iri Collections{% endblock %}
+{% block meta_description %}Your saved jewelry pieces at Iri Collections. Add to cart or keep saving for later.{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <h1 style="font-family: var(--font-display); font-size: 2.2rem;">My <span class="text-gold">Wishlist</span></h1>
+            <div class="section-divider"></div>
+        </div>
+
+        <div id="wishlist-content">
+            <div class="page-loader"><div class="spinner"></div></div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadWishlist() {
+    const container = document.getElementById('wishlist-content');
+
+    if (!API.isLoggedIn()) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="ph ph-heart"></i></div>
+                <h3>Your wishlist awaits</h3>
+                <p>Please <a href="/login/">sign in</a> to view your saved items</p>
+            </div>`;
+        return;
+    }
+
+    try {
+        const items = await API.get('/store/wishlist/');
+        renderWishlist(items);
+    } catch (err) {
+        container.innerHTML = `<p class="text-center text-muted">Failed to load wishlist.</p>`;
+    }
+}
+
+function renderWishlist(items) {
+    const container = document.getElementById('wishlist-content');
+
+    if (!items || items.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="ph ph-heart"></i></div>
+                <h3>Your wishlist is empty</h3>
+                <p>Browse our collection and save your favourite pieces</p>
+                <a href="/catalog/" class="btn btn-primary mt-2">Explore Collection</a>
+            </div>`;
+        return;
+    }
+
+    const header = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xl);">
+            <span style="color:var(--text-secondary);">${items.length} saved item${items.length !== 1 ? 's' : ''}</span>
+            <a href="/catalog/" class="btn btn-ghost btn-sm"><i class="ph ph-arrow-left"></i> Continue Shopping</a>
+        </div>`;
+
+    const grid = `
+        <div class="grid-products" id="wishlist-grid">
+            ${items.map(p => wishlistCardHTML(p)).join('')}
+        </div>`;
+
+    container.innerHTML = header + grid;
+    initLazyLoading();
+}
+
+function wishlistCardHTML(p) {
+    const imgSrc = p.display_image || p.image_url || p.image || '';
+    const isOOS = p.stock <= 0;
+    const discount = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
+    const cardOpacity = isOOS ? '0.65' : '1';
+
+    return `
+        <div class="card product-card fade-in" style="opacity:${cardOpacity}; position:relative;" data-product-id="${p.id}">
+            <a href="/product/${p.slug}/" style="text-decoration:none; color:inherit;">
+                <div class="product-card-image">
+                    <img data-src="${imgSrc}" alt="${escapeHTML(p.name)}"
+                         src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Crect fill='%2316161f' width='400' height='400'/%3E%3C/svg%3E">
+                    ${discount > 0 && !isOOS ? `<span class="product-card-badge">${discount}% Off</span>` : ''}
+                    ${isOOS ? `<span class="product-card-badge" style="background:var(--error);color:white;">Out of Stock</span>` : ''}
+                </div>
+            </a>
+            <!-- Wishlist (remove) button -->
+            <button
+                id="btn-wishlist-${p.id}"
+                onclick="removeFromWishlistPage(${p.id}, this)"
+                title="Remove from wishlist"
+                style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.55); color:var(--gold); border:none; border-radius:50%; width:36px; height:36px; font-size:1.2rem; cursor:pointer; z-index:2; transition:transform 0.2s; display:flex; align-items:center; justify-content:center;"><i class="ph-fill ph-heart"></i></button>
+
+            <div class="product-card-info">
+                <div class="product-card-category">${escapeHTML(p.category_name || '')}</div>
+                <h3 class="product-card-name">${escapeHTML(p.name)}</h3>
+                <div class="product-card-price">
+                    <span class="current">${formatPrice(p.price)}</span>
+                    ${p.compare_price ? `<span class="original">${formatPrice(p.compare_price)}</span>` : ''}
+                    ${discount > 0 ? `<span class="discount">${discount}% off</span>` : ''}
+                </div>
+                <div style="margin-top:var(--space-md);">
+                    ${isOOS
+                        ? `<button class="btn btn-primary btn-block" disabled style="opacity:0.5;cursor:not-allowed;">Out of Stock</button>`
+                        : `<button class="btn btn-primary btn-block" onclick="addToCartFromWishlist(${p.id})"><i class="ph ph-shopping-cart"></i> Add to Cart</button>`
+                    }
+                </div>
+            </div>
+        </div>`;
+}
+
+async function removeFromWishlistPage(productId, btn) {
+    // Optimistically animate
+    btn.style.transform = 'scale(0.8)';
+    const res = await API.delete('/store/wishlist/', { product_id: productId });
+    if (res && res.ok) {
+        window.wishlistItems.delete(productId);
+        updateWishlistBadge();
+        // Remove the card with a fade
+        const card = document.querySelector(`[data-product-id="${productId}"]`);
+        if (card) {
+            card.style.transition = 'opacity 0.35s, transform 0.35s';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.92)';
+            setTimeout(() => {
+                card.remove();
+                // Update header count
+                const remaining = document.querySelectorAll('#wishlist-grid [data-product-id]').length;
+                const hdr = document.querySelector('#wishlist-content span[style*="color:var(--text-secondary)"]');
+                if (hdr) hdr.textContent = `${remaining} saved item${remaining !== 1 ? 's' : ''}`;
+                if (remaining === 0) renderWishlist([]);
+            }, 380);
+        }
+        Toast.success('Removed from wishlist');
+    } else {
+        btn.style.transform = 'none';
+        Toast.error('Failed to remove item');
+    }
+}
+
+async function addToCartFromWishlist(productId) {
+    await addToCart(productId, 1);
+}
+
+document.addEventListener('DOMContentLoaded', loadWishlist);
+</script>
+{% endblock %}

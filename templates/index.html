@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Iri Collections — Exquisite Jewelry{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-shader"></div>
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-badge"><i class="ph ph-sparkle"></i> New Collection 2026</div>
+            <h1 class="hero-title">
+                <span class="thin">This is</span>
+                <span class="bold">Iri Collections</span>
+                <span class="italic-thin">Shop our Collections here</span>
+            </h1>
+            <p>Discover our curated collection of jewelry — from exquisite gold necklaces to dazzling trendy earrings.
+            </p>
+            <div class="hero-buttons">
+                <a href="/catalog/" class="btn btn-premium">Explore Collection</a>
+                <a href="/catalog/?featured=true" class="btn btn-outline-gold">Featured Pieces</a>
+            </div>
+        </div>
+        <div class="hero-image-premium">
+        </div>
+</section>
+
+
+<!-- Featured Products -->
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Featured <span class="text-gold">Pieces</span></h2>
+            <div class="section-divider"></div>
+        </div>
+        <div class="grid-products" id="featured-products">
+            <!-- Populated by JS -->
+            <div class="page-loader">
+                <div class="spinner"></div>
+            </div>
+        </div>
+        <div class="text-center mt-2">
+            <a href="/catalog/" class="btn btn-secondary">View All Products</a>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="section" style="background: var(--bg-secondary);">
+    <div class="container">
+        <div class="section-header">
+            <h2>Shop by <span class="text-gold">Category</span></h2>
+            <div class="section-divider"></div>
+        </div>
+        <div class="grid-products" id="categories-grid">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Load featured products
+        try {
+            const data = await API.get('/store/products/?featured=true');
+            const container = document.getElementById('featured-products');
+            if (data && data.results && data.results.length > 0) {
+                container.innerHTML = data.results.map(p => productCardHTML(p)).join('');
+                initLazyLoading();
+            } else {
+                // Fallback: load all products  
+                const allData = await API.get('/store/products/');
+                if (allData && allData.results) {
+                    container.innerHTML = allData.results.slice(0, 4).map(p => productCardHTML(p)).join('');
+                    initLazyLoading();
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load products:', err);
+        }
+
+        // Load categories
+        try {
+            const cats = await API.get('/store/categories/');
+            const catGrid = document.getElementById('categories-grid');
+            if (cats && cats.length > 0) {
+                catGrid.innerHTML = cats.map(cat => `
+                <a href="/catalog/?category=${cat.slug}" class="card feature-card" style="cursor:pointer; text-decoration:none;">
+                    <div class="feature-icon">
+                        ${{
+                        'Necklaces': '<i class="ph ph-flower-lotus"></i>', 'Earrings': '<i class="ph ph-sparkle"></i>', 'Bracelets': '<i class="ph ph-asterisk"></i>',
+                        'Rings': '<i class="ph ph-circle-notch"></i>', 'Anklets': '<i class="ph ph-link"></i>'
+                    }[cat.name] || '<i class="ph ph-diamond"></i>'}
+                    </div>
+                    <h3>${cat.name}</h3>
+                    <p>${cat.product_count} pieces</p>
+                </a>
+            `).join('');
+            }
+        } catch (err) {
+            console.error('Failed to load categories:', err);
+        }
+    });
+</script>
+{% endblock %}

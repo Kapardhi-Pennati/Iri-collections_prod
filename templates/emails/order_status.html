@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Status Update</title>
+</head>
+
+<body style="margin:0; padding:0; background-color:#0e0e14; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+        style="background-color:#0e0e14; padding:40px 20px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                    style="background-color:#16161f; border-radius:12px; overflow:hidden; border:1px solid #2a2a3d;">
+                    <!-- Header -->
+                    <tr>
+                        <td
+                            style="background:linear-gradient(135deg,#c9a84c,#d4af5a); padding:32px; text-align:center;">
+                            <h1 style="margin:0; color:#0e0e14; font-size:28px; letter-spacing:1px;">Iri Collections
+                            </h1>
+                        </td>
+                    </tr>
+                    <!-- Status Badge -->
+                    <tr>
+                        <td style="padding:32px 32px 0; text-align:center;">
+                            <div style="font-size:48px; margin-bottom:8px;">{{ new_status_emoji }}</div>
+                            <h2 style="color:#c9a84c; margin:0 0 8px; font-size:22px;">Order {{ new_status }}</h2>
+                            <p style="color:#6b6b80; font-size:14px; margin:0;">Order #{{ order_number }}</p>
+                        </td>
+                    </tr>
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding:24px 32px;">
+                            <p style="color:#a0a0b8; line-height:1.8; margin:0 0 24px; font-size:15px;">
+                                Hi {{ user_name }}, your order status has been updated:
+                            </p>
+                            <!-- Status Change Card -->
+                            <div style="background-color:#1e1e2e; border-radius:8px; padding:20px; margin-bottom:24px;">
+                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td style="color:#6b6b80; font-size:13px; padding-bottom:8px;">Previous Status
+                                        </td>
+                                        <td
+                                            style="color:#6b6b80; font-size:13px; padding-bottom:8px; text-align:right;">
+                                            New Status</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color:#a0a0b8; font-size:16px; font-weight:600;">{{ old_status }}
+                                        </td>
+                                        <td style="text-align:right;">
+                                            <span
+                                                style="background:linear-gradient(135deg,#c9a84c,#d4af5a); color:#0e0e14; padding:6px 16px; border-radius:20px; font-weight:700; font-size:14px;">
+                                                {{ new_status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            {% if is_shipped %}
+                            <div
+                                style="background-color:#1a2a1a; border-radius:8px; padding:16px; border-left:3px solid #27ae60; margin-bottom:24px;">
+                                <p style="color:#a0a0b8; font-size:13px; margin:0; line-height:1.6;">
+                                    🚚 Your order is on its way! You'll receive a delivery update soon.
+                                </p>
+                            </div>
+                            {% endif %}
+                            {% if is_cancelled %}
+                            <div
+                                style="background-color:#2a1a1a; border-radius:8px; padding:16px; border-left:3px solid #e74c3c; margin-bottom:24px;">
+                                <p style="color:#a0a0b8; font-size:13px; margin:0; line-height:1.6;">
+                                    If any payment was made, a refund has been initiated to your original payment
+                                    method. Refunds typically take 5–7 business days to process.
+                                </p>
+                            </div>
+                            {% endif %}
+                            {% if is_delivered %}
+                            <div
+                                style="background-color:#1a2a1a; border-radius:8px; padding:16px; border-left:3px solid #27ae60; margin-bottom:24px;">
+                                <p style="color:#a0a0b8; font-size:13px; margin:0; line-height:1.6;">
+                                    📦 Your order has been handed of to the delivery partner!
+                                </p>
+                            </div>
+                            {% endif %}
+                            <!-- Order Summary -->
+                            <div style="background-color:#1e1e2e; border-radius:8px; padding:16px; margin-bottom:24px;">
+                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td style="color:#6b6b80; font-size:13px;">Order Total</td>
+                                        <td style="color:#c9a84c; font-size:16px; font-weight:700; text-align:right;">
+                                            ₹{{ total_amount }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;">
+                                <tr>
+                                    <td
+                                        style="background:linear-gradient(135deg,#c9a84c,#d4af5a); border-radius:8px; padding:14px 32px;">
+                                        <a href="{{ site_url }}/orders/"
+                                            style="color:#0e0e14; text-decoration:none; font-weight:700; font-size:15px; display:block;">
+                                            View Order Details →
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding:24px 32px; border-top:1px solid #2a2a3d; text-align:center;">
+                            <p style="color:#6b6b80; font-size:12px; margin:0; line-height:1.6;">
+                                © {{ current_year }} Iri Collections. All rights reserved.<br>
+                                Need help? Contact us at <a href="mailto:{{ support_email }}"
+                                    style="color:#c9a84c; text-decoration:none;">{{ support_email }}</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

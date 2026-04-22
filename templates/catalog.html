@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shop Jewelry — Iri Collections{% endblock %}
+{% block meta_description %}Browse our curated collection of handcrafted jewelry. Necklaces, earrings, rings, bracelets & more.{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <h1 style="font-family: var(--font-display); font-size: 2.5rem;">Our <span class="text-gold">Collection</span></h1>
+            <div class="section-divider"></div>
+        </div>
+
+        <!-- Filters Bar -->
+        <div class="catalog-filters-row" style="display:flex; gap:var(--space-md); flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:var(--space-xl);">
+            <div class="categories-bar" id="category-filters" style="margin-bottom:0;">
+                <button class="category-chip active" data-category="">All</button>
+                <!-- Populated by JS -->
+            </div>
+            <div class="catalog-search-sort" style="display:flex; gap:var(--space-md); align-items:center;">
+                <input type="text" id="search-input" placeholder="Search jewelry..." style="width:220px;">
+                <select id="sort-select" style="width:180px;">
+                    <option value="">Sort by</option>
+                    <option value="price_low">Price: Low to High</option>
+                    <option value="price_high">Price: High to Low</option>
+                    <option value="newest">Newest First</option>
+                </select>
+            </div>
+        </div>
+
+
+        <!-- Products Grid -->
+        <div class="grid-products" id="products-grid">
+            <div class="page-loader"><div class="spinner"></div></div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="text-center mt-2" style="display:flex; gap:var(--space-sm); justify-content:center;"></div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentCategory = '';
+let currentSearch = '';
+let currentSort = '';
+let currentPage = 1;
+
+async function loadProducts(page = 1) {
+    const grid = document.getElementById('products-grid');
+    grid.innerHTML = '<div class="page-loader"><div class="spinner"></div></div>';
+
+    let url = `/store/products/?page=${page}`;
+    if (currentCategory) url += `&category=${currentCategory}`;
+    if (currentSearch) url += `&search=${encodeURIComponent(currentSearch)}`;
+    if (currentSort) url += `&sort=${currentSort}`;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('featured') === 'true') url += '&featured=true';
+
+    try {
+        const data = await API.get(url);
+        if (data && data.results && data.results.length > 0) {
+            grid.innerHTML = data.results.map(p => productCardHTML(p)).join('');
+            initLazyLoading();
+            renderPagination(data);
+        } else {
+            grid.innerHTML = `
+                <div class="empty-state" style="grid-column: 1/-1;">
+                    <div class="empty-state-icon"><i class="ph ph-diamond"></i></div>
+                    <h3>No products found</h3>
+                    <p>Try adjusting your filters or search terms</p>
+                </div>
+            `;
+            document.getElementById('pagination').innerHTML = '';
+        }
+    } catch (err) {
+        grid.innerHTML = '<p class="text-center text-muted">Failed to load products.</p>';
+    }
+}
+
+function renderPagination(data) {
+    const pag = document.getElementById('pagination');
+    if (!data.next && !data.previous) { pag.innerHTML = ''; return; }
+
+    let html = '';
+    if (data.previous) {
+        html += `<button class="btn btn-ghost btn-sm" onclick="loadProducts(${currentPage - 1}); currentPage--;"><i class="ph ph-arrow-left"></i> Prev</button>`;
+    }
+    html += `<span class="btn btn-ghost btn-sm" style="pointer-events:none;">Page ${currentPage}</span>`;
+    if (data.next) {
+        html += `<button class="btn btn-ghost btn-sm" onclick="loadProducts(${currentPage + 1}); currentPage++;">Next <i class="ph ph-arrow-right"></i></button>`;
+    }
+    pag.innerHTML = html;
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // Check URL params for category
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('category')) currentCategory = params.get('category');
+
+    // Load categories for filter chips
+    try {
+        const cats = await API.get('/store/categories/');
+        const filters = document.getElementById('category-filters');
+        if (cats) {
+            cats.forEach(cat => {
+                const chip = document.createElement('button');
+                chip.className = 'category-chip' + (currentCategory === cat.slug ? ' active' : '');
+                chip.dataset.category = cat.slug;
+                chip.textContent = cat.name;
+                filters.appendChild(chip);
+                if (currentCategory === cat.slug) {
+                    filters.querySelector('[data-category=""]').classList.remove('active');
+                }
+            });
+        }
+    } catch {}
+
+    // Category click
+    document.getElementById('category-filters').addEventListener('click', (e) => {
+        if (!e.target.classList.contains('category-chip')) return;
+        document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+        e.target.classList.add('active');
+        currentCategory = e.target.dataset.category;
+        currentPage = 1;
+        loadProducts(1);
+    });
+
+    // Search
+    let searchTimer;
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            currentSearch = e.target.value;
+            currentPage = 1;
+            loadProducts(1);
+        }, 400);
+    });
+
+    // Sort
+    document.getElementById('sort-select').addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        currentPage = 1;
+        loadProducts(1);
+    });
+
+    loadProducts(1);
+});
+</script>
+{% endblock %}

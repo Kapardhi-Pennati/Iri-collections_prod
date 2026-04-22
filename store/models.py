@@ -1,0 +1,302 @@
+import uuid
+from django.db import models
+from django.conf import settings
+from django.utils.text import slugify
+from django.core.mail import send_mail
+
+
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=120, unique=True, blank=True)
+    description = models.TextField(blank=True)
+    image = models.ImageField(upload_to="categories/", blank=True, null=True)
+
+    class Meta:
+        db_table = "categories"
+        verbose_name_plural = "Categories"
+        ordering = ["name"]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+class Product(models.Model):
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=220, unique=True, blank=True)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    compare_price = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    stock = models.PositiveIntegerField(default=0)
+    category = models.ForeignKey(
+        Category, on_delete=models.PROTECT, related_name="products"
+    )
+    image = models.ImageField(upload_to="products/", blank=True, null=True)
+    image_url = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    is_featured = models.BooleanField(default=False, db_index=True)
+    material = models.CharField(max_length=100, blank=True)
+    weight = models.CharField(max_length=50, blank=True, help_text="e.g. 5.2g")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "products"
+        ordering = ["-created_at"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(price__gte=0), name="product_price_positive"
+            ),
+            models.CheckConstraint(
+                check=models.Q(stock__gte=0), name="product_stock_positive"
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+            while Product.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def in_stock(self):
+        return self.stock > 0
+
+    @property
+    def display_image(self):
+        if self.image:
+            return self.image.url
+        return self.image_url or ""
+
+
+class Cart(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="cart"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "carts"
+
+    def __str__(self):
+        return f"Cart of {self.user.email}"
+
+    @property
+    def total(self):
+        return sum(item.subtotal for item in self.items.all())
+
+    @property
+    def item_count(self) -> int:
+        """
+        Return the total number of in-stock items in the cart.
+
+        Refactored from a Python loop (N+1 queries — one per item) to a
+        single ORM aggregate query. Using filter(product__stock__gt=0)
+        pushes the stock check into SQL, not Python.
+        """
+        from django.db.models import Sum
+        result = (
+            self.items.filter(product__stock__gt=0)
+            .aggregate(total=Sum("quantity"))["total"]
+        )
+        return result or 0
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        db_table = "cart_items"
+        unique_together = ("cart", "product")
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(quantity__gt=0), name="cartitem_quantity_positive"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.quantity}x {self.product.name}"
+
+    @property
+    def subtotal(self):
+        if self.product.stock <= 0:
+            return 0
+        return self.product.price * self.quantity
+
+
+class Order(models.Model):
+    STATUS_CHOICES = (
+        ("pending", "Pending"),
+        ("confirmed", "Confirmed"),
+        ("shipped", "Shipped"),
+        ("delivered", "Delivered"),
+        ("cancelled", "Cancelled"),
+    )
+    order_number = models.CharField(max_length=20, unique=True, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders"
+    )
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    shipping_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    status = models.CharField(
+        max_length=12, choices=STATUS_CHOICES, default="pending", db_index=True
+    )
+    shipping_address = models.TextField()
+    phone = models.CharField(max_length=15, blank=True)
+    notes = models.TextField(blank=True)
+    tracking_image = models.ImageField(upload_to="tracking/", blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "orders"
+        ordering = ["-created_at"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(total_amount__gte=0), name="order_total_positive"
+            )
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_status = self.status
+
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            self.order_number = f"IRI-{uuid.uuid4().hex[:8].upper()}"
+
+        # If image uploaded while shipped -> move to delivered
+        if self.status == "shipped" and self.tracking_image and not getattr(self, "_delivering", False):
+            self.status = "delivered"
+            self._delivering = True
+
+        super().save(*args, **kwargs)
+
+        # ✅ Email notifications are now handled asynchronously via:
+        #    store/signals.py → post_save signal → Celery task
+        #    (see core/tasks.py → task_send_order_status_email)
+        #
+        # The signal reads _original_status to detect changes and
+        # dispatches the task with .delay() so SMTP never blocks the request.
+
+    def __str__(self):
+        return self.order_number
+
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
+    product_name = models.CharField(max_length=200)
+    quantity = models.PositiveIntegerField()
+    price_at_purchase = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        db_table = "order_items"
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(quantity__gt=0), name="orderitem_quantity_positive"
+            ),
+            models.CheckConstraint(
+                check=models.Q(price_at_purchase__gte=0),
+                name="orderitem_price_positive",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.quantity}x {self.product_name}"
+
+    @property
+    def subtotal(self):
+        return self.price_at_purchase * self.quantity
+
+
+class Transaction(models.Model):
+    """Records a payment transaction against an order via PhonePe."""
+    STATUS_CHOICES = (
+        ("created", "Created"),
+        ("paid", "Paid"),
+        ("failed", "Failed"),
+        ("pending", "Pending"),   # PhonePe PAYMENT_PENDING state
+    )
+    order = models.OneToOneField(
+        Order, on_delete=models.CASCADE, related_name="transaction"
+    )
+    # PhonePe: our unique transaction ID sent in the payment request
+    merchant_transaction_id = models.CharField(
+        max_length=255, blank=True, db_index=True,
+        help_text="Our unique ID sent to PhonePe (merchantTransactionId)",
+    )
+    # PhonePe: the transaction ID assigned by PhonePe on their side
+    phonepe_transaction_id = models.CharField(
+        max_length=255, blank=True,
+        help_text="PhonePe's own transaction reference ID",
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(
+        max_length=10, choices=STATUS_CHOICES, default="created", db_index=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Cancel order automatically if payment failed
+        if self.status == "failed" and self.order.status != "cancelled":
+            self.order.status = "cancelled"
+            self.order.save()
+
+    def __str__(self):
+        return f"Txn {self.merchant_transaction_id} - {self.status}"
+
+
+class Wishlist(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="wishlist"
+    )
+    products = models.ManyToManyField(Product, related_name="wishlisted_by")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "wishlists"
+
+    def __str__(self):
+        return f"Wishlist of {self.user.email}"
+
+
+class PageView(models.Model):
+    """Tracks page visits for website traffic analytics."""
+    path = models.CharField(max_length=500)
+    session_key = models.CharField(max_length=100, blank=True, db_index=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="page_views",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        db_table = "page_views"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.path} @ {self.created_at:%Y-%m-%d %H:%M}"

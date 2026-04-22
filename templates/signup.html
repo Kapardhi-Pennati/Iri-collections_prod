@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account — Iri Collections{% endblock %}
+{% block meta_description %}Join Iri Collections — create your account and discover exquisite jewelry.{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card card-glass">
+        <h1>Join <span class="text-gold">Iri Collections</span></h1>
+        <p class="subtitle">Create your account to start shopping</p>
+
+        <form id="signup-form">
+            <div class="form-group">
+                <label for="full_name">Full Name</label>
+                <input type="text" id="full_name" placeholder="Your full name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="you@example.com" required autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" placeholder="+91 9876543210">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Min. 8 characters" required minlength="8">
+            </div>
+            <div class="form-group">
+                <label for="password2">Confirm Password</label>
+                <input type="password" id="password2" placeholder="Repeat password" required>
+            </div>
+            <div id="signup-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg" id="send-otp-btn">Send Verification OTP</button>
+        </form>
+
+        <form id="otp-form" style="display:none; margin-top:1rem;">
+            <p>We've sent a 6-digit code to your email. Enter it below to complete registration.</p>
+            <div class="form-group">
+                <label for="otp_code">Verification Code</label>
+                <input type="text" id="otp_code" placeholder="123456" required maxlength="6" pattern="\d{6}">
+            </div>
+            <div id="otp-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg" id="signup-btn">Verify & Create Account</button>
+        </form>
+
+        <div class="auth-footer" style="margin-top:2rem;">
+            Already have an account? <a href="/login/">Sign in</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let userEmail = "";
+
+document.getElementById('signup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('send-otp-btn');
+    const errEl = document.getElementById('signup-error');
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const password2 = document.getElementById('password2').value;
+
+    if (password !== password2) {
+        errEl.textContent = 'Passwords do not match.';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending OTP...';
+    errEl.style.display = 'none';
+
+    // Step 1: Request OTP
+    const res = await API.post('/auth/request-otp/', { email: email, action: 'signup' });
+
+    if (res && res.ok) {
+        userEmail = email;
+        Toast.success('OTP sent to your email!');
+        document.getElementById('signup-form').style.display = 'none';
+        document.getElementById('otp-form').style.display = 'block';
+    } else {
+        errEl.textContent = res?.data?.error || 'Failed to send OTP. Please try again.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Send Verification OTP';
+    }
+});
+
+document.getElementById('otp-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('signup-btn');
+    const errEl = document.getElementById('otp-error');
+    btn.disabled = true;
+    btn.textContent = 'Creating account...';
+    errEl.style.display = 'none';
+
+    const otp_code = document.getElementById('otp_code').value;
+
+    // Step 2: Verify OTP
+    const verifyRes = await API.post('/auth/verify-otp/', { email: userEmail, otp_code });
+    if (!verifyRes || !verifyRes.ok) {
+        errEl.textContent = verifyRes?.data?.error || 'Invalid OTP. Try again.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Verify & Create Account';
+        return;
+    }
+
+    // Step 3: Register Details
+    const data = {
+        full_name: document.getElementById('full_name').value,
+        email: userEmail,
+        username: userEmail.split('@')[0],
+        phone: document.getElementById('phone').value,
+        password: document.getElementById('password').value,
+        password2: document.getElementById('password2').value,
+    };
+
+    const res = await API.post('/auth/register/', data);
+
+    if (res && res.ok) {
+        API.setTokens(res.data.tokens);
+        API.setUser(res.data.user);
+        Toast.success('Account created successfully!');
+        setTimeout(() => window.location.href = '/', 500);
+    } else {
+        const errors = res?.data;
+        let msg = 'Registration failed. ';
+        if (errors) {
+            for (const [key, val] of Object.entries(errors)) {
+                if (typeof val === 'string') msg += val;
+                else if (Array.isArray(val)) msg += val.join(' ');
+            }
+        }
+        errEl.textContent = msg;
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Verify & Create Account';
+    }
+});
+</script>
+{% endblock %}
