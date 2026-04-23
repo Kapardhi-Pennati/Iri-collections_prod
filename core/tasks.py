@@ -118,17 +118,6 @@ def task_send_otp_email(self, email: str, otp_code: str) -> bool:
     This is separate from the token-based verification email because
     the OTP flow is the existing signup mechanism in this codebase.
     """
-    from core.services.email_service import send_html_email
+    from core.services.email_service import send_otp_email
 
-    context = {
-        "otp_code": otp_code,
-        "email": email,
-        "expiry_minutes": 15,
-    }
-
-    return send_html_email(
-        subject="Your OTP Verification Code — Iri Collections",
-        template_name="emails/otp_code.html",
-        context=context,
-        recipient_list=[email],
-    )
+    return send_otp_email(email=email, otp_code=otp_code)

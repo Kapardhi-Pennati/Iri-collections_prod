@@ -121,6 +121,32 @@ def send_html_email(
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# OTP EMAIL
+# ═══════════════════════════════════════════════════════════════════════════
+
+def send_otp_email(email: str, otp_code: str) -> bool:
+    """
+    Send OTP verification code email (signup/password-reset flow).
+
+    Args:
+        email: Recipient email address.
+        otp_code: 6-digit one-time password.
+    """
+    context = {
+        "otp_code": otp_code,
+        "email": email,
+        "expiry_minutes": 15,
+    }
+
+    return send_html_email(
+        subject="Your OTP Verification Code — Iri Collections",
+        template_name="emails/otp_code.html",
+        context=context,
+        recipient_list=[email],
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # 1. WELCOME EMAIL
 # ═══════════════════════════════════════════════════════════════════════════
 

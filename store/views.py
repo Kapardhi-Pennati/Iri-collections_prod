@@ -674,12 +674,67 @@ class AdminOrderDetailView(generics.RetrieveDestroyAPIView):
 class AdminOrderStatusView(APIView):
     permission_classes = [IsAdminRole]
 
+    _allowed_transitions = {
+        "pending": {"confirmed", "cancelled"},
+        "confirmed": {"shipped", "cancelled"},
+        "shipped": {"delivered", "cancelled"},
+        "delivered": set(),
+        "cancelled": set(),
+    }
+
     def patch(self, request, pk):
         try:
-            order = Order.objects.get(pk=pk)
-            new_status = request.data.get("status")
+            order = Order.objects.select_related("transaction").get(pk=pk)
+            new_status = str(request.data.get("status", "")).strip().lower()
+
+            valid_statuses = {choice[0] for choice in Order.STATUS_CHOICES}
+            if new_status not in valid_statuses:
+                return Response(
+                    {"error": "Invalid order status."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if new_status == order.status:
+                return Response(OrderSerializer(order).data)
+
+            allowed_next = self._allowed_transitions.get(order.status, set())
+            if new_status not in allowed_next:
+                return Response(
+                    {
+                        "error": (
+                            f"Invalid status transition: {order.status} -> {new_status}."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if new_status in {"confirmed", "shipped", "delivered"}:
+                txn = getattr(order, "transaction", None)
+                if not txn or txn.status != "paid":
+                    return Response(
+                        {
+                            "error": (
+                                "Order cannot be moved to fulfillment without an approved payment. "
+                                "Please approve the payment proof first."
+                            )
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
             order.status = new_status
-            order.save()
+            order.save(update_fields=["status"])
+
+            audit_log(
+                action="ADMIN_ORDER_STATUS_UPDATED",
+                user_id=request.user.id,
+                details={
+                    "order_id": order.id,
+                    "order_number": order.order_number,
+                    "new_status": new_status,
+                },
+                severity="INFO",
+            )
+
             return Response(OrderSerializer(order).data)
         except Order.DoesNotExist:
             return Response({"error": "Order not found."}, status=status.HTTP_404_NOT_FOUND)

@@ -91,6 +91,33 @@ def _require_valid_email(
     return True, email, None
 
 
+def _dispatch_email_task(task, fallback, *args) -> bool:
+    """
+    Try async email dispatch first, then fall back to synchronous send.
+
+    This keeps auth flows functional even when Celery broker/workers
+    are temporarily unavailable.
+    """
+    try:
+        task.delay(*args)
+        return True
+    except Exception as exc:
+        logger.warning(
+            "Async email dispatch failed for %s; using sync fallback. error=%s",
+            getattr(task, "name", getattr(task, "__name__", "unknown_task")),
+            str(exc),
+        )
+
+    try:
+        return bool(fallback(*args))
+    except Exception:
+        logger.exception(
+            "Sync email fallback failed for %s.",
+            getattr(fallback, "__name__", "unknown_fallback"),
+        )
+        return False
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # OTP GENERATION & VERIFICATION
 # ─────────────────────────────────────────────────────────────────────────────
@@ -153,13 +180,32 @@ class RequestOTPView(APIView):
 
         # Deferred imports prevent circular dependency: views→tasks→email_service
         from core.tasks import task_send_otp_email, task_send_password_reset_email
+        from core.services.email_service import (
+            send_otp_email,
+            send_password_reset_email,
+        )
 
-        task_send_otp_email.delay(email, otp_code)
+        otp_dispatched = _dispatch_email_task(
+            task_send_otp_email,
+            send_otp_email,
+            email,
+            otp_code,
+        )
+        if not otp_dispatched:
+            OTP.objects.filter(email=email).delete()
+            return Response(
+                {"error": "Failed to send OTP. Please try again in a moment."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
         if action == "reset":
             try:
                 user = User.objects.get(email=email)
-                task_send_password_reset_email.delay(user.id)
+                _dispatch_email_task(
+                    task_send_password_reset_email,
+                    send_password_reset_email,
+                    user.id,
+                )
             except User.DoesNotExist:
                 pass  # Guarded by anti-enumeration check above
 
@@ -311,8 +357,17 @@ class RegisterView(generics.CreateAPIView):
         otp.delete()  # Consume the OTP — cannot be reused
 
         from core.tasks import task_send_verification_email, task_send_welcome_email
-        task_send_welcome_email.delay(user.id)
-        task_send_verification_email.delay(user.id)
+        from core.services.email_service import (
+            send_verification_email,
+            send_welcome_email,
+        )
+
+        _dispatch_email_task(task_send_welcome_email, send_welcome_email, user.id)
+        _dispatch_email_task(
+            task_send_verification_email,
+            send_verification_email,
+            user.id,
+        )
 
         audit_log(
             action="USER_REGISTERED",

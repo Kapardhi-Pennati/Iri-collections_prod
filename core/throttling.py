@@ -2,12 +2,29 @@
 Custom DRF throttle classes for endpoint-specific rate limiting.
 """
 
-from rest_framework.throttling import BaseThrottle
-from rest_framework.response import Response
-from django.core.cache import cache
 import logging
 
+from django.core.cache import cache
+from rest_framework.throttling import BaseThrottle
+
 logger = logging.getLogger(__name__)
+
+
+def _safe_cache_get(key: str, default: int = 0) -> int:
+    """Read cache safely; fail open on backend outages."""
+    try:
+        return cache.get(key, default)
+    except Exception:
+        logger.warning("Throttle cache read failed for key=%s", key)
+        return default
+
+
+def _safe_cache_set(key: str, value: int, ttl_seconds: int) -> None:
+    """Write cache safely; fail open on backend outages."""
+    try:
+        cache.set(key, value, ttl_seconds)
+    except Exception:
+        logger.warning("Throttle cache write failed for key=%s", key)
 
 
 class OTPThrottle(BaseThrottle):
@@ -23,13 +40,13 @@ class OTPThrottle(BaseThrottle):
             return False  # Reject if no email provided
         
         cache_key = f"throttle_otp:{email}"
-        request_count = cache.get(cache_key, 0)
+        request_count = _safe_cache_get(cache_key, 0)
         
         if request_count >= 3:
             logger.warning(f"OTP rate limit exceeded for email: {email}")
             return False
         
-        cache.set(cache_key, request_count + 1, 3600)  # 1 hour
+        _safe_cache_set(cache_key, request_count + 1, 3600)  # 1 hour
         return True
     
     def throttle_success(self):
@@ -55,14 +72,14 @@ class LoginThrottle(BaseThrottle):
             return False
         
         cache_key = f"throttle_login:{email}"
-        attempt_count = cache.get(cache_key, 0)
+        attempt_count = _safe_cache_get(cache_key, 0)
         
         # Hard rate limit at 5 attempts per hour
         if attempt_count >= 5:
             logger.warning(f"Login rate limit exceeded for email: {email}")
             return False
         
-        cache.set(cache_key, attempt_count + 1, 3600)
+        _safe_cache_set(cache_key, attempt_count + 1, 3600)
         return True
     
     def throttle_failure(self):
@@ -84,13 +101,13 @@ class PaymentThrottle(BaseThrottle):
         
         user_id = request.user.id
         cache_key = f"throttle_payment:{user_id}"
-        attempt_count = cache.get(cache_key, 0)
+        attempt_count = _safe_cache_get(cache_key, 0)
         
         if attempt_count >= 10:
             logger.warning(f"Payment rate limit exceeded for user: {user_id}")
             return False
         
-        cache.set(cache_key, attempt_count + 1, 60)
+        _safe_cache_set(cache_key, attempt_count + 1, 60)
         return True
     
     def throttle_failure(self):
@@ -115,13 +132,13 @@ class AdminThrottle(BaseThrottle):
         
         user_id = request.user.id
         cache_key = f"throttle_admin:{user_id}"
-        attempt_count = cache.get(cache_key, 0)
+        attempt_count = _safe_cache_get(cache_key, 0)
         
         if attempt_count >= 100:
             logger.warning(f"Admin rate limit exceeded for user: {user_id}")
             return False
         
-        cache.set(cache_key, attempt_count + 1, 60)
+        _safe_cache_set(cache_key, attempt_count + 1, 60)
         return True
     
     def throttle_failure(self):
@@ -143,13 +160,13 @@ class PincodeVerifyThrottle(BaseThrottle):
         
         client_ip = get_client_ip(request)
         cache_key = f"throttle_pincode:{client_ip}"
-        attempt_count = cache.get(cache_key, 0)
+        attempt_count = _safe_cache_get(cache_key, 0)
         
         if attempt_count >= 20:
             logger.warning(f"Pincode verify rate limit exceeded for IP: {client_ip}")
             return False
         
-        cache.set(cache_key, attempt_count + 1, 3600)
+        _safe_cache_set(cache_key, attempt_count + 1, 3600)
         return True
     
     def throttle_failure(self):

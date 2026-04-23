@@ -349,30 +349,29 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PAYMENTS (PHONEPE)
+# PAYMENTS (Static UPI QR Code)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# 🔴 CRITICAL: PhonePe credentials must be set via environment variables.
-# Obtain from PhonePe merchant dashboard: https://dashboard.phonepe.com/
-PHONEPE_MERCHANT_ID = os.getenv("PHONEPE_MERCHANT_ID", "")
-PHONEPE_SALT_KEY = os.getenv("PHONEPE_SALT_KEY", "")
-PHONEPE_SALT_INDEX = os.getenv("PHONEPE_SALT_INDEX", "1")
+# Static UPI QR code approach:
+# - QR image is served from /static/img/upi_qr.png (hardcoded, tamper-proof)
+# - Customers scan, pay, and upload a screenshot
+# - Admin verifies the screenshot and approves/rejects the order
+# - Even if the site is hacked, the QR code image cannot be changed
+#   to redirect payments elsewhere
 
-if not PHONEPE_MERCHANT_ID or not PHONEPE_SALT_KEY:
-    _pay_logger = logging.getLogger(__name__)
-    if not DEBUG:
-        _pay_logger.warning(
-            "⚠️  PHONEPE_MERCHANT_ID or PHONEPE_SALT_KEY missing. "
-            "Payments will fail in production."
-        )
-    else:
-        _pay_logger.info(
-            "ℹ️  PhonePe credentials not set — running in sandbox/dev mode."
-        )
+# UPI ID displayed alongside QR code (for manual entry)
+UPI_ID = os.getenv("UPI_ID", "your-upi-id@paytm")
+UPI_DISPLAY_NAME = os.getenv("UPI_DISPLAY_NAME", "Iri Collections")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CACHING (for rate limiting, sessions)
 # ─────────────────────────────────────────────────────────────────────────────
+
+REDIS_IGNORE_EXCEPTIONS = os.getenv("REDIS_IGNORE_EXCEPTIONS", "true").lower() in (
+    "1",
+    "true",
+    "yes",
+)
 
 CACHES = {
     "default": {
@@ -380,6 +379,7 @@ CACHES = {
         "LOCATION": os.getenv("REDIS_URL", "redis://127.0.0.1:6379/1"),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "IGNORE_EXCEPTIONS": REDIS_IGNORE_EXCEPTIONS,
             "CONNECTION_POOL_KWARGS": {
                 # ✅ Prevent connection pool exhaustion
                 "max_connections": 50,
@@ -390,6 +390,9 @@ CACHES = {
         "TIMEOUT": 300,  # Default 5 minute timeout
     }
 }
+
+# Keep Django cache consumers running even if Redis is temporarily unavailable.
+DJANGO_REDIS_IGNORE_EXCEPTIONS = REDIS_IGNORE_EXCEPTIONS
 
 # Fallback to in-memory cache if Redis unavailable
 if os.getenv("USE_LOCAL_CACHE") == "true" or not os.getenv("REDIS_URL"):

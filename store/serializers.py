@@ -109,10 +109,11 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = (
             "id",
-            "merchant_transaction_id",
-            "phonepe_transaction_id",
+            "payment_screenshot",
+            "upi_reference_id",
             "status",
             "amount",
+            "admin_notes",
             "created_at",
         )
 

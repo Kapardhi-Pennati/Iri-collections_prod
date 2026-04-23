@@ -228,41 +228,46 @@ class OrderItem(models.Model):
 
 
 class Transaction(models.Model):
-    """Records a payment transaction against an order via PhonePe."""
+    """Records a payment transaction against an order via manual UPI QR verification."""
     STATUS_CHOICES = (
-        ("created", "Created"),
+        ("pending_verification", "Pending Verification"),
         ("paid", "Paid"),
-        ("failed", "Failed"),
-        ("pending", "Pending"),   # PhonePe PAYMENT_PENDING state
+        ("rejected", "Rejected"),
     )
     order = models.OneToOneField(
         Order, on_delete=models.CASCADE, related_name="transaction"
     )
-    # PhonePe: our unique transaction ID sent in the payment request
-    merchant_transaction_id = models.CharField(
-        max_length=255, blank=True, db_index=True,
-        help_text="Our unique ID sent to PhonePe (merchantTransactionId)",
+    # Customer uploads a screenshot of their UPI payment
+    payment_screenshot = models.ImageField(
+        upload_to="payment_proofs/", blank=True, null=True,
+        help_text="Screenshot of UPI payment uploaded by customer",
     )
-    # PhonePe: the transaction ID assigned by PhonePe on their side
-    phonepe_transaction_id = models.CharField(
-        max_length=255, blank=True,
-        help_text="PhonePe's own transaction reference ID",
+    # Customer enters the UPI transaction reference / UTR number
+    upi_reference_id = models.CharField(
+        max_length=100, blank=True,
+        help_text="UPI transaction reference (UTR) entered by customer",
     )
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(
-        max_length=10, choices=STATUS_CHOICES, default="created", db_index=True
+        max_length=25, choices=STATUS_CHOICES, default="pending_verification", db_index=True
+    )
+    admin_notes = models.TextField(
+        blank=True,
+        help_text="Admin notes when approving/rejecting payment",
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        # Cancel order automatically if payment failed
-        if self.status == "failed" and self.order.status != "cancelled":
-            self.order.status = "cancelled"
-            self.order.save()
+        # Auto-cancel order when payment is rejected
+        if self.status == "rejected":
+            self.order.refresh_from_db(fields=["status"])
+            if self.order.status == "pending":
+                self.order.status = "cancelled"
+                self.order.save(update_fields=["status"])
 
     def __str__(self):
-        return f"Txn {self.merchant_transaction_id} - {self.status}"
+        return f"Txn for Order {self.order.order_number} - {self.status}"
 
 
 class Wishlist(models.Model):

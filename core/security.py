@@ -165,6 +165,11 @@ def is_rate_limited(key: str, max_attempts: int, window_seconds: int) -> bool:
         cache.set(cache_key, 1, window_seconds)
         return False
 
+    # Some cache backends may return None when errors are ignored.
+    if not isinstance(current, int):
+        logger.warning("Rate limit cache unavailable for key: %s", sanitize_for_log(key))
+        return False
+
     if current > max_attempts:
         logger.warning("Rate limit exceeded for key: %s", sanitize_for_log(key))
         return True
@@ -174,6 +179,8 @@ def is_rate_limited(key: str, max_attempts: int, window_seconds: int) -> bool:
 def get_rate_limit_remaining(key: str, max_attempts: int) -> int:
     """Return attempts remaining before rate limiting triggers."""
     attempts = cache.get(f"ratelimit:{key}", 0)
+    if not isinstance(attempts, int):
+        attempts = 0
     return max(0, max_attempts - attempts)
 
 
@@ -304,7 +311,14 @@ def increment_failed_login_attempts(user_id: int) -> int:
     if cache.add(cache_key, 1, LOGIN_LOCKOUT_SECONDS):
         return 1
     try:
-        return cache.incr(cache_key)
+        current = cache.incr(cache_key)
+        if isinstance(current, int):
+            return current
+        logger.warning(
+            "Failed-login cache unavailable for user_id=%s; defaulting to 1.",
+            user_id,
+        )
+        return 1
     except ValueError:
         cache.set(cache_key, 1, LOGIN_LOCKOUT_SECONDS)
         return 1

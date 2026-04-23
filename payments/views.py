@@ -1,94 +1,65 @@
 """
-payments/views.py — PhonePe Payment Gateway Views
+payments/views.py — Static UPI QR Code Payment Views
 
 Endpoints:
-  POST /api/payments/initiate/          → Create PhonePe payment, return redirect URL
-  POST /api/payments/callback/          → PhonePe server-to-server callback (webhook)
-  GET  /api/payments/status/<txn_id>/  → Verify payment status after redirect
-  GET  /api/payments/health-check/     → Gateway connectivity check
+  POST /api/payments/upload-proof/    → Customer uploads payment screenshot + UTR
+  POST /api/payments/approve/<pk>/    → Admin approves payment (confirms order)
+  POST /api/payments/reject/<pk>/     → Admin rejects payment (cancels order)
+
+Flow:
+  1. Customer places order → order status = 'pending'
+  2. Customer scans static UPI QR, pays, uploads screenshot + UTR
+  3. Admin reviews screenshot in dashboard
+  4. Admin approves → stock deducted, order confirmed
+  5. Admin rejects → order cancelled
 
 Security:
-  ✅ Callback endpoint verifies PhonePe X-VERIFY checksum before trusting data
-  ✅ Status endpoint polls PhonePe directly — never trusts client-side redirect params
-  ✅ All fulfillment is atomic + idempotent
-  ✅ Audit logging on every significant event
+  ✅ QR code is a static image — cannot be changed even if site is compromised
+  ✅ Admin manually verifies every payment before confirming
+  ✅ Stock deduction only happens after admin approval
+  ✅ All actions are audit-logged
 """
 
-import base64
-import json
 import logging
 
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.db import transaction
 
 from core.security import audit_log, get_client_ip
-from store.models import Order, Transaction
-
-from .services import (
-    check_phonepe_health,
-    check_payment_status,
-    create_phonepe_payment,
-    fulfill_order_after_payment,
-    rollback_order_inventory,
-    _verify_callback_checksum,
-)
+from store.models import Order, OrderItem, Product, Transaction
+from store.views import IsAdminRole
 
 logger = logging.getLogger("payments")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 1. GATEWAY HEALTH CHECK
+# 1. UPLOAD PAYMENT PROOF (Customer)
 # ─────────────────────────────────────────────────────────────────────────────
 
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def payment_health_check(request) -> Response:
+class UploadPaymentProofView(APIView):
     """
-    Lightweight check that PhonePe credentials are configured and the
-    API host is reachable. Safe to call from monitoring systems.
-    """
-    is_healthy, error = check_phonepe_health()
-    if is_healthy:
-        return Response({"status": "healthy", "healthy": True, "gateway": "PhonePe"})
-    return Response(
-        {"status": "unhealthy", "healthy": False, "error": error},
-        status=status.HTTP_503_SERVICE_UNAVAILABLE,
-    )
+    Customer uploads UPI payment screenshot and UTR reference for a pending order.
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 2. INITIATE PAYMENT
-# ─────────────────────────────────────────────────────────────────────────────
-
-class InitiatePaymentView(APIView):
-    """
-    Initiate a PhonePe payment for an existing pending order.
-
-    The client submits the order ID; we build and sign the PhonePe request
-    server-side (amount from our DB, never from the client) and return the
-    redirect URL.
-
-    Request body:
-        { "order_id": 123 }
-
-    Response (success):
-        {
-            "payment_url": "https://mercury-t2.phonepe.com/...",
-            "merchant_transaction_id": "IRI-XXXXXXXX-YYYYYYYY"
-        }
+    Request:
+        POST /api/payments/upload-proof/
+        Content-Type: multipart/form-data
+        Body:
+          - order_id: int (required)
+          - payment_screenshot: file (required, image)
+          - upi_reference_id: str (optional but recommended)
 
     Security:
-        ✅ Order must belong to the authenticated user (IDOR prevention)
-        ✅ Only 'pending' orders can be paid (prevents double-payment)
-        ✅ Amount is read from DB — client cannot manipulate price
-        ✅ Existing unpaid transaction is reused (idempotent)
+        ✅ Only the order owner can upload proof
+        ✅ Only pending orders accept proof uploads
+        ✅ File upload validated (image only)
+        ✅ Audit logged
     """
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request) -> Response:
         order_id = request.data.get("order_id")
@@ -108,10 +79,7 @@ class InitiatePaymentView(APIView):
 
         # ── Fetch order (scoped to this user — IDOR guard) ───────────
         try:
-            order = Order.objects.prefetch_related("items").get(
-                id=order_id,
-                user=request.user,
-            )
+            order = Order.objects.get(id=order_id, user=request.user)
         except Order.DoesNotExist:
             return Response(
                 {"error": "Order not found."},
@@ -120,300 +88,239 @@ class InitiatePaymentView(APIView):
 
         if order.status != "pending":
             return Response(
-                {"error": f"Order is already {order.status} and cannot be paid again."},
+                {"error": f"Order is already {order.status}. Cannot upload payment proof."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if order.items.count() == 0:
+        # ── Validate screenshot file ─────────────────────────────────
+        screenshot = request.FILES.get("payment_screenshot")
+        if not screenshot:
             return Response(
-                {"error": "Order has no items."},
+                {"error": "payment_screenshot file is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ── Build redirect/callback URLs ──────────────────────────────
-        origin = request.META.get(
-            "HTTP_ORIGIN",
-            request.build_absolute_uri("/").rstrip("/"),
-        )
-        redirect_url = f"{origin}/checkout/?payment=result"
-        callback_url = request.build_absolute_uri("/api/payments/callback/")
-
-        # ── Initiate PhonePe payment ──────────────────────────────────
-        payment_url, merchant_transaction_id, error = create_phonepe_payment(
-            order=order,
-            redirect_url=redirect_url,
-            callback_url=callback_url,
-        )
-
-        if error:
+        # Validate file type
+        allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+        if screenshot.content_type not in allowed_types:
             return Response(
-                {"error": error},
-                status=status.HTTP_502_BAD_GATEWAY,
+                {"error": "Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ── Create a Transaction record to track this payment ─────────
-        Transaction.objects.update_or_create(
+        # Validate file size (max 5 MB)
+        if screenshot.size > 5 * 1024 * 1024:
+            return Response(
+                {"error": "File too large. Maximum 5 MB allowed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        upi_reference = str(request.data.get("upi_reference_id", "")).strip()
+
+        # ── Create or update transaction ──────────────────────────────
+        txn, created = Transaction.objects.update_or_create(
             order=order,
             defaults={
-                "merchant_transaction_id": merchant_transaction_id,
+                "payment_screenshot": screenshot,
+                "upi_reference_id": upi_reference,
                 "amount": order.total_amount,
-                "status": "created",
+                "status": "pending_verification",
             },
         )
 
         audit_log(
-            action="PAYMENT_INITIATED",
+            action="PAYMENT_PROOF_UPLOADED",
             user_id=request.user.id,
             details={
                 "order_id": str(order.id),
                 "order_number": order.order_number,
-                "merchant_transaction_id": merchant_transaction_id,
+                "upi_reference_id": upi_reference,
+                "file_size": str(screenshot.size),
             },
             severity="INFO",
             ip_address=get_client_ip(request),
         )
 
         return Response({
-            "payment_url": payment_url,
-            "merchant_transaction_id": merchant_transaction_id,
+            "message": "Payment proof uploaded successfully. Awaiting admin verification.",
+            "order_number": order.order_number,
+            "status": "pending_verification",
         })
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 3. PHONEPE CALLBACK (Server-to-Server Webhook)
+# 2. APPROVE PAYMENT (Admin)
 # ─────────────────────────────────────────────────────────────────────────────
 
-@method_decorator(csrf_exempt, name="dispatch")
-class PhonePeCallbackView(APIView):
+class ApprovePaymentView(APIView):
     """
-    Receive PhonePe's server-to-server payment result callback.
+    Admin approves a payment after verifying the screenshot.
 
-    PhonePe POSTs a Base64-encoded payload with an X-VERIFY header.
-    We verify the signature before processing — any request with an
-    invalid checksum is rejected immediately (prevents spoofed callbacks).
-
-    PhonePe callback format:
-        POST body: { "response": "<base64_encoded_json>" }
-        Header:    X-VERIFY: <sha256>###<salt_index>
+    This atomically:
+      1. Sets transaction status to 'paid'
+      2. Confirms the order
+      3. Deducts inventory
 
     Security:
-        ✅ CSRF exempted (PhonePe cannot send CSRF tokens)
-        ✅ X-VERIFY checksum verified before any DB writes
-        ✅ Idempotent fulfillment (safe to call multiple times)
-        ✅ Only PAYMENT_SUCCESS triggers order confirmation
-        ✅ Failed payments update Transaction.status to 'failed'
+        ✅ Admin-only access
+        ✅ Atomic transaction with row-level locking
+        ✅ Idempotent (safe to call twice)
+        ✅ Stock validation with graceful degradation
     """
-    permission_classes = [AllowAny]  # PhonePe cannot authenticate as a user
+    permission_classes = [IsAdminRole]
 
-    def post(self, request) -> Response:
-        from django.conf import settings as django_settings
-
-        # ── Extract and validate the callback payload ─────────────────
-        x_verify = request.META.get("HTTP_X_VERIFY", "")
-        body_data = request.data
-
-        base64_response = body_data.get("response", "")
-        if not base64_response:
-            logger.warning("PhonePe callback received with empty response body")
-            return Response(
-                {"error": "Invalid callback payload."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # ── Verify checksum BEFORE decoding payload ───────────────────
-        salt_key = django_settings.PHONEPE_SALT_KEY
-        salt_index = str(django_settings.PHONEPE_SALT_INDEX)
-
-        if not _verify_callback_checksum(x_verify, base64_response, salt_key, salt_index):
-            logger.critical(
-                "PhonePe callback checksum FAILED — possible spoofing attempt. "
-                "IP: %s  X-VERIFY: %s",
-                get_client_ip(request), x_verify[:50],
-            )
-            audit_log(
-                action="PHONEPE_CALLBACK_CHECKSUM_FAILED",
-                details={"ip": get_client_ip(request)},
-                severity="CRITICAL",
-            )
-            return Response(
-                {"error": "Invalid signature."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # ── Decode and parse the verified payload ─────────────────────
+    @transaction.atomic
+    def post(self, request, pk) -> Response:
         try:
-            decoded = base64.b64decode(base64_response).decode("utf-8")
-            payload = json.loads(decoded)
-        except Exception as e:
-            logger.error("PhonePe callback payload decode failed: %s", e)
-            return Response(
-                {"error": "Malformed callback payload."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # ── Extract key fields from payload ───────────────────────────
-        phonepe_code = payload.get("code", "")
-        data = payload.get("data", {})
-        merchant_transaction_id = data.get("merchantTransactionId", "")
-        phonepe_transaction_id = data.get("transactionId", "")
-        state = data.get("state", "FAILED")
-
-        if not merchant_transaction_id:
-            logger.error("PhonePe callback missing merchantTransactionId: %s", payload)
-            return Response(
-                {"error": "Missing transaction ID."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # ── Process based on payment state ────────────────────────────
-        if phonepe_code == "PAYMENT_SUCCESS" and state == "COMPLETED":
-            # Update phonepe_transaction_id before fulfillment
-            try:
-                txn = Transaction.objects.get(
-                    merchant_transaction_id=merchant_transaction_id
-                )
-                txn.phonepe_transaction_id = phonepe_transaction_id
-                txn.save(update_fields=["phonepe_transaction_id"])
-            except Transaction.DoesNotExist:
-                logger.error(
-                    "Callback: no Transaction for merchant_txn_id=%s",
-                    merchant_transaction_id,
-                )
-
-            fulfilled = fulfill_order_after_payment(merchant_transaction_id)
-            if fulfilled:
-                logger.info(
-                    "PhonePe callback: order fulfilled for txn %s",
-                    merchant_transaction_id,
-                )
-                return Response({"status": "OK"})
-            return Response(
-                {"status": "ALREADY_PROCESSED"},
-                status=status.HTTP_200_OK,
-            )
-
-        elif phonepe_code in ("PAYMENT_ERROR", "PAYMENT_DECLINED", "TIMED_OUT"):
-            # Mark transaction and order as failed
-            try:
-                txn = Transaction.objects.get(
-                    merchant_transaction_id=merchant_transaction_id
-                )
-                txn.status = "failed"
-                txn.phonepe_transaction_id = phonepe_transaction_id
-                txn.save(update_fields=["status", "phonepe_transaction_id"])
-                # Transaction.save() auto-cancels the linked order
-            except Transaction.DoesNotExist:
-                logger.warning(
-                    "Callback: failed payment for unknown txn %s",
-                    merchant_transaction_id,
-                )
-
-            audit_log(
-                action="PHONEPE_PAYMENT_FAILED_CALLBACK",
-                details={
-                    "merchant_transaction_id": merchant_transaction_id,
-                    "phonepe_code": phonepe_code,
-                },
-                severity="WARNING",
-            )
-            return Response({"status": "OK"})
-
-        else:
-            # PAYMENT_PENDING or unknown state — do nothing (wait for next callback)
-            logger.info(
-                "PhonePe callback: unhandled state %s / code %s for txn %s",
-                state, phonepe_code, merchant_transaction_id,
-            )
-            return Response({"status": "PENDING"})
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 4. PAYMENT STATUS (Called from redirect URL after user returns)
-# ─────────────────────────────────────────────────────────────────────────────
-
-class PaymentStatusView(APIView):
-    """
-    Verify payment status after PhonePe redirects the user back.
-
-    The client calls this with the merchant_transaction_id to get the
-    authoritative payment result. We poll PhonePe's Status API directly —
-    we never trust redirect URL parameters.
-
-    GET /api/payments/status/<merchant_transaction_id>/
-
-    Security:
-        ✅ Authentication required — user can only check their own orders
-        ✅ Status comes from PhonePe API, not from URL/client parameters
-        ✅ On COMPLETED, triggers fulfillment if callback hasn't run yet
-           (handles rare cases where callback fires before/after redirect)
-    """
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, merchant_transaction_id: str) -> Response:
-        # Verify this transaction belongs to the authenticated user
-        try:
-            txn = Transaction.objects.select_related("order__user").get(
-                merchant_transaction_id=merchant_transaction_id,
-                order__user=request.user,
-            )
+            txn = Transaction.objects.select_for_update().get(order_id=pk)
         except Transaction.DoesNotExist:
             return Response(
-                {"error": "Transaction not found."},
+                {"error": "No payment proof found for this order."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # If already paid (callback already ran), return immediately
+        # Idempotency guard
         if txn.status == "paid":
             return Response({
-                "payment_status": "COMPLETED",
-                "order_status": txn.order.status,
-                "order_number": txn.order.order_number,
-                "total_amount": float(txn.order.total_amount),
-                "merchant_transaction_id": merchant_transaction_id,
-                "message": "Payment confirmed.",
+                "message": "Payment already approved.",
+                "status": "paid",
             })
 
-        # Poll PhonePe for authoritative status
-        result = check_payment_status(merchant_transaction_id)
+        if txn.status == "rejected":
+            return Response(
+                {"error": "Payment was already rejected. Cannot approve."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        if result["status"] == "COMPLETED" and result["success"]:
-            # Update PhonePe transaction ID if we have it
-            if result.get("phonepe_transaction_id"):
-                txn.phonepe_transaction_id = result["phonepe_transaction_id"]
-                txn.save(update_fields=["phonepe_transaction_id"])
+        admin_notes = str(request.data.get("admin_notes", "")).strip()
 
-            # Fulfill if callback hasn't done so already (idempotent)
-            fulfill_order_after_payment(merchant_transaction_id)
-            txn.refresh_from_db()
+        # ── Lock order and items ──────────────────────────────────────
+        order = Order.objects.select_for_update().get(id=pk)
+        order_items = OrderItem.objects.filter(order=order).select_related("product")
 
+        # ── Validate and deduct stock ─────────────────────────────────
+        for item in order_items:
+            if not item.product:
+                logger.error(
+                    "Product deleted for order item %s in order %s — skipping",
+                    item.id, order.id,
+                )
+                continue
+
+            product = Product.objects.select_for_update().get(id=item.product_id)
+
+            if product.stock < item.quantity:
+                logger.critical(
+                    "Insufficient stock for product %s (%s): needed %s, have %s. Order %s",
+                    product.id, product.name, item.quantity, product.stock, order.id,
+                )
+                audit_log(
+                    action="UPI_STOCK_INSUFFICIENT",
+                    user_id=request.user.id,
+                    details={
+                        "order_id": str(order.id),
+                        "product_id": str(product.id),
+                        "product_name": product.name,
+                        "needed": str(item.quantity),
+                        "available": str(product.stock),
+                    },
+                    severity="CRITICAL",
+                )
+                # Deduct what we can — fulfillment team resolves shortfall
+                product.stock = max(0, product.stock - item.quantity)
+            else:
+                product.stock -= item.quantity
+
+            product.save(update_fields=["stock"])
+
+        # ── Confirm transaction and order ─────────────────────────────
+        txn.status = "paid"
+        txn.admin_notes = admin_notes
+        txn.save(update_fields=["status", "admin_notes"])
+
+        order.status = "confirmed"
+        order.save(update_fields=["status"])
+
+        audit_log(
+            action="PAYMENT_APPROVED",
+            user_id=request.user.id,
+            details={
+                "order_id": str(order.id),
+                "order_number": order.order_number,
+                "upi_reference_id": txn.upi_reference_id,
+                "total": str(float(order.total_amount)),
+                "admin_notes": admin_notes,
+            },
+            severity="INFO",
+        )
+
+        return Response({
+            "message": "Payment approved. Order confirmed and stock deducted.",
+            "order_number": order.order_number,
+            "status": "confirmed",
+        })
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. REJECT PAYMENT (Admin)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class RejectPaymentView(APIView):
+    """
+    Admin rejects a payment proof (screenshot doesn't match, fake, etc.).
+
+    This:
+      1. Sets transaction status to 'rejected'
+      2. Cancels the order (via Transaction.save() hook)
+
+    Security:
+        ✅ Admin-only access
+        ✅ Audit logged
+    """
+    permission_classes = [IsAdminRole]
+
+    def post(self, request, pk) -> Response:
+        try:
+            txn = Transaction.objects.select_related("order").get(order_id=pk)
+        except Transaction.DoesNotExist:
+            return Response(
+                {"error": "No payment proof found for this order."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if txn.status == "paid":
+            return Response(
+                {"error": "Payment already approved. Cannot reject."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if txn.status == "rejected":
             return Response({
-                "payment_status": "COMPLETED",
-                "order_status": txn.order.status,
-                "order_number": txn.order.order_number,
-                "total_amount": float(txn.order.total_amount),
-                "merchant_transaction_id": merchant_transaction_id,
-                "message": "Payment successful! Your order is confirmed.",
+                "message": "Payment already rejected.",
+                "status": "rejected",
             })
 
-        elif result["status"] == "FAILED":
-            txn.status = "failed"
-            txn.save(update_fields=["status"])
-            return Response({
-                "payment_status": "FAILED",
-                "order_status": txn.order.status,
-                "order_number": txn.order.order_number,
-                "total_amount": float(txn.order.total_amount),
-                "merchant_transaction_id": merchant_transaction_id,
-                "message": "Payment failed. Please try again.",
-            })
+        admin_notes = str(request.data.get("admin_notes", "")).strip()
 
-        else:
-            # PENDING or UNKNOWN
-            return Response({
-                "payment_status": result["status"],
-                "order_status": txn.order.status,
+        txn.status = "rejected"
+        txn.admin_notes = admin_notes
+        txn.save(update_fields=["status", "admin_notes"])
+        # Transaction.save() hook auto-cancels the order
+
+        audit_log(
+            action="PAYMENT_REJECTED",
+            user_id=request.user.id,
+            details={
+                "order_id": str(txn.order.id),
                 "order_number": txn.order.order_number,
-                "total_amount": float(txn.order.total_amount),
-                "merchant_transaction_id": merchant_transaction_id,
-                "message": "Payment is being processed. Please wait.",
-            })
+                "upi_reference_id": txn.upi_reference_id,
+                "admin_notes": admin_notes,
+            },
+            severity="WARNING",
+        )
+
+        return Response({
+            "message": "Payment rejected. Order has been cancelled.",
+            "order_number": txn.order.order_number,
+            "status": "rejected",
+        })
