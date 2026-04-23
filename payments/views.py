@@ -29,6 +29,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db import transaction
+from django.http import HttpResponse
+from django.conf import settings
+import io
+import qrcode
 
 from core.security import audit_log, get_client_ip
 from store.models import Order, OrderItem, Product, Transaction
@@ -99,6 +103,12 @@ class UploadPaymentProofView(APIView):
         if not screenshot:
             return Response(
                 {"error": "payment_screenshot file is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+            
+        if screenshot.size == 0:
+            return Response(
+                {"error": "The uploaded screenshot is empty (0 bytes)."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -335,3 +345,47 @@ class RejectPaymentView(APIView):
             "order_number": txn.order.order_number,
             "status": "rejected",
         })
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 4. SERVER-SIDE QR GENERATION (Security enhancement)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class GenerateUPIQRView(APIView):
+    """
+    Generates a UPI QR code server-side to prevent tampering
+    and reduce reliance on third-party QR generators.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request) -> HttpResponse:
+        amount = request.query_params.get("amount", "0")
+        try:
+            amount_val = float(amount)
+            if amount_val < 0:
+                amount_val = 0
+            amount = f"{amount_val:.2f}"
+        except ValueError:
+            amount = "0.00"
+
+        upi_id = getattr(settings, "UPI_ID", "")
+        upi_name = getattr(settings, "UPI_DISPLAY_NAME", "")
+        
+        upi_uri = f"upi://pay?pa={upi_id}&pn={upi_name}&am={amount}&cu=INR"
+        
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(upi_uri)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        buf.seek(0)
+        
+        return HttpResponse(buf.getvalue(), content_type="image/png")

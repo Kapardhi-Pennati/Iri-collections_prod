@@ -98,13 +98,14 @@
             <!-- Step 3: Payment (UPI QR) -->
             <div id="step-3" class="card-glass hidden">
                 <h2 style="font-family:var(--font-display); margin-bottom:var(--space-md); text-align: center;">Complete Payment</h2>
-                <p class="text-muted" style="text-align: center; margin-bottom: var(--space-xl);">Scan the QR code below using any UPI app to complete your payment.</p>
+                <p class="text-muted" style="text-align: center; margin-bottom: 0.5rem;">Scan the QR code below using any UPI app to complete your payment.</p>
+                <p style="text-align: center; color: var(--gold); font-size: 0.9rem; margin-bottom: var(--space-xl); font-weight: 500;">
+                    <i class="ph ph-shield-check"></i> Security Tip: Verify that the recipient name is '{{ upi_display_name }}' before confirming.
+                </p>
                 
                 <div style="display: flex; flex-direction: column; align-items: center; background: var(--bg-elevated); padding: var(--space-xl); border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: var(--space-xl);">
-                    <!-- Static UPI QR generated from configured UPI_ID and UPI_DISPLAY_NAME -->
-                    {% with upi_uri='upi://pay?pa='|add:upi_id|add:'&pn='|add:upi_display_name %}
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ upi_uri|urlencode }}" alt="UPI QR Code" style="width: 250px; height: 250px; border-radius: var(--radius-sm); border: 4px solid #fff; background: #fff; margin-bottom: var(--space-md);">
-                    {% endwith %}
+                    <!-- Dynamic UPI QR generated securely server-side -->
+                    <img src="/api/payments/qr-code/?amount=0" alt="UPI QR Code" style="width: 250px; height: 250px; border-radius: var(--radius-sm); border: 4px solid #fff; background: #fff; margin-bottom: var(--space-md);">
                     <div style="font-weight: 600; font-size: 1.1rem;">UPI ID: <span class="text-gold" style="user-select: all;">{{ upi_id }}</span></div>
                     <div style="font-size: 0.9rem; color: var(--text-muted);">{{ upi_display_name }}</div>
                     
@@ -376,7 +377,10 @@ function goToStep(step) {
 function updatePaymentQRCode(totalAmount) {
     const amountValue = Number(totalAmount || 0).toFixed(2);
     const upiUri = `upi://pay?pa=${UPI_ID}&pn=${UPI_DISPLAY_NAME}&am=${amountValue}&cu=INR`;
-    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUri)}`;
+    
+    // Secure server-side QR generation
+    const qrSrc = `/api/payments/qr-code/?amount=${amountValue}`;
+    
     const qrImg = document.querySelector('#step-3 img[alt="UPI QR Code"]');
     if (qrImg) qrImg.src = qrSrc;
     const upiUrlInput = document.getElementById('upi-payment-url');
@@ -544,7 +548,12 @@ document.getElementById('payment-proof-form').addEventListener('submit', async (
         if (btn) { btn.disabled = false; btn.textContent = 'Submit Payment Proof'; }
         return;
     }
-
+    
+    if (fileInput.files[0].size === 0) {
+        Toast.error('The uploaded screenshot is empty (0 bytes). Please select a valid file.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Submit Payment Proof'; }
+        return;
+    }
     const formData = new FormData();
     formData.append('order_id', createdOrder.id);
     formData.append('payment_screenshot', fileInput.files[0]);

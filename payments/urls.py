@@ -10,4 +10,7 @@ urlpatterns = [
 
     # Admin: reject payment (fake screenshot, etc.)
     path("reject/<int:pk>/", views.RejectPaymentView.as_view(), name="payment-reject"),
+    
+    # Secure server-side QR generation
+    path("qr-code/", views.GenerateUPIQRView.as_view(), name="payment-qr-code"),
 ]

@@ -7,6 +7,7 @@ python-dotenv>=1.0,<2.0
 Pillow>=11.0
 argon2-cffi>=23.1,<24.0
 python-json-logger>=2.0,<3.0
+qrcode>=7.4,<9.0
 
 # Dev/local only (no Redis, no PostgreSQL, no gunicorn needed)
 whitenoise>=6.6,<7.0

@@ -89,4 +89,16 @@ class SecurityHeadersMiddleware:
             )
             response.setdefault("Pragma", "no-cache")
 
+        # ── Content Security Policy ──────────────────────────────────────
+        # Mitigates XSS and Quishing (QR Phishing) attacks.
+        response.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; "
+            "style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; "
+            "font-src 'self' https://unpkg.com https://fonts.gstatic.com; "
+            "img-src 'self' data: blob: https://api.qrserver.com; "  # api.qrserver.com kept temporarily for backward compatibility if cached
+            "connect-src 'self' https://api.postalpincode.in;"
+        )
+
         return response
