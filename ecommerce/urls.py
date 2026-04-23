@@ -53,6 +53,7 @@ urlpatterns = [
     ),
     path("shipping/", TemplateView.as_view(template_name="shipping.html"), name="shipping-page"),
     path("returns/", TemplateView.as_view(template_name="returns.html"), name="returns-page"),
+    path("policy/", TemplateView.as_view(template_name="policy.html"), name="policy-page"),
     path("contact/", TemplateView.as_view(template_name="contact.html"), name="contact-page"),
     path("about/", TemplateView.as_view(template_name="about.html"), name="about-page"),
     path(

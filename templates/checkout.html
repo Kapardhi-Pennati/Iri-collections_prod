@@ -122,15 +122,16 @@
                 </div>
 
                 <form id="payment-proof-form">
-                    <h3 style="margin-bottom: var(--space-md);">Upload Payment Proof</h3>
-                    <div class="form-group">
-                        <label for="payment-screenshot">Payment Screenshot <span style="color:var(--error);">*</span></label>
-                        <input type="file" id="payment-screenshot" accept="image/png, image/jpeg, image/webp" required>
-                        <small style="color: var(--text-muted);">Upload a screenshot clearly showing the successful transaction and UTR.</small>
+                    <h3 style="margin-bottom: var(--space-md);">Submit Payment Details</h3>
+                    <div class="form-group" style="margin-bottom: var(--space-md);">
+                        <label for="payment-utr">UPI Transaction ID / UTR <span style="color:var(--error);">*</span></label>
+                        <input type="text" id="payment-utr" placeholder="e.g. 312345678901" required>
+                        <small style="color: var(--text-muted);">Enter the 12-digit UTR or Transaction ID from your payment app.</small>
                     </div>
                     <div class="form-group" style="margin-bottom: var(--space-xl);">
-                        <label for="payment-utr">UTR / Reference Number <span style="color:var(--text-muted);">(Optional but recommended)</span></label>
-                        <input type="text" id="payment-utr" placeholder="e.g. 312345678901">
+                        <label for="payment-screenshot">Payment Screenshot <span style="color:var(--text-muted);">(Optional)</span></label>
+                        <input type="file" id="payment-screenshot" accept="image/png, image/jpeg, image/webp">
+                        <small style="color: var(--text-muted);">You can optionally upload a screenshot of your successful transaction.</small>
                     </div>
                     
                     <div style="display:flex; gap:var(--space-md);">
@@ -543,22 +544,24 @@ document.getElementById('payment-proof-form').addEventListener('submit', async (
 
     const fileInput = document.getElementById('payment-screenshot');
     const utrInput = document.getElementById('payment-utr');
-    if (!fileInput.files || !fileInput.files[0]) {
-        Toast.error('Please upload a payment screenshot.');
+    
+    if (!utrInput.value.trim()) {
+        Toast.error('Please enter the UPI Transaction ID.');
         if (btn) { btn.disabled = false; btn.textContent = 'Submit Payment Proof'; }
         return;
     }
-    
-    if (fileInput.files[0].size === 0) {
+
+    if (fileInput.files && fileInput.files.length > 0 && fileInput.files[0].size === 0) {
         Toast.error('The uploaded screenshot is empty (0 bytes). Please select a valid file.');
         if (btn) { btn.disabled = false; btn.textContent = 'Submit Payment Proof'; }
         return;
     }
+    
     const formData = new FormData();
     formData.append('order_id', createdOrder.id);
-    formData.append('payment_screenshot', fileInput.files[0]);
-    if (utrInput.value.trim()) {
-        formData.append('upi_reference_id', utrInput.value.trim());
+    formData.append('upi_reference_id', utrInput.value.trim());
+    if (fileInput.files && fileInput.files.length > 0) {
+        formData.append('payment_screenshot', fileInput.files[0]);
     }
 
     try {

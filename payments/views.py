@@ -98,36 +98,36 @@ class UploadPaymentProofView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ── Validate screenshot file ─────────────────────────────────
-        screenshot = request.FILES.get("payment_screenshot")
-        if not screenshot:
-            return Response(
-                {"error": "payment_screenshot file is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-            
-        if screenshot.size == 0:
-            return Response(
-                {"error": "The uploaded screenshot is empty (0 bytes)."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Validate file type
-        allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-        if screenshot.content_type not in allowed_types:
-            return Response(
-                {"error": "Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Validate file size (max 5 MB)
-        if screenshot.size > 5 * 1024 * 1024:
-            return Response(
-                {"error": "File too large. Maximum 5 MB allowed."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         upi_reference = str(request.data.get("upi_reference_id", "")).strip()
+        if not upi_reference:
+            return Response(
+                {"error": "UPI Transaction ID is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # ── Validate screenshot file (Optional) ──────────────────────
+        screenshot = request.FILES.get("payment_screenshot")
+        if screenshot:
+            if screenshot.size == 0:
+                return Response(
+                    {"error": "The uploaded screenshot is empty (0 bytes)."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Validate file type
+            allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+            if screenshot.content_type not in allowed_types:
+                return Response(
+                    {"error": "Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Validate file size (max 5 MB)
+            if screenshot.size > 5 * 1024 * 1024:
+                return Response(
+                    {"error": "File too large. Maximum 5 MB allowed."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         # ── Create transaction and reserve stock on first upload ──────
         txn = Transaction.objects.filter(order=order).first()
