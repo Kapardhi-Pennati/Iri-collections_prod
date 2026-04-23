@@ -69,31 +69,18 @@ async function loadOrders() {
                             ${parseFloat(order.shipping_fee) > 0 ? `<div style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">(incl. ${formatPrice(order.shipping_fee)} shipping)</div>` : ''}
                         </div>
                         <div style="display:flex; gap:10px; align-items:center;">
-                            ${['pending', 'confirmed'].includes(order.status) ? `<button class="btn btn-sm btn-ghost" style="color:var(--error);" onclick="cancelOrder(${order.id})">Cancel Order</button>` : ''}
                             <a href="/invoice/${order.id}/" target="_blank" class="btn btn-sm btn-ghost" style="text-decoration:none;"><i class="ph ph-printer"></i> Print Bill</a>
                         </div>
                     </div>
                     ${order.transaction ? `
                     <div style="margin-top:var(--space-sm); font-size:0.8rem; color:var(--text-muted);">
-                        Transaction ID: ${escapeHTML(order.transaction.phonepe_transaction_id || order.transaction.merchant_transaction_id || 'N/A')}
+                        UTR / Reference: ${escapeHTML(order.transaction.upi_reference_id || 'Not provided')}
                         <span style="margin-left: 10px;">Payment Status:</span> <span class="order-status ${order.transaction.status}">${order.transaction.status}</span>
                     </div>` : ''}
                 </div>`;
         }).join('');
     } catch (err) {
         console.error(err);
-    }
-}
-
-async function cancelOrder(orderId) {
-    if (!confirm("Are you sure you want to cancel this order? Any payments will be refunded.")) return;
-    
-    const res = await API.post(`/store/orders/${orderId}/cancel/`);
-    if (res && res.ok) {
-        Toast.success(res.data.message || 'Order cancelled successfully.');
-        loadOrders();
-    } else {
-        Toast.error(res?.data?.error || 'Failed to cancel order.');
     }
 }
 

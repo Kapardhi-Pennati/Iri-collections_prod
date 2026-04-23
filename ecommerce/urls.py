@@ -34,7 +34,13 @@ urlpatterns = [
     path("wishlist/", TemplateView.as_view(template_name="wishlist.html"), name="wishlist-page"),
     path(
         "checkout/",
-        TemplateView.as_view(template_name="checkout.html"),
+        TemplateView.as_view(
+            template_name="checkout.html",
+            extra_context={
+                "upi_id": settings.UPI_ID,
+                "upi_display_name": settings.UPI_DISPLAY_NAME,
+            },
+        ),
         name="checkout-page",
     ),
     path(

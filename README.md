@@ -6,21 +6,17 @@ A full-featured jewelry e-commerce platform built with Django, Django REST Frame
 
 - Secure authentication with Argon2 password hashing, OTP flows, and JWT sessions.
 - Brute-force protection with account lockout and API throttling.
-- Signed payment callback verification (HMAC-SHA256).
+- Static UPI QR checkout with manual payment verification.
 - Strong production headers/cookies (HSTS, CSP-compatible setup, CSRF/CORS controls).
 - Audit logging for sensitive actions.
 
 ## Functional Highlights
 
 - Product catalog, cart, wishlist, and order lifecycle.
-- PhonePe payment flow:
-  - `POST /api/payments/initiate/`
-  - `POST /api/payments/callback/`
-  - `GET /api/payments/status/<merchant_transaction_id>/`
-  - `GET /api/payments/health-check/`
-- Shipping logic:
-  - Tamil Nadu: ₹50
-  - Any other Indian state: ₹80
+- Static UPI payment flow:
+  - Customer uploads proof: `POST /api/payments/upload-proof/`
+  - Admin approves payment: `POST /api/payments/approve/<order_id>/`
+  - Admin rejects payment: `POST /api/payments/reject/<order_id>/`
 - Checkout UX:
   - Live shipping estimate appears in Step 1 after pincode/address updates.
   - Shipping state is carried into order creation for consistent fee calculation.
@@ -46,12 +42,11 @@ A full-featured jewelry e-commerce platform built with Django, Django REST Frame
    ```
 
    - If you want SQLite locally, ensure `DATABASE_URL` is unset or set to `sqlite:///db.sqlite3`.
-   - Add PhonePe sandbox values for payment testing:
+  - Add UPI checkout values:
 
    ```env
-   PHONEPE_MERCHANT_ID=your_test_merchant_id
-   PHONEPE_SALT_KEY=your_test_salt_key
-   PHONEPE_SALT_INDEX=1
+   UPI_ID=your-upi-id@bank
+   UPI_DISPLAY_NAME=Iri Collections
    ```
 
 3. Optional infrastructure:
@@ -79,7 +74,7 @@ This repository is configured for standard Python web hosting (Passenger/cPanel,
 
 1. Upload project files.
 2. Create/activate virtual environment and install requirements.
-3. Configure `.env` with production values (`DEBUG=False`, secure `SECRET_KEY`, DB, Redis, SMTP, PhonePe).
+3. Configure `.env` with production values (`DEBUG=False`, secure `SECRET_KEY`, DB, Redis, SMTP, UPI settings).
 4. Run migrations and collect static files:
 
    ```bash
@@ -114,8 +109,9 @@ Run before each production release:
 
 4. Payment sanity:
 
-   - Verify `PHONEPE_MERCHANT_ID`, `PHONEPE_SALT_KEY`, `PHONEPE_SALT_INDEX`.
-   - Confirm `/api/payments/health-check/` reports healthy.
+   - Verify `UPI_ID` and `UPI_DISPLAY_NAME`.
+   - Confirm checkout payment step shows the correct UPI details.
+   - Submit payment proof and verify admin can approve/reject it.
 
 ## Notes
 

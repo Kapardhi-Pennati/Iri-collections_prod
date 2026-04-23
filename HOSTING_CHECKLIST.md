@@ -44,9 +44,8 @@ Use this checklist for Passenger/cPanel or VPS hosting.
   - [ ] `EMAIL_HOST_PASSWORD`
   - [ ] `DEFAULT_FROM_EMAIL`
 - [ ] Set payment values:
-  - [ ] `PHONEPE_MERCHANT_ID`
-  - [ ] `PHONEPE_SALT_KEY`
-  - [ ] `PHONEPE_SALT_INDEX`
+  - [ ] `UPI_ID`
+  - [ ] `UPI_DISPLAY_NAME`
 
 ## 4. Deploy Commands
 
@@ -85,13 +84,12 @@ Use this checklist for Passenger/cPanel or VPS hosting.
 - [ ] Open homepage and catalog successfully.
 - [ ] Login/signup works.
 - [ ] Cart and checkout pages load.
-- [ ] Payment health endpoint returns healthy:
-  - [ ] `GET /api/payments/health-check/`
+- [ ] Checkout Step 3 shows your static UPI QR and UPI ID correctly.
 - [ ] Create a checkout with Tamil Nadu state and verify shipping fee is 50.
 - [ ] Create a checkout with another India state and verify shipping fee is 80.
 - [ ] Confirm shipping estimate updates after address/pincode changes in checkout.
-- [ ] Confirm payment return/status flow works for a test transaction.
-- [ ] Verify order appears in orders page after successful payment.
+- [ ] Upload payment proof (screenshot + optional UTR) from checkout and confirm success screen.
+- [ ] Approve/reject payment from admin dashboard and verify order status updates correctly.
 
 ## 7. Monitoring and Backups
 

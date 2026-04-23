@@ -9,14 +9,15 @@ Endpoints:
 Flow:
   1. Customer places order → order status = 'pending'
   2. Customer scans static UPI QR, pays, uploads screenshot + UTR
-  3. Admin reviews screenshot in dashboard
-  4. Admin approves → stock deducted, order confirmed
+  3. On proof upload → stock is reserved (deducted)
+  4. Admin reviews screenshot in dashboard
+  5. Admin approves → order confirmed
   5. Admin rejects → order cancelled
 
 Security:
   ✅ QR code is a static image — cannot be changed even if site is compromised
   ✅ Admin manually verifies every payment before confirming
-  ✅ Stock deduction only happens after admin approval
+  ✅ Stock is reserved at proof upload and restored on rejection
   ✅ All actions are audit-logged
 """
 
@@ -61,6 +62,7 @@ class UploadPaymentProofView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
+    @transaction.atomic
     def post(self, request) -> Response:
         order_id = request.data.get("order_id")
         if not order_id:
@@ -77,9 +79,9 @@ class UploadPaymentProofView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ── Fetch order (scoped to this user — IDOR guard) ───────────
+        # ── Fetch order with lock (scoped to this user — IDOR guard) ──
         try:
-            order = Order.objects.get(id=order_id, user=request.user)
+            order = Order.objects.select_for_update().get(id=order_id, user=request.user)
         except Order.DoesNotExist:
             return Response(
                 {"error": "Order not found."},
@@ -117,16 +119,52 @@ class UploadPaymentProofView(APIView):
 
         upi_reference = str(request.data.get("upi_reference_id", "")).strip()
 
-        # ── Create or update transaction ──────────────────────────────
-        txn, created = Transaction.objects.update_or_create(
-            order=order,
-            defaults={
-                "payment_screenshot": screenshot,
-                "upi_reference_id": upi_reference,
-                "amount": order.total_amount,
-                "status": "pending_verification",
-            },
-        )
+        # ── Create transaction and reserve stock on first upload ──────
+        txn = Transaction.objects.filter(order=order).first()
+
+        if txn and txn.status == "pending_verification":
+            # Proof re-upload before admin action: update proof only.
+            txn.payment_screenshot = screenshot
+            txn.upi_reference_id = upi_reference
+            txn.save(update_fields=["payment_screenshot", "upi_reference_id"])
+        else:
+            if txn and txn.status in {"paid", "rejected"}:
+                return Response(
+                    {"error": f"Payment is already {txn.status}. Cannot upload proof again."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            order_items = OrderItem.objects.filter(order=order).select_related("product")
+            for item in order_items:
+                if not item.product:
+                    continue
+
+                product = Product.objects.select_for_update().get(id=item.product_id)
+                if product.stock < item.quantity:
+                    return Response(
+                        {
+                            "error": (
+                                f"Insufficient stock for {product.name}. "
+                                "Please contact support."
+                            )
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            for item in order_items:
+                if not item.product:
+                    continue
+                product = Product.objects.select_for_update().get(id=item.product_id)
+                product.stock -= item.quantity
+                product.save(update_fields=["stock"])
+
+            txn = Transaction.objects.create(
+                order=order,
+                payment_screenshot=screenshot,
+                upi_reference_id=upi_reference,
+                amount=order.total_amount,
+                status="pending_verification",
+            )
 
         audit_log(
             action="PAYMENT_PROOF_UPLOADED",
@@ -159,13 +197,12 @@ class ApprovePaymentView(APIView):
     This atomically:
       1. Sets transaction status to 'paid'
       2. Confirms the order
-      3. Deducts inventory
 
     Security:
         ✅ Admin-only access
         ✅ Atomic transaction with row-level locking
         ✅ Idempotent (safe to call twice)
-        ✅ Stock validation with graceful degradation
+        ✅ Stock already reserved at proof upload
     """
     permission_classes = [IsAdminRole]
 
@@ -194,44 +231,8 @@ class ApprovePaymentView(APIView):
 
         admin_notes = str(request.data.get("admin_notes", "")).strip()
 
-        # ── Lock order and items ──────────────────────────────────────
+        # ── Lock order ────────────────────────────────────────────────
         order = Order.objects.select_for_update().get(id=pk)
-        order_items = OrderItem.objects.filter(order=order).select_related("product")
-
-        # ── Validate and deduct stock ─────────────────────────────────
-        for item in order_items:
-            if not item.product:
-                logger.error(
-                    "Product deleted for order item %s in order %s — skipping",
-                    item.id, order.id,
-                )
-                continue
-
-            product = Product.objects.select_for_update().get(id=item.product_id)
-
-            if product.stock < item.quantity:
-                logger.critical(
-                    "Insufficient stock for product %s (%s): needed %s, have %s. Order %s",
-                    product.id, product.name, item.quantity, product.stock, order.id,
-                )
-                audit_log(
-                    action="UPI_STOCK_INSUFFICIENT",
-                    user_id=request.user.id,
-                    details={
-                        "order_id": str(order.id),
-                        "product_id": str(product.id),
-                        "product_name": product.name,
-                        "needed": str(item.quantity),
-                        "available": str(product.stock),
-                    },
-                    severity="CRITICAL",
-                )
-                # Deduct what we can — fulfillment team resolves shortfall
-                product.stock = max(0, product.stock - item.quantity)
-            else:
-                product.stock -= item.quantity
-
-            product.save(update_fields=["stock"])
 
         # ── Confirm transaction and order ─────────────────────────────
         txn.status = "paid"
@@ -255,7 +256,7 @@ class ApprovePaymentView(APIView):
         )
 
         return Response({
-            "message": "Payment approved. Order confirmed and stock deducted.",
+            "message": "Payment approved. Order confirmed.",
             "order_number": order.order_number,
             "status": "confirmed",
         })
@@ -279,9 +280,10 @@ class RejectPaymentView(APIView):
     """
     permission_classes = [IsAdminRole]
 
+    @transaction.atomic
     def post(self, request, pk) -> Response:
         try:
-            txn = Transaction.objects.select_related("order").get(order_id=pk)
+            txn = Transaction.objects.select_related("order").select_for_update().get(order_id=pk)
         except Transaction.DoesNotExist:
             return Response(
                 {"error": "No payment proof found for this order."},
@@ -301,6 +303,15 @@ class RejectPaymentView(APIView):
             })
 
         admin_notes = str(request.data.get("admin_notes", "")).strip()
+
+        order = Order.objects.select_for_update().get(id=pk)
+        order_items = OrderItem.objects.filter(order=order).select_related("product")
+        for item in order_items:
+            if not item.product:
+                continue
+            product = Product.objects.select_for_update().get(id=item.product_id)
+            product.stock += item.quantity
+            product.save(update_fields=["stock"])
 
         txn.status = "rejected"
         txn.admin_notes = admin_notes

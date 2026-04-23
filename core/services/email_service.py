@@ -324,7 +324,7 @@ def send_order_status_email(
 
     # ── Build subject line ────────────────────────────────────────────
     if new_status == "cancelled":
-        subject = f"Order {order.order_number} — Cancelled & Refund Initiated"
+        subject = f"Order {order.order_number} — Cancelled"
     elif new_status == "shipped":
         subject = f"Order {order.order_number} — Your order has been shipped! 🚚"
     elif new_status == "delivered":

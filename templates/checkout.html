@@ -25,6 +25,10 @@
                 <div class="checkout-step-number">3</div>
                 <div class="checkout-step-label">Payment</div>
             </div>
+            <div class="checkout-step" id="step-indicator-4">
+                <div class="checkout-step-number">4</div>
+                <div class="checkout-step-label">Done</div>
+            </div>
         </div>
 
         <div class="checkout-panel" id="checkout-content">
@@ -86,17 +90,61 @@
                 <div id="review-shipping" style="margin-top:var(--space-lg); padding:var(--space-lg); background:var(--bg-elevated); border-radius:var(--radius-md);"></div>
                 <div id="review-total" style="margin-top:var(--space-lg);"></div>
                 <div style="display:flex; gap:var(--space-md); margin-top:var(--space-xl);">
-                    <button class="btn btn-ghost btn-lg" onclick="goToStep(1)"><i class="ph ph-arrow-left"></i> Back</button>
-                    <button class="btn btn-primary btn-lg" style="flex:1;" id="pay-now-btn" onclick="proceedToPayment()">Pay Now <i class="ph ph-lock-key"></i></button>
+                    <button type="button" class="btn btn-ghost btn-lg" onclick="goToStep(1)"><i class="ph ph-arrow-left"></i> Back</button>
+                    <button type="button" class="btn btn-primary btn-lg" style="flex:1;" id="pay-now-btn" onclick="proceedToPayment()">Pay Now <i class="ph ph-lock-key"></i></button>
                 </div>
             </div>
 
-            <!-- Step 3: Payment Confirmation (hidden initially) -->
-            <div id="step-3" class="card-glass hidden text-center">
+            <!-- Step 3: Payment (UPI QR) -->
+            <div id="step-3" class="card-glass hidden">
+                <h2 style="font-family:var(--font-display); margin-bottom:var(--space-md); text-align: center;">Complete Payment</h2>
+                <p class="text-muted" style="text-align: center; margin-bottom: var(--space-xl);">Scan the QR code below using any UPI app to complete your payment.</p>
+                
+                <div style="display: flex; flex-direction: column; align-items: center; background: var(--bg-elevated); padding: var(--space-xl); border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: var(--space-xl);">
+                    <!-- Static UPI QR generated from configured UPI_ID and UPI_DISPLAY_NAME -->
+                    {% with upi_uri='upi://pay?pa='|add:upi_id|add:'&pn='|add:upi_display_name %}
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ upi_uri|urlencode }}" alt="UPI QR Code" style="width: 250px; height: 250px; border-radius: var(--radius-sm); border: 4px solid #fff; background: #fff; margin-bottom: var(--space-md);">
+                    {% endwith %}
+                    <div style="font-weight: 600; font-size: 1.1rem;">UPI ID: <span class="text-gold" style="user-select: all;">{{ upi_id }}</span></div>
+                    <div style="font-size: 0.9rem; color: var(--text-muted);">{{ upi_display_name }}</div>
+                    
+                    <div style="margin-top: var(--space-lg); font-size: 1.2rem; font-weight: 700;">
+                        Amount to Pay: <span id="payment-amount-display" class="text-gold"></span>
+                    </div>
+                    <div style="margin-top: var(--space-md); width: 100%;">
+                        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; text-align: center;">UPI Payment URL</div>
+                        <div style="display: flex; gap: var(--space-sm); align-items: center;">
+                            <input type="text" id="upi-payment-url" readonly style="flex: 1; font-size: 0.85rem; font-family: monospace; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text);" value="">
+                            <button type="button" class="btn btn-ghost btn-sm" onclick="copyUpiUrl()">Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="payment-proof-form">
+                    <h3 style="margin-bottom: var(--space-md);">Upload Payment Proof</h3>
+                    <div class="form-group">
+                        <label for="payment-screenshot">Payment Screenshot <span style="color:var(--error);">*</span></label>
+                        <input type="file" id="payment-screenshot" accept="image/png, image/jpeg, image/webp" required>
+                        <small style="color: var(--text-muted);">Upload a screenshot clearly showing the successful transaction and UTR.</small>
+                    </div>
+                    <div class="form-group" style="margin-bottom: var(--space-xl);">
+                        <label for="payment-utr">UTR / Reference Number <span style="color:var(--text-muted);">(Optional but recommended)</span></label>
+                        <input type="text" id="payment-utr" placeholder="e.g. 312345678901">
+                    </div>
+                    
+                    <div style="display:flex; gap:var(--space-md);">
+                        <button type="button" class="btn btn-ghost btn-lg" onclick="goToStep(2)"><i class="ph ph-arrow-left"></i> Back</button>
+                        <button type="submit" class="btn btn-primary btn-lg" style="flex:1;" id="submit-proof-btn">Submit Payment Proof <i class="ph ph-check-circle"></i></button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 4: Confirmation (hidden initially) -->
+            <div id="step-4" class="card-glass hidden text-center">
                 <!-- Dynamic icon: set by showConfirmation() -->
                 <div style="font-size:4rem; margin-bottom:var(--space-lg);" id="confirmation-icon"><i class="ph ph-confetti"></i></div>
-                <h2 style="font-family:var(--font-display); margin-bottom:var(--space-sm);" id="confirmation-title">Order Confirmed!</h2>
-                <p class="text-muted mb-2" id="confirmation-msg">Your order has been placed successfully.</p>
+                <h2 style="font-family:var(--font-display); margin-bottom:var(--space-sm);" id="confirmation-title">Order Received!</h2>
+                <p class="text-muted mb-2" id="confirmation-msg">We have received your payment proof and it is under verification.</p>
                 <div id="confirmation-details" style="text-align:left; background:var(--bg-elevated); border-radius:var(--radius-md); padding:var(--space-lg); margin-bottom:var(--space-xl);"></div>
                 <div style="display:flex; gap:var(--space-md); justify-content:center;">
                     <a href="/orders/" class="btn btn-primary btn-lg">View My Orders</a>
@@ -112,27 +160,15 @@
 <script>
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * CHECKOUT FLOW — PhonePe Redirect (Verified Status)
+ * CHECKOUT FLOW — Static UPI Manual Flow
  * ═══════════════════════════════════════════════════════════════════════════
- *
- * Flow:
- *   1. User fills shipping form → validated, pincode checked
- *   2. Review step → user sees order summary
- *   3. "Pay Now" → health check → create order → initiate PhonePe → REDIRECT
- *   4. User pays on PhonePe hosted page
- *   5. PhonePe redirects back with ?payment=result&merchant_transaction_id=...
- *   6. We call our backend /payments/status/<merchant_txn_id>/ for verified status
- *   7. Show confirmation based on BACKEND response (never trust redirect params alone)
- *
- * Security:
- *   ✅ Payment status trusted ONLY from our backend, not from URL params
- *   ✅ Gateway health check before initiating payment
- *   ✅ Cart state cleared only after backend confirms payment
  */
 
 let cartData = null;
 let currentStep = 1;
 let createdOrder = null;
+const UPI_ID = '{{ upi_id|escapejs }}';
+const UPI_DISPLAY_NAME = '{{ upi_display_name|escapejs }}';
 let checkoutShippingState = "";
 let shippingQuoteTimer = null;
 let shippingQuote = {
@@ -143,172 +179,12 @@ let shippingQuote = {
     error: '',
 };
 
-
 // ─── Page Load ─────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
     bindShippingEstimateListeners();
     renderShippingEstimate();
-
-    // Check if this is a return from PhonePe redirect
-    const params = new URLSearchParams(window.location.search);
-    const paymentStatus = params.get('payment');
-    const merchantTxnId =
-        params.get('merchant_transaction_id') ||
-        localStorage.getItem('pending_phonepe_txn');
-
-    if (paymentStatus === 'result' && merchantTxnId) {
-        await handlePaymentReturn(merchantTxnId);
-        return;
-    }
-
-    if (paymentStatus === 'result' && !merchantTxnId) {
-        Toast.error('Could not verify payment session. Please check your orders page.');
-        window.history.replaceState({}, '', '/checkout/');
-        return;
-    }
-
-    if (paymentStatus === 'cancelled') {
-        // User exited payment page before completion
-        localStorage.removeItem('pending_phonepe_txn');
-        Toast.info('Payment was cancelled. Your order has been saved.');
-        // Clean the URL without reloading
-        window.history.replaceState({}, '', '/checkout/');
-    }
-
-    // Normal checkout flow — load cart
     await loadCheckoutCart();
 });
-
-
-// ─── Handle Return from PhonePe ────────────────────────────────────────
-async function handlePaymentReturn(merchantTxnId) {
-    /**
-    * ✅ SECURITY: We do NOT trust redirect query params alone.
-    * We always verify status from our backend, which queries PhonePe.
-     * 
-     * Instead, we call our backend which:
-    *   1. Verifies the merchant transaction belongs to the current user
-    *   2. Retrieves payment status from PhonePe's status API
-     *   3. Returns the actual order/payment status from our DB
-     */
-
-    // Show loading state while we verify
-    document.getElementById('checkout-content').innerHTML = `
-        <div class="card-glass text-center" style="padding: var(--space-2xl);">
-            <div style="font-size: 3rem; margin-bottom: var(--space-lg); animation: pulse 1.5s infinite;"><i class="ph ph-hourglass"></i></div>
-            <h2 style="font-family: var(--font-display);">Verifying Payment...</h2>
-            <p class="text-muted">Please wait while we confirm your payment with the bank.</p>
-        </div>`;
-
-    if (!API.isLoggedIn()) {
-        window.location.href = '/login/';
-        return;
-    }
-
-    try {
-        const res = await API.get(`/payments/status/${encodeURIComponent(merchantTxnId)}/`);
-
-        if (!res || res.error) {
-            showPaymentResult('failed', null, res?.error || 'Unable to verify payment.');
-            return;
-        }
-
-        const verifiedStatus = String(res.payment_status || '').toUpperCase();
-        updateCartCount();
-
-        if (verifiedStatus === 'COMPLETED') {
-            showPaymentResult('confirmed', res);
-            localStorage.removeItem('pending_phonepe_txn');
-        } else if (verifiedStatus === 'PENDING') {
-            showPaymentResult('processing', res);
-        } else {
-            showPaymentResult('failed', res, res.message || 'Payment was not completed.');
-            localStorage.removeItem('pending_phonepe_txn');
-        }
-    } catch (err) {
-        console.error('Payment verification error:', err);
-        showPaymentResult('failed', null, 'An error occurred while verifying your payment.');
-    }
-
-    // ✅ Clean the URL to prevent re-verification on refresh
-    window.history.replaceState({}, '', '/checkout/');
-}
-
-
-// ─── Show Payment Result ───────────────────────────────────────────────
-function showPaymentResult(status, data, errorMsg) {
-    /**
-     * Renders the appropriate confirmation UI based on verified backend status.
-     *
-     * States:
-     *   'confirmed'  — Payment verified, order confirmed (green ✅)
-        *   'processing' — Payment initiated, confirmation pending (amber ⏳)
-     *   'failed'     — Payment failed or verification error (red ❌)
-     */
-    const configs = {
-        confirmed: {
-            icon: '<i class="ph ph-check-circle" style="color: var(--success);"></i>',
-            title: 'Payment Confirmed!',
-            message: 'Your payment has been verified and your order is confirmed. Thank you for your purchase!',
-            statusClass: 'confirmed',
-            statusText: 'Confirmed',
-        },
-        processing: {
-            icon: '<i class="ph ph-hourglass" style="color: var(--gold);"></i>',
-            title: 'Payment Received!',
-            message: 'Your payment has been received and is being processed. Your order will be confirmed shortly.',
-            statusClass: 'confirmed',
-            statusText: 'Processing',
-        },
-        failed: {
-            icon: '<i class="ph ph-x-circle" style="color: var(--error);"></i>',
-            title: 'Payment Failed',
-            message: errorMsg || 'Your payment could not be verified. Please try again or contact support.',
-            statusClass: 'cancelled',
-            statusText: 'Failed',
-        },
-    };
-
-    const config = configs[status] || configs.failed;
-
-    // Rebuild the confirmation panel
-    document.getElementById('checkout-content').innerHTML = `
-        <div class="card-glass text-center">
-            <div style="font-size:4rem; margin-bottom:var(--space-lg);">${config.icon}</div>
-            <h2 style="font-family:var(--font-display); margin-bottom:var(--space-sm);">${config.title}</h2>
-            <p class="text-muted mb-2">${config.message}</p>
-            ${data ? `
-            <div style="text-align:left; background:var(--bg-elevated); border-radius:var(--radius-md); padding:var(--space-lg); margin-bottom:var(--space-xl);">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
-                    <div>
-                        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Order Number</div>
-                        <div style="font-weight:700; color:var(--gold-light); font-size:1.1rem;">${data.order_number || '—'}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Total Amount</div>
-                        <div style="font-weight:700; font-size:1.1rem;">${data.total_amount ? formatPrice(data.total_amount) : '—'}</div>
-                    </div>
-                    <div>
-                        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Status</div>
-                        <div><span class="order-status ${config.statusClass}">${config.statusText}</span></div>
-                    </div>
-                    <div>
-                        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Date</div>
-                        <div>${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-                    </div>
-                </div>
-            </div>` : ''}
-            <div style="display:flex; gap:var(--space-md); justify-content:center; flex-wrap: wrap;">
-                <a href="/orders/" class="btn btn-primary btn-lg">View My Orders</a>
-                <a href="/catalog/" class="btn btn-secondary btn-lg">Continue Shopping</a>
-                ${status === 'failed' ? '<a href="/checkout/" class="btn btn-ghost btn-lg">Try Again</a>' : ''}
-            </div>
-        </div>`;
-
-    // Hide step indicators for result pages
-    document.querySelector('.checkout-steps').style.display = 'none';
-}
-
 
 // ─── Load Cart ─────────────────────────────────────────────────────────
 async function loadCheckoutCart() {
@@ -383,7 +259,6 @@ function fillSavedAddress() {
         refreshShippingEstimate(true);
     }
 }
-
 
 // ─── Shipping Estimate (Step 1) ──────────────────────────────────────────
 function bindShippingEstimateListeners() {
@@ -483,20 +358,44 @@ async function refreshShippingEstimate(forceApi = false) {
     return res;
 }
 
-
 // ─── Step Navigation ───────────────────────────────────────────────────
 function goToStep(step) {
     currentStep = step;
-    for (let i = 1; i <= 3; i++) {
-        document.getElementById(`step-${i}`).classList.toggle('hidden', i !== step);
+    for (let i = 1; i <= 4; i++) {
+        document.getElementById(`step-${i}`)?.classList.toggle('hidden', i !== step);
         const ind = document.getElementById(`step-indicator-${i}`);
-        ind.classList.remove('active', 'completed');
-        if (i < step) ind.classList.add('completed');
-        if (i === step) ind.classList.add('active');
+        if(ind) {
+            ind.classList.remove('active', 'completed');
+            if (i < step) ind.classList.add('completed');
+            if (i === step) ind.classList.add('active');
+        }
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+function updatePaymentQRCode(totalAmount) {
+    const amountValue = Number(totalAmount || 0).toFixed(2);
+    const upiUri = `upi://pay?pa=${UPI_ID}&pn=${UPI_DISPLAY_NAME}&am=${amountValue}&cu=INR`;
+    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUri)}`;
+    const qrImg = document.querySelector('#step-3 img[alt="UPI QR Code"]');
+    if (qrImg) qrImg.src = qrSrc;
+    const upiUrlInput = document.getElementById('upi-payment-url');
+    if (upiUrlInput) upiUrlInput.value = upiUri;
+}
+
+function copyUpiUrl() {
+    const upiUrlInput = document.getElementById('upi-payment-url');
+    if (!upiUrlInput || !upiUrlInput.value) {
+        Toast.error('UPI URL is not available yet.');
+        return;
+    }
+
+    upiUrlInput.select();
+    upiUrlInput.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(upiUrlInput.value)
+        .then(() => Toast.success('UPI URL copied!'))
+        .catch(() => Toast.error('Unable to copy UPI URL.'));
+}
 
 // ─── Step 1 → Step 2: Shipping → Review ────────────────────────────────
 document.getElementById('shipping-form').addEventListener('submit', async (e) => {
@@ -570,40 +469,28 @@ document.getElementById('shipping-form').addEventListener('submit', async (e) =>
         <div class="cart-summary-row"><span>Shipping</span><span style="color:var(--success);">${shippingFee === 0 ? 'Free' : formatPrice(shippingFee)}</span></div>
         <div class="cart-summary-row total"><span>Total</span><span>${formatPrice(total)}</span></div>`;
 
+    // Also update the final amount in Step 3
+    document.getElementById('payment-amount-display').textContent = formatPrice(total);
+    updatePaymentQRCode(total);
+
     goToStep(2);
 });
 
-
-// ─── Step 2 → Payment: PhonePe Redirect ─────────────────────────────────
+// ─── Step 2 → Step 3: Review → Payment ──────────────────────────────────
 async function proceedToPayment() {
-    /**
-     * Full payment initiation flow:
-        *   1. Health check — verify payment gateway is operational
-     *   2. Create order — backend validates stock & creates order
-        *   3. Initiate PhonePe payment — backend returns payment URL
-        *   4. Redirect — browser navigates to PhonePe hosted page
-     *
-        * ✅ SECURITY: Payment status is confirmed only from backend verification.
-     */
+    // If the order is already created, resume directly at payment-proof step.
+    if (createdOrder) {
+        document.getElementById('payment-amount-display').textContent = formatPrice(createdOrder.total_amount);
+        updatePaymentQRCode(createdOrder.total_amount);
+        goToStep(3);
+        return;
+    }
 
+    // We create the order now in "pending" status, then move to step 3 to upload proof
     const btn = document.getElementById('pay-now-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Processing...'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Creating Order...'; }
 
     try {
-        // ── Step 1: Gateway health check ─────────────────────────────
-        // Prevents sending the user to a broken checkout page.
-        const healthRes = await API.get('/payments/health-check/');
-        if (!healthRes || healthRes.status !== 'healthy') {
-            Toast.error(
-                healthRes?.error ||
-                'Payment gateway is temporarily unavailable. Please try again later.'
-            );
-            if (btn) { btn.disabled = false; btn.textContent = 'Pay Now'; }
-            return;
-        }
-
-        // ── Step 2: Create the order ─────────────────────────────────
-        // Stock is validated but NOT deducted — deferred to webhook.
         const state = checkoutShippingState || shippingQuote.state || '';
         const address = `${document.getElementById('ship-name').value}, ${document.getElementById('ship-address').value}, ${document.getElementById('ship-city').value}${state ? ', ' + state : ''} - ${document.getElementById('ship-pincode').value}, India`;
         const phone = document.getElementById('ship-phone').value;
@@ -623,50 +510,76 @@ async function proceedToPayment() {
         }
 
         createdOrder = orderRes.data;
-
-        // ── Step 3: Initiate PhonePe payment ─────────────────────────
-        const sessionRes = await API.post('/payments/initiate/', {
-            order_id: createdOrder.id,
-        });
-
-        if (!sessionRes || !sessionRes.ok || !sessionRes.data?.payment_url) {
-            Toast.error(
-                sessionRes?.data?.error ||
-                'Failed to initialize payment. Please try again.'
-            );
-            // Order was created but payment failed — show as pending
-            Toast.info('Your order has been saved. You can complete payment from your Orders page.');
-            showConfirmation(createdOrder, 'pending');
-            return;
+        updateCartCount(); // cart is cleared on the backend since order was placed
+        document.getElementById('payment-amount-display').textContent = formatPrice(createdOrder.total_amount);
+        updatePaymentQRCode(createdOrder.total_amount);
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Continue Payment';
         }
-
-        if (sessionRes.data?.merchant_transaction_id) {
-            localStorage.setItem('pending_phonepe_txn', sessionRes.data.merchant_transaction_id);
-        }
-
-        // ── Step 4: Redirect to PhonePe payment page ─────────────────
-        Toast.info('Redirecting to secure payment page...');
-        window.location.href = sessionRes.data.payment_url;
+        goToStep(3);
 
     } catch (err) {
-        console.error('Payment error:', err);
+        console.error('Order creation error:', err);
         Toast.error('An unexpected error occurred. Please try again.');
         if (btn) { btn.disabled = false; btn.textContent = 'Pay Now'; }
     }
 }
 
+// ─── Step 3 → Step 4: Upload Proof → Confirmation ───────────────────────
+document.getElementById('payment-proof-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!createdOrder) {
+        Toast.error('Order not found. Please refresh and try again.');
+        return;
+    }
 
-// ─── Legacy Confirmation (for pending orders when payment init fails) ──
-function showConfirmation(order, paymentStatus) {
-    updateCartCount();
-    document.getElementById('confirmation-icon').innerHTML =
-        paymentStatus === 'confirmed' ? '<i class="ph ph-check-circle" style="color: var(--success);"></i>' : '<i class="ph ph-hourglass" style="color: var(--gold);"></i>';
-    document.getElementById('confirmation-title').textContent =
-        paymentStatus === 'confirmed' ? 'Order Confirmed!' : 'Order Created';
-    document.getElementById('confirmation-msg').textContent =
-        paymentStatus === 'confirmed'
-            ? 'Your payment has been confirmed. Thank you for your purchase!'
-            : 'Your order has been placed. Complete payment to confirm.';
+    const btn = document.getElementById('submit-proof-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Uploading...'; }
+
+    const fileInput = document.getElementById('payment-screenshot');
+    const utrInput = document.getElementById('payment-utr');
+    if (!fileInput.files || !fileInput.files[0]) {
+        Toast.error('Please upload a payment screenshot.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Submit Payment Proof'; }
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('order_id', createdOrder.id);
+    formData.append('payment_screenshot', fileInput.files[0]);
+    if (utrInput.value.trim()) {
+        formData.append('upi_reference_id', utrInput.value.trim());
+    }
+
+    try {
+        const token = API.getToken();
+        const res = await fetch('/api/payments/upload-proof/', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+
+        const data = await res.json();
+        
+        if (res.ok) {
+            showConfirmation(createdOrder);
+        } else {
+            Toast.error(data.error || 'Failed to upload payment proof.');
+            if (btn) { btn.disabled = false; btn.textContent = 'Submit Payment Proof'; }
+        }
+    } catch (err) {
+        console.error('Proof upload error:', err);
+        Toast.error('An unexpected error occurred during upload.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Submit Payment Proof'; }
+    }
+});
+
+// ─── Final Confirmation ─────────────────────────────────────────────────
+function showConfirmation(order) {
+    document.getElementById('confirmation-icon').innerHTML = '<i class="ph ph-hourglass" style="color: var(--gold);"></i>';
+    document.getElementById('confirmation-title').textContent = 'Order Under Verification';
+    document.getElementById('confirmation-msg').textContent = 'We have received your payment proof. Our team will verify and confirm your order shortly.';
 
     document.getElementById('confirmation-details').innerHTML = `
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
@@ -674,13 +587,14 @@ function showConfirmation(order, paymentStatus) {
                 <div style="font-weight:700; color:var(--gold-light); font-size:1.1rem;">${order.order_number}</div></div>
             <div><div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Total Amount</div>
                 <div style="font-weight:700; font-size:1.1rem;">${formatPrice(order.total_amount)}</div></div>
-            <div><div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Status</div>
-                <div><span class="order-status ${paymentStatus}">${paymentStatus}</span></div></div>
+            <div><div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Payment Status</div>
+                <div><span class="order-status pending">Pending Verification</span></div></div>
             <div><div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Date</div>
                 <div>${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</div></div>
         </div>`;
 
-    goToStep(3);
+    document.querySelector('.checkout-steps').style.display = 'none';
+    goToStep(4);
 }
 </script>
 {% endblock %}

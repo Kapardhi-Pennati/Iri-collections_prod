@@ -4,16 +4,12 @@ Merged with original application logic for full functionality.
 """
 
 import logging
-import socket
 import urllib.request
 import urllib.error
-from urllib.parse import urljoin
 import json
 from datetime import timedelta
-from typing import Tuple
 
 from rest_framework import generics, status, viewsets
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -23,17 +19,16 @@ from django.db.models.functions import TruncDate
 from django.utils import timezone
 from django.utils.html import escape
 
-from core.security import audit_log, get_client_ip
+from core.security import audit_log
 from core.validators import InputValidator
 from core.throttling import PincodeVerifyThrottle
 
-from .models import Category, Product, Cart, CartItem, Order, OrderItem, Transaction, Wishlist
+from .models import Category, Product, Cart, CartItem, Order, OrderItem, Wishlist
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
     ProductAdminSerializer,
     CartSerializer,
-    CartItemSerializer,
     OrderSerializer,
     OrderCreateSerializer,
 )
@@ -566,78 +561,6 @@ class OrderDetailView(generics.RetrieveAPIView):
         return Order.objects.filter(user=self.request.user).prefetch_related(
             "items", "transaction"
         )
-
-
-class CancelOrderView(APIView):
-    """
-    Cancel an order and restore inventory if payment was confirmed.
-    
-    Security:
-      ✅ User can only cancel their own orders
-      ✅ Atomic inventory restoration with row-level locking
-      ✅ Only restores stock for orders where it was actually deducted
-      ✅ Audit logging for tracking
-    """
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, pk):
-        try:
-            order = Order.objects.get(pk=pk, user=request.user)
-        except Order.DoesNotExist:
-            return Response(
-                {"error": "Order not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        if order.status not in ["pending", "confirmed"]:
-            return Response(
-                {"error": "Order cannot be cancelled at this stage."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        with transaction.atomic():
-            # ✅ If the order was confirmed (paid), stock was already
-            # deducted by the webhook — we need to restore it.
-            if order.status == "confirmed":
-                order_items = OrderItem.objects.filter(
-                    order=order
-                ).select_related("product")
-
-                for oi in order_items:
-                    if not oi.product:
-                        continue
-                    # ✅ Lock the row before modifying stock
-                    product = Product.objects.select_for_update().get(
-                        id=oi.product_id
-                    )
-                    product.stock += oi.quantity
-                    product.save()
-
-                audit_log(
-                    action="ORDER_CANCEL_INVENTORY_RESTORED",
-                    user_id=request.user.id,
-                    details={
-                        "order_id": order.id,
-                        "order_number": order.order_number,
-                    },
-                    severity="INFO",
-                )
-
-            order.status = "cancelled"
-            order.save()
-
-        audit_log(
-            action="ORDER_CANCELLED",
-            user_id=request.user.id,
-            details={
-                "order_id": order.id,
-                "order_number": order.order_number,
-                "previous_status": order._original_status,
-            },
-            severity="INFO",
-        )
-
-        return Response({"message": "Order cancelled successfully."})
 
 
 # ─── Admin: Products CRUD ──────────────────────────────────────
