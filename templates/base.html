@@ -7,90 +7,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
     <meta name="description"
-        content="{% block meta_description %}Iri Collections — Exquisite handcrafted jewelry. Discover necklaces, earrings, rings, bracelets & more.{% endblock %}">
-    <title>{% block title %}Iri Collections{% endblock %}</title>
+        content="{% block meta_description %}Iri Collections — Premium Neo-Brutalist Jewelry Store. Handcrafted necklaces, earrings, and rings.{% endblock %}">
+    <title>{% block title %}IRI COLLECTIONS | PREMIUM JEWELRY{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     {% block extra_head %}{% endblock %}
 </head>
 
-<body class="{% block body_class %}{% endblock %}">
-    <!-- Mobile Menu Overlay -->
-    <div class="menu-overlay" id="menu-overlay"></div>
+<body>
+    <!-- 📜 SCROLLING POLICY MARQUEE -->
+    <div class="marquee-bar">
+        <div class="marquee-content">
+            NO RETURNS • NO REFUNDS • NO EXCHANGES • NO WARRANTIES • NO GUARANTEES • NO RETURNS • NO REFUNDS • NO EXCHANGES • NO WARRANTIES • NO GUARANTEES • NO RETURNS • NO REFUNDS • NO EXCHANGES • NO WARRANTIES • NO GUARANTEES
+        </div>
+    </div>
 
-    <!-- Navigation -->
-    <nav class="navbar" id="navbar">
+    <!-- 🧭 NAVIGATION -->
+    <nav class="navbar">
         <div class="container">
-            <a href="/" class="navbar-brand">Iri <span>Collections</span></a>
+            <a href="/" class="navbar-brand">IRI COLLECTIONS</a>
 
-            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+            <ul class="nav-links">
+                <li><a href="/">HOME</a></li>
+                <li><a href="/catalog/">SHOP</a></li>
+                
+                <!-- 🛒 CART ICON (PREMIUM SVG) -->
+                <li>
+                    <a href="/cart/" class="nav-icon-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                        <span class="cart-badge" id="cart-count">0</span>
+                    </a>
+                </li>
 
-            <ul class="nav-links" id="nav-links">
-                <li class="mobile-only" style="display: none; padding-bottom: var(--space-xl);"><a href="/"
-                        class="navbar-brand">Iri</a></li>
-                <li><a href="/">Home</a></li>
-                <li><a href="/catalog/">Shop</a></li>
-                <li id="auth-links"><a href="/login/">Login</a></li>
-                <li id="admin-link" class="hidden"><a href="/admin-dashboard/">Dashboard</a></li>
-                <li id="wishlist-link" class="hidden"><a href="/wishlist/">Wishlist <span class="cart-badge"
-                            id="wishlist-count">0</span></a></li>
-                <li id="cart-link"><a href="/cart/">Cart <span class="cart-badge" id="cart-count">0</span></a></li>
-                <li id="user-menu" class="nav-user-menu hidden">
-                    <a href="#" class="user-name-trigger">Account <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-left:4px;"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80a8,8,0,0,1,11.32-11.32L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path></svg></a>
-                    <div class="nav-dropdown">
-                        <a href="/orders/">My Orders</a>
-                        <div class="divider"></div>
-                        <a href="#" onclick="logout(); return false;">Logout</a>
-                    </div>
+                <!-- ❤️ WISHLIST ICON (PREMIUM SVG) -->
+                <li>
+                    <a href="/wishlist/" class="nav-icon-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                    </a>
+                </li>
+
+                <!-- 👤 PROFILE/LOGIN -->
+                <li id="auth-links"><a href="/login/" class="brutalist-btn" style="padding: 0.4rem 1rem; font-size: 0.8rem;">LOGIN</a></li>
+                
+                <li id="user-menu" class="hidden" style="position: relative;">
+                    <a href="#" class="user-name-trigger" style="display:flex; align-items:center; gap:5px;">
+                        ACCOUNT <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80a8,8,0,0,1,11.32-11.32L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
+                    </a>
+                    <!-- Simplified Dropdown -->
                 </li>
             </ul>
         </div>
     </nav>
 
-    <!-- Toast Container -->
-    <div class="toast-container" id="toast-container"></div>
+    <!-- 🍞 TOASTS -->
+    <div class="toast-container" id="toast-container" style="position: fixed; top: 130px; right: 20px; z-index: 2000;"></div>
 
-    <!-- Main Content -->
-    {% block content %}{% endblock %}
+    <!-- 🖼️ MAIN CONTENT -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
 
-    <!-- Footer -->
+    <!-- 🏁 FOOTER -->
     {% block footer %}
     <footer class="footer">
         <div class="container">
             <div class="footer-grid">
                 <div>
-                    <div class="footer-brand">Iri Collections</div>
+                    <div class="footer-brand">IRI COLLECTIONS</div>
+                    <p style="font-size: 0.9rem; margin-top: 10px;">Premium Jewelry. Built Different.</p>
                 </div>
                 <div>
-                    <h4>Shop</h4>
+                    <h4 style="margin-bottom: 15px;">EXPLORE</h4>
                     <ul class="footer-links">
-                        <li><a href="/catalog/?category=necklaces">Necklaces</a></li>
-                        <li><a href="/catalog/?category=earrings">Earrings</a></li>
-                        <li><a href="/catalog/?category=bracelets">Bracelets</a></li>
-                        <li><a href="/catalog/?category=rings">Rings</a></li>
+                        <li><a href="/catalog/">ALL COLLECTIONS</a></li>
+                        <li><a href="/catalog/?category=necklaces">NECKLACES</a></li>
+                        <li><a href="/catalog/?category=earrings">EARRINGS</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4>Help</h4>
+                    <h4 style="margin-bottom: 15px;">POLICIES</h4>
                     <ul class="footer-links">
-                        <li><a href="/shipping/">Shipping Policy</a></li>
-                        <li><a href="/policy/">No Refund & Exchange Policy</a></li>
-                        <li><a href="/contact/">Contact Us</a></li>
+                        <li><a href="/shipping/">SHIPPING INFO</a></li>
+                        <li><a href="/policy/">TERMS OF SERVICE</a></li>
+                        <li><a href="/contact/">CONTACT SUPPORT</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4>Company</h4>
-                    <ul class="footer-links">
-                        <li><a href="/about/">About Us</a></li>
-                    </ul>
+                    <h4 style="margin-bottom: 15px;">SOCIAL</h4>
+                    <div style="display: flex; gap: 15px;">
+                        <a href="#" class="brutalist-card" style="padding: 8px; box-shadow: 2px 2px 0 0 #000;">IG</a>
+                        <a href="#" class="brutalist-card" style="padding: 8px; box-shadow: 2px 2px 0 0 #000;">FB</a>
+                    </div>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 Iri Collections. All rights reserved.</p>
+            <div style="margin-top: 50px; padding-top: 20px; border-top: 2px solid #000; font-size: 0.8rem; font-weight: 700;">
+                &copy; 2026 IRI COLLECTIONS. NO RETURNS. NO REFUNDS.
             </div>
         </div>
     </footer>
