@@ -22,7 +22,7 @@ import logging
 from typing import Optional, Tuple
 
 from django.conf import settings
-from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils.html import escape
 from rest_framework import generics, status, viewsets
@@ -540,9 +540,7 @@ class LoginView(APIView):
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
-        authenticated_user = authenticate(
-            request, username=user.email, password=password
-        )
+        authenticated_user = user if user.is_active and user.check_password(password) else None
 
         if authenticated_user is None:
             failed_count = increment_failed_login_attempts(user.id)
