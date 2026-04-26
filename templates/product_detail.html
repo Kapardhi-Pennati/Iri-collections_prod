@@ -53,7 +53,7 @@ function renderProduct(p) {
     const heartIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${isInWishlist ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
 
     document.getElementById('product-detail-content').innerHTML = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items: start;">
+        <div class="product-detail-grid">
             <!-- IMAGE -->
             <div class="brutalist-card" style="padding: 0; overflow: hidden; background: var(--bg-secondary);">
                 <img src="${imgSrc}" alt="${p.name}" style="width: 100%; display: block;">
@@ -77,7 +77,7 @@ function renderProduct(p) {
                     ${p.description}
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-lg);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-sm); margin-bottom: var(--space-lg);">
                     <div class="brutalist-card" style="padding: 14px; font-weight: 600; font-size: 0.85rem;">
                         <span style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-bottom: 2px;">MATERIAL</span>
                         ${p.material || 'N/A'}
@@ -90,7 +90,7 @@ function renderProduct(p) {
 
                 <!-- ACTIONS -->
                 ${p.stock > 0 ? `
-                <div style="display: flex; gap: var(--space-sm); margin-bottom: var(--space-md);">
+                <div style="display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-bottom: var(--space-md);">
                     <div style="display: flex; border: var(--border-width) solid var(--border-color); background: var(--bg-elevated); box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--shadow-color);">
                         <button onclick="changeQty(-1)" style="padding: 10px 16px; font-weight: 700; background: var(--bg-elevated); border:none; cursor:pointer;">−</button>
                         <input type="number" id="qty-input" value="1" readonly style="width: 50px; text-align: center; border:none; border-left: var(--border-width) solid var(--border-color); border-right: var(--border-width) solid var(--border-color); font-weight: 700; font-size: 1rem; background: var(--bg-elevated);">

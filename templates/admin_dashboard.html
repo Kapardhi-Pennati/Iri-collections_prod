@@ -78,7 +78,7 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-xl); margin-top: 40px;">
+            <div class="chart-grid">
                 <div class="brutalist-card" style="padding: 30px; background: var(--bg-elevated);">
                     <h3 style="margin-bottom: 20px;">REVENUE (LAST 30 DAYS)</h3>
                     <canvas id="revenue-chart" height="300"></canvas>
@@ -110,7 +110,7 @@
                 <canvas id="traffic-chart" height="200"></canvas>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl);">
+            <div class="chart-grid-equal">
                 <div class="brutalist-card" style="padding: 30px; background: var(--bg-elevated);">
                     <h3 style="margin-bottom: 20px;">TOP PAGES</h3>
                     <div style="overflow-y:auto; max-height:320px;">
@@ -174,15 +174,15 @@
             <input type="hidden" id="product-edit-id">
             <div class="form-group"><label>Name</label><input type="text" id="pf-name" required></div>
             <div class="form-group"><label>Description</label><textarea id="pf-desc" rows="3" required></textarea></div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
+            <div class="form-grid">
                 <div class="form-group"><label>Price (₹)</label><input type="number" id="pf-price" step="0.01" required></div>
                 <div class="form-group"><label>Compare Price (₹)</label><input type="number" id="pf-compare" step="0.01"></div>
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
+            <div class="form-grid">
                 <div class="form-group"><label>Stock</label><input type="number" id="pf-stock" required></div>
                 <div class="form-group"><label>Category</label><select id="pf-category" required></select></div>
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md); align-items: end;">
+            <div class="form-grid" style="align-items: end;">
                 <div class="form-group"><label>Image URL</label><input type="url" id="pf-image" placeholder="https://..."></div>
                 <div class="form-group"><label>Or Upload Image</label><input type="file" id="pf-image-file" accept="image/*"></div>
             </div>
@@ -190,7 +190,7 @@
                 <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Preview</label>
                 <img src="" alt="Preview" style="max-width: 100px; max-height: 100px; border-radius: var(--radius-sm); object-fit: cover; border: 1px solid var(--border);">
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
+            <div class="form-grid">
                 <div class="form-group"><label>Material</label><input type="text" id="pf-material"></div>
                 <div class="form-group"><label>Weight</label><input type="text" id="pf-weight" placeholder="e.g. 5.2g"></div>
             </div>
