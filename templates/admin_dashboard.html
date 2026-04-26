@@ -876,7 +876,7 @@ async function loadAdminCategories() {
         allCategories = cats;
         const container = document.getElementById('categories-list');
         container.innerHTML = cats.map(c => `
-            <div class="order-card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="brutalist-card flex-wrap-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--space-md);">
                 <div>
                     <div style="font-weight:600; font-size:1.05rem;">${escapeHTML(c.name)}</div>
                     <div style="font-size:0.85rem; color:var(--text-muted);">${c.product_count} products · /${escapeHTML(c.slug)}</div>
