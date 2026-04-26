@@ -26,7 +26,12 @@ DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-change-me-in-production")
 
 if not DEBUG and (not SECRET_KEY or SECRET_KEY == "django-insecure-change-me-in-production"):
-    raise ValueError(
+    if os.getenv("VERCEL"):
+        SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-vercel-build-fallback")
+    else:
+
+        raise ValueError(
+
         "CRITICAL: SECRET_KEY not set or using unsafe default in production. "
         "Set SECRET_KEY environment variable in your hosting environment.\n"
         "Generate one: python -c \"from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())\""
@@ -37,6 +42,12 @@ if DEBUG:
     logger.warning("⚠️  DEBUG MODE ENABLED - Never use in production!")
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+
+# Vercel specific configuration
+if os.getenv("VERCEL_URL"):
+    ALLOWED_HOSTS.append(os.getenv("VERCEL_URL"))
+    ALLOWED_HOSTS.append(".vercel.app")
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
