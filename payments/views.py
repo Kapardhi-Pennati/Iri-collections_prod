@@ -120,41 +120,19 @@ class UploadPaymentProofView(APIView):
     def post(self, request) -> Response:
         order_id = request.data.get("order_id")
         if not order_id:
-            return Response(
-                {"error": "order_id is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"error": "order_id is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             order_id = int(order_id)
-        except (TypeError, ValueError):
-            return Response(
-                {"error": "Invalid order_id."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
             upi_reference = _validate_upi_reference(request.data.get("upi_reference_id"))
             screenshot = request.FILES.get("payment_screenshot")
             _validate_screenshot(screenshot)
-        except ValueError as exc:
+            order = _load_locked_order(order_id, user=request.user)
+        except (TypeError, ValueError, Order.DoesNotExist) as exc:
             return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            order = _load_locked_order(order_id, user=request.user)
-        except Order.DoesNotExist:
-            return Response(
-                {"error": "Order not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
         if order.status != "pending":
-            return Response(
-                {
-                    "error": f"Order is already {order.status}. Cannot upload payment proof."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"error": f"Order is already {order.status}."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             _ensure_order_reservations(order, request.user)
@@ -162,11 +140,16 @@ class UploadPaymentProofView(APIView):
             return Response({"error": str(exc)}, status=status.HTTP_409_CONFLICT)
 
         txn = Transaction.objects.select_for_update().filter(order=order).first()
-        if txn and txn.status in {"paid", "rejected"}:
-            return Response(
-                {"error": f"Payment is already {txn.status}. Cannot upload proof again."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        
+        # ✅ DEDUCT STOCK: Only if first proof or if previous was rejected (stock was restored)
+        if not txn or txn.status == "rejected":
+            order_items = list(OrderItem.objects.filter(order=order).select_related("product"))
+            for item in order_items:
+                if item.product:
+                    item.product.stock -= item.quantity
+                    item.product.save(update_fields=["stock"])
+            # Clear reservations since stock is now officially deducted
+            StockReservation.objects.filter(order=order).delete()
 
         if txn:
             txn.payment_screenshot = screenshot
@@ -185,24 +168,12 @@ class UploadPaymentProofView(APIView):
         audit_log(
             action="PAYMENT_PROOF_UPLOADED",
             user_id=request.user.id,
-            details={
-                "order_id": str(order.id),
-                "order_number": order.order_number,
-                "upi_reference_id": upi_reference,
-                "has_screenshot": "true" if screenshot else "false",
-                "file_size": str(screenshot.size) if screenshot else "0",
-            },
+            details={"order_id": str(order.id), "order_number": order.order_number, "stock_deducted": "true"},
             severity="INFO",
             ip_address=get_client_ip(request),
         )
 
-        return Response(
-            {
-                "message": "Payment proof uploaded successfully. Awaiting admin verification.",
-                "order_number": order.order_number,
-                "status": "pending_verification",
-            }
-        )
+        return Response({"message": "Proof uploaded. Stock deducted. Awaiting admin verification.", "order_number": order.order_number, "status": "pending_verification"})
 
 
 class ApprovePaymentView(APIView):
@@ -213,104 +184,22 @@ class ApprovePaymentView(APIView):
     def post(self, request, pk) -> Response:
         try:
             txn = Transaction.objects.select_for_update().get(order_id=pk)
-        except Transaction.DoesNotExist:
-            return Response(
-                {"error": "No payment proof found for this order."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            order = _load_locked_order(pk)
+        except (Transaction.DoesNotExist, Order.DoesNotExist):
+            return Response({"error": "Order or Transaction not found."}, status=status.HTTP_404_NOT_FOUND)
 
         if txn.status == "paid":
             return Response({"message": "Payment already approved.", "status": "paid"})
 
-        if txn.status == "rejected":
-            return Response(
-                {"error": "Payment was already rejected. Cannot approve."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            order = _load_locked_order(pk)
-        except Order.DoesNotExist:
-            return Response(
-                {"error": "Order not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        admin_notes = str(request.data.get("admin_notes", "")).strip()
-        order_items = list(OrderItem.objects.filter(order=order).select_related("product"))
-        product_ids = [item.product_id for item in order_items if item.product_id]
-        products = Product.objects.select_for_update().filter(id__in=product_ids)
-        product_map = {product.id: product for product in products}
-
-        for item in order_items:
-            if not item.product_id:
-                continue
-
-            product = product_map.get(item.product_id)
-            if not product:
-                return Response(
-                    {"error": f"Product for line item {item.product_name} is no longer available."},
-                    status=status.HTTP_409_CONFLICT,
-                )
-
-            reservation = (
-                StockReservation.objects.select_for_update()
-                .filter(order=order, product=product)
-                .first()
-            )
-            held_quantity = (
-                reservation.quantity
-                if reservation and reservation.expires_at > timezone.now()
-                else 0
-            )
-            reservable_quantity = product.get_available_stock() + held_quantity
-            if item.quantity > reservable_quantity:
-                return Response(
-                    {
-                        "error": (
-                            f"Inventory for {product.name} is no longer available. "
-                            "Reject and recreate the order."
-                        )
-                    },
-                    status=status.HTTP_409_CONFLICT,
-                )
-
-        for item in order_items:
-            if not item.product_id:
-                continue
-            product = product_map[item.product_id]
-            product.stock -= item.quantity
-            product.save(update_fields=["stock"])
-
-        StockReservation.objects.filter(order=order).delete()
-
+        # ✅ Note: Stock was already deducted during UploadPaymentProofView
         txn.status = "paid"
-        txn.admin_notes = admin_notes
-        txn.save(update_fields=["status", "admin_notes"])
+        txn.save(update_fields=["status"])
 
         order.status = "confirmed"
         order.save(update_fields=["status"])
 
-        audit_log(
-            action="PAYMENT_APPROVED",
-            user_id=request.user.id,
-            details={
-                "order_id": str(order.id),
-                "order_number": order.order_number,
-                "upi_reference_id": txn.upi_reference_id,
-                "total": str(float(order.total_amount)),
-                "admin_notes": admin_notes,
-            },
-            severity="INFO",
-        )
-
-        return Response(
-            {
-                "message": "Payment approved. Order confirmed.",
-                "order_number": order.order_number,
-                "status": "confirmed",
-            }
-        )
+        audit_log(action="PAYMENT_APPROVED", user_id=request.user.id, details={"order_number": order.order_number}, severity="INFO")
+        return Response({"message": "Payment approved. Order confirmed.", "order_number": order.order_number, "status": "confirmed"})
 
 
 class RejectPaymentView(APIView):
@@ -320,65 +209,30 @@ class RejectPaymentView(APIView):
     @transaction.atomic
     def post(self, request, pk) -> Response:
         try:
-            txn = Transaction.objects.select_related("order").select_for_update().get(
-                order_id=pk
-            )
-        except Transaction.DoesNotExist:
-            return Response(
-                {"error": "No payment proof found for this order."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        if txn.status == "paid":
-            return Response(
-                {"error": "Payment already approved. Cannot reject."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            txn = Transaction.objects.select_related("order").select_for_update().get(order_id=pk)
+            order = _load_locked_order(pk)
+        except (Transaction.DoesNotExist, Order.DoesNotExist):
+            return Response({"error": "Order or Transaction not found."}, status=status.HTTP_404_NOT_FOUND)
 
         if txn.status == "rejected":
-            return Response(
-                {"message": "Payment already rejected.", "status": "rejected"}
-            )
+            return Response({"message": "Payment already rejected.", "status": "rejected"})
 
-        try:
-            order = _load_locked_order(pk)
-        except Order.DoesNotExist:
-            return Response(
-                {"error": "Order not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        admin_notes = str(request.data.get("admin_notes", "")).strip()
-
-        StockReservation.objects.filter(order=order).delete()
+        # ✅ RESTORE STOCK: Add quantities back to product stock
+        order_items = list(OrderItem.objects.filter(order=order).select_related("product"))
+        for item in order_items:
+            if item.product:
+                item.product.stock += item.quantity
+                item.product.save(update_fields=["stock"])
 
         txn.status = "rejected"
-        txn.admin_notes = admin_notes
-        txn.save(update_fields=["status", "admin_notes"])
+        txn.save(update_fields=["status"])
 
-        if order.status == "pending":
-            order.status = "cancelled"
-            order.save(update_fields=["status"])
+        order.status = "cancelled"
+        order.save(update_fields=["status"])
 
-        audit_log(
-            action="PAYMENT_REJECTED",
-            user_id=request.user.id,
-            details={
-                "order_id": str(txn.order.id),
-                "order_number": txn.order.order_number,
-                "upi_reference_id": txn.upi_reference_id,
-                "admin_notes": admin_notes,
-            },
-            severity="WARNING",
-        )
+        audit_log(action="PAYMENT_REJECTED", user_id=request.user.id, details={"order_number": order.order_number, "stock_restored": "true"}, severity="WARNING")
+        return Response({"message": "Payment rejected. Stock restored.", "order_number": order.order_number, "status": "rejected"})
 
-        return Response(
-            {
-                "message": "Payment rejected. Order has been cancelled.",
-                "order_number": txn.order.order_number,
-                "status": "rejected",
-            }
-        )
 
 
 class GenerateUPIQRView(APIView):

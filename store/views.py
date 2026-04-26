@@ -788,6 +788,16 @@ class AdminOrderStatusView(APIView):
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
+            if new_status == "cancelled" and order.status != "cancelled":
+                txn = getattr(order, "transaction", None)
+                if txn and txn.status != "rejected":
+                    for item in order.items.all().select_related("product"):
+                        if item.product:
+                            item.product.stock += item.quantity
+                            item.product.save(update_fields=["stock"])
+                    txn.status = "rejected"
+                    txn.save(update_fields=["status"])
+            
             if new_status == "cancelled" and order.status == "pending":
                 StockReservation.objects.filter(order=order).delete()
 
