@@ -2,19 +2,82 @@
 {% block title %}ABOUT | IRI COLLECTIONS{% endblock %}
 {% block content %}
 <section style="padding: var(--space-xl) 0;">
-    <div class="container" style="max-width: 900px;">
+    <div class="container">
+        <!-- 🏷️ HEADER -->
         <div style="margin-bottom: 50px; border-bottom: var(--border-width) solid #000; padding-bottom: 20px;">
-            <h1 style="font-size: 3.5rem; margin: 0;">OUR STORY</h1>
+            <h1 style="font-size: 3.5rem; margin: 0;">OUR MISSION</h1>
         </div>
-        
-        <div class="brutalist-card" style="padding: 40px; background: #fff; line-height: 1.6; font-weight: 700;">
-            <p style="margin-bottom: 20px; font-size: 1.2rem;">IRI COLLECTIONS WAS FOUNDED WITH A SINGLE MISSION: TO BRING HIGH-IMPACT JEWELRY TO EVERYONE AT REVOLUTIONARY PRICES.</p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items: start;">
+            <!-- 📖 BRAND STORY -->
+            <div style="font-size: 1.2rem; line-height: 1.8; font-weight: 700;">
+                <p style="margin-bottom: 20px;">
+                    <span style="background: var(--bg-accent); padding: 0 5px;">IRI COLLECTIONS</span> is a wholesale sourcing partner specializing in high-quality artificial jewelry, timepieces, and jewelry-making components.
+                </p>
+                <p style="margin-bottom: 20px;">
+                    We began our journey by building a transparent, community-focused marketplace on YouTube, and we have now evolved into a comprehensive digital platform.
+                </p>
+                <p>
+                    We don't just sell products; <span style="text-decoration: underline;">we bridge the gap between global manufacturing excellence and your doorstep.</span>
+                </p>
+            </div>
+
+            <!-- 🛠️ EXPERTISE CARDS -->
+            <div style="display: grid; gap: 20px;">
+                <div class="brutalist-card" style="padding: 25px; background: #fff;">
+                    <h3 style="margin-bottom: 10px; font-size: 1rem;">ADORNMENTS</h3>
+                    <p style="font-size: 0.9rem; font-weight: 600;">EARRINGS, RINGS, AND BRACELETS SOURCED TO REFLECT CURRENT MARKET HIGH-FASHION AND TRADITIONAL TRENDS.</p>
+                </div>
+                <div class="brutalist-card" style="padding: 25px; background: #fff;">
+                    <h3 style="margin-bottom: 10px; font-size: 1rem;">ESSENTIAL COMPONENTS</h3>
+                    <p style="font-size: 0.9rem; font-weight: 600;">PREMIUM BEADS AND CHAINS SOURCED FOR DURABILITY, PERFECT FOR DESIGNERS AND BOUTIQUE ASSEMBLY.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📊 WHOLESALE ADVANTAGE TABLE -->
+        <div style="margin-top: 80px;">
+            <h2 style="font-size: 2.5rem; margin-bottom: 40px; border-bottom: var(--border-width) solid #000; padding-bottom: 10px;">THE WHOLESALE ADVANTAGE</h2>
             
-            <p style="margin-bottom: 20px;">EVERY PIECE IN OUR COLLECTION IS METICULOUSLY HANDPICKED. WE BELIEVE THAT JEWELRY IS MORE THAN JUST AN ACCESSORY—IT IS AN EXPRESSION OF INDIVIDUALITY AND A CELEBRATION OF LIFE'S MOST PRECIOUS MOMENTS.</p>
-            
-            <p style="padding: 20px; background: var(--bg-accent); border: 4px solid #000; box-shadow: 4px 4px 0 0 #000;">
-                FROM BOLD STATEMENT PIECES TO DAILY ESSENTIALS, OUR CURATION IS BUILT FOR THOSE WHO COMMAND ATTENTION.
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; border: var(--border-width) solid #000;">
+                    <thead>
+                        <tr style="background: #000; color: #fff;">
+                            <th style="padding: 20px; text-align: left; text-transform: uppercase;">OUR EDGE</th>
+                            <th style="padding: 20px; text-align: left; text-transform: uppercase;">WHAT IT MEANS FOR YOU</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-weight: 700;">
+                        <tr style="border-bottom: 2px solid #000;">
+                            <td style="padding: 20px; background: var(--bg-accent);">DIRECT SOURCING</td>
+                            <td style="padding: 20px;">BY SOURCING DIRECTLY, WE BYPASS TRADITIONAL RETAIL MARKUPS TO OFFER GENUINE WHOLESALE PRICING.</td>
+                        </tr>
+                        <tr style="border-bottom: 2px solid #000;">
+                            <td style="padding: 20px; background: var(--bg-accent);">CURATED CATALOG</td>
+                            <td style="padding: 20px;">WE DO THE TREND-HUNTING FOR YOU, SELECTING ONLY THE MOST MARKETABLE AND HIGH-DEMAND DESIGNS.</td>
+                        </tr>
+                        <tr style="border-bottom: 2px solid #000;">
+                            <td style="padding: 20px; background: var(--bg-accent);">COMMUNITY TRUSTED</td>
+                            <td style="padding: 20px;">BUILT ON THE TRANSPARENCY OF OUR YOUTUBE ORIGINS, OUR SOURCING PROCESS IS HONEST AND RELIABLE.</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 20px; background: var(--bg-accent);">SCALABLE SUPPLY</td>
+                            <td style="padding: 20px;">WHETHER YOU ARE BUYING FOR YOURSELF OR STOCKING A STOREFRONT, OUR PLATFORM HANDLES BULK LOGISTICS WITH EASE.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 📝 THE PROMISE -->
+        <div class="brutalist-card" style="margin-top: 80px; padding: 50px; background: var(--bg-secondary); text-align: center;">
+            <h2 style="font-size: 2rem; margin-bottom: 20px;">THE IRI COLLECTIONS PROMISE</h2>
+            <p style="max-width: 800px; margin: 0 auto 30px auto; font-size: 1.1rem; font-weight: 700; line-height: 1.6;">
+                AT IRI COLLECTIONS, OUR MISSION IS TO BE THE MOST RELIABLE LINK IN YOUR SUPPLY CHAIN. WE TREAT SOURCING AS AN ART FORM, SCOURING THE MARKET TO BRING YOU A DIVERSE RANGE OF ACCESSORIES THAT EMPOWER YOUR BUSINESS OR PERSONAL STYLE.
             </p>
+            <div style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; border-top: var(--border-width) solid #000; display: inline-block; padding-top: 15px;">
+                "GLOBAL TRENDS, SOURCED FOR YOU. QUALITY ACCESSORIES AT WHOLESALE REALITY."
+            </div>
         </div>
     </div>
 </section>
