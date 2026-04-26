@@ -293,8 +293,10 @@ async function updateNavbar() {
     const user = await API.bootstrapUser();
     if (user) {
         authLinks.classList.add('hidden');
+        authLinks.style.display = 'none'; // Force hide
         if (userMenu) {
             userMenu.classList.remove('hidden');
+            userMenu.style.display = 'block'; // Force show
             const nameEl = userMenu.querySelector('.user-name-trigger');
             if (nameEl) {
                 const firstName = user.full_name ? user.full_name.split(' ')[0] : (user.username || 'Account');
@@ -303,14 +305,28 @@ async function updateNavbar() {
         }
         if (adminLink && API.isAdmin()) {
             adminLink.classList.remove('hidden');
+            adminLink.style.display = 'block';
         }
-        if (wishlistLink) wishlistLink.classList.remove('hidden');
+        if (wishlistLink) {
+            wishlistLink.classList.remove('hidden');
+            wishlistLink.style.display = 'block';
+        }
         updateCartCount();
     } else {
         authLinks.classList.remove('hidden');
-        if (userMenu) userMenu.classList.add('hidden');
-        if (adminLink) adminLink.classList.add('hidden');
-        if (wishlistLink) wishlistLink.classList.add('hidden');
+        authLinks.style.display = 'block';
+        if (userMenu) {
+            userMenu.classList.add('hidden');
+            userMenu.style.display = 'none';
+        }
+        if (adminLink) {
+            adminLink.classList.add('hidden');
+            adminLink.style.display = 'none';
+        }
+        if (wishlistLink) {
+            wishlistLink.classList.add('hidden');
+            wishlistLink.style.display = 'none';
+        }
         if (cartCount) cartCount.textContent = '0';
     }
 

@@ -11,57 +11,74 @@
 
 {% block content %}
 <div class="admin-layout">
-    <!-- Mobile Header -->
-    <div class="admin-mobile-header">
-        <div style="font-family:var(--font-display); font-weight:700; color:var(--text-primary);">IRI <span class="text-gold">ADMIN</span></div>
-        <button class="admin-menu-toggle" onclick="toggleAdminSidebar()">☰</button>
-    </div>
-
-    <!-- Sidebar -->
-    <aside class="admin-sidebar" id="admin-sidebar">
-        <div class="sidebar-header">
-            <div style="font-family:var(--font-display); font-size:1.1rem; color:var(--gold); margin-bottom:var(--space-2xl);">Admin Panel</div>
-            <button class="admin-sidebar-close" onclick="toggleAdminSidebar()">✕</button>
+    <!-- 📁 SIDEBAR -->
+    <aside class="admin-sidebar">
+        <div style="margin-bottom: 30px;">
+            <h2 style="font-size: 1.2rem; margin: 0; border-left: 5px solid var(--bg-accent); padding-left: 10px;">IRI ADMIN</h2>
         </div>
-        <ul class="admin-sidebar-nav">
-            <li><a href="#" onclick="showSection('overview')" class="active" id="nav-overview">📊 Overview</a></li>
-            <li><a href="#" onclick="showSection('products')" id="nav-products">📦 Products</a></li>
-            <li><a href="#" onclick="showSection('orders')" id="nav-orders">🛒 Orders</a></li>
-            <li><a href="#" onclick="showSection('categories')" id="nav-categories">🏷️ Categories</a></li>
-            <li><a href="#" onclick="showSection('traffic')" id="nav-traffic">📈 Traffic</a></li>
-        </ul>
-        <div style="margin-top:auto; padding-top:var(--space-2xl); border-top:1px solid var(--border);">
-            <a href="/" style="color:var(--text-muted); font-size:0.85rem;">← Back to Store</a>
-        </div>
+        
+        <nav>
+            <a href="#" onclick="showSection('overview')" class="admin-nav-item active" id="nav-overview">
+                <i class="ph ph-house-line" style="font-size: 1.2rem;"></i> OVERVIEW
+            </a>
+            <a href="#" onclick="showSection('products')" class="admin-nav-item" id="nav-products">
+                <i class="ph ph-package" style="font-size: 1.2rem;"></i> PRODUCTS
+            </a>
+            <a href="#" onclick="showSection('orders')" class="admin-nav-item" id="nav-orders">
+                <i class="ph ph-shopping-cart-simple" style="font-size: 1.2rem;"></i> ORDERS
+            </a>
+            <a href="#" onclick="showSection('categories')" class="admin-nav-item" id="nav-categories">
+                <i class="ph ph-tag" style="font-size: 1.2rem;"></i> CATEGORIES
+            </a>
+            <a href="#" onclick="showSection('traffic')" class="admin-nav-item" id="nav-traffic">
+                <i class="ph ph-chart-line-up" style="font-size: 1.2rem;"></i> TRAFFIC
+            </a>
+            
+            <div style="margin-top: 50px; border-top: 2px solid #000; padding-top: 20px;">
+                <a href="/" class="admin-nav-item" style="font-size: 0.8rem; color: #666;">
+                    <i class="ph ph-arrow-left"></i> BACK TO STORE
+                </a>
+            </div>
+        </nav>
     </aside>
 
-    <!-- Main Content -->
+    <!-- 📊 MAIN CONTENT -->
     <main class="admin-main">
-        <!-- Section: Overview -->
         <div id="section-overview">
-            <h2 style="font-family:var(--font-display); margin-bottom:var(--space-xl);">Dashboard <span class="text-gold">Overview</span></h2>
-            <div class="stat-cards" id="stat-cards">
-                <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">Total Revenue</div><div class="stat-value" id="stat-revenue">—</div></div>
-                <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-label">Total Orders</div><div class="stat-value" id="stat-orders">—</div></div>
-                <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-label">Pending Orders</div><div class="stat-value" id="stat-pending">—</div></div>
-                <div class="stat-card"><div class="stat-icon">💎</div><div class="stat-label">Active Products</div><div class="stat-value" id="stat-products">—</div></div>
-                <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-label">Low Stock</div><div class="stat-value" id="stat-lowstock">—</div></div>
+            <h1 style="font-size: 2.5rem; margin-bottom: 40px;">DASHBOARD OVERVIEW</h1>
+            
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div style="font-weight: 800; font-size: 0.8rem; color: #666;">TOTAL REVENUE</div>
+                    <div class="stat-value" id="stat-revenue">₹0</div>
+                    <div style="font-size: 0.7rem; color: var(--success); font-weight: 700;">↑ 0% FROM LAST MONTH</div>
+                </div>
+                <div class="stat-card">
+                    <div style="font-weight: 800; font-size: 0.8rem; color: #666;">TOTAL ORDERS</div>
+                    <div class="stat-value" id="stat-orders">0</div>
+                    <div style="font-size: 0.7rem; color: #666; font-weight: 700;">PROCESSED TODAY</div>
+                </div>
+                <div class="stat-card">
+                    <div style="font-weight: 800; font-size: 0.8rem; color: #666;">PENDING ORDERS</div>
+                    <div class="stat-value" id="stat-pending">0</div>
+                    <div style="font-size: 0.7rem; color: var(--error); font-weight: 700;">REQUIRES ACTION</div>
+                </div>
+                <div class="stat-card">
+                    <div style="font-weight: 800; font-size: 0.8rem; color: #666;">ACTIVE PRODUCTS</div>
+                    <div class="stat-value" id="stat-products">0</div>
+                    <div style="font-size: 0.7rem; color: #666; font-weight: 700;">IN LIVE CATALOG</div>
+                </div>
             </div>
 
-            <div class="charts-grid" style="display:grid; grid-template-columns:2fr 1fr; gap:var(--space-xl); margin-bottom:var(--space-xl);">
-                <div class="chart-container">
-                    <h3>Revenue (Last 30 Days)</h3>
-                    <canvas id="revenue-chart" height="240"></canvas>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-xl); margin-top: 40px;">
+                <div class="brutalist-card" style="padding: 30px; background: #fff;">
+                    <h3 style="margin-bottom: 20px;">REVENUE (LAST 30 DAYS)</h3>
+                    <canvas id="revenue-chart" height="300"></canvas>
                 </div>
-                <div class="chart-container">
-                    <h3>Orders by Status</h3>
-                    <canvas id="status-chart" height="240"></canvas>
+                <div class="brutalist-card" style="padding: 30px; background: #fff;">
+                    <h3 style="margin-bottom: 20px;">ORDERS BY STATUS</h3>
+                    <canvas id="status-chart" height="300"></canvas>
                 </div>
-            </div>
-
-            <div class="chart-container">
-                <h3>Top Selling Products</h3>
-                <div id="top-products-list"></div>
             </div>
         </div>
 
