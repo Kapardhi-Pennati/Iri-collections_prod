@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Create Account — Iri Collections{% endblock %}
 {% block meta_description %}Join Iri Collections — create your account and discover exquisite jewelry.{% endblock %}
@@ -6,48 +7,59 @@
 {% block footer %}{% endblock %}
 
 {% block content %}
-<div class="auth-page">
-    <div class="auth-card card-glass">
-        <h1>Join <span class="text-gold">Iri Collections</span></h1>
-        <p class="subtitle">Create your account to start shopping</p>
+<div class="auth-page fade-in">
+    <!-- Visual Side -->
+    <div class="auth-visual" style="background: var(--gold-gradient);">
+        <div class="auth-visual-content">
+            <h2 style="font-family: var(--font-display); font-size: 3rem; margin-bottom: var(--space-md);">Timeless Elegance</h2>
+            <p style="font-size: 1.1rem; opacity: 0.9; line-height: 1.6;">Join our community of jewelry enthusiasts and discover handcrafted pieces that tell your unique story.</p>
+        </div>
+    </div>
 
-        <form id="signup-form">
-            <div class="form-group">
-                <label for="full_name">Full Name</label>
-                <input type="text" id="full_name" placeholder="Your full name" required>
-            </div>
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" placeholder="you@example.com" required autocomplete="email">
-            </div>
-            <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" placeholder="+91 9876543210">
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Min. 8 characters" required minlength="8">
-            </div>
-            <div class="form-group">
-                <label for="password2">Confirm Password</label>
-                <input type="password" id="password2" placeholder="Repeat password" required>
-            </div>
-            <div id="signup-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
-            <button type="submit" class="btn btn-primary btn-block btn-lg" id="send-otp-btn">Send Verification OTP</button>
-        </form>
+    <!-- Form Side -->
+    <div class="auth-content">
+        <div class="auth-card">
+            <h1>Join <span class="text-gold">Iri Collections</span></h1>
+            <p class="subtitle">Create your account to start shopping</p>
 
-        <form id="otp-form" style="display:none; margin-top:1rem;">
-            <p>We've sent a 6-digit code to your email. Enter it below to complete registration.</p>
-            <div class="form-group">
-                <label for="otp_code">Verification Code</label>
-                <input type="text" id="otp_code" placeholder="123456" required maxlength="6" pattern="\d{6}">
-            </div>
-            <div id="otp-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
-            <button type="submit" class="btn btn-primary btn-block btn-lg" id="signup-btn">Verify & Create Account</button>
-        </form>
+            <form id="signup-form">
+                <div class="form-group">
+                    <label for="full_name">Full Name</label>
+                    <input type="text" id="full_name" placeholder="Your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" placeholder="+91 9876543210">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Min. 8 characters" required minlength="8">
+                </div>
+                <div class="form-group">
+                    <label for="password2">Confirm Password</label>
+                    <input type="password" id="password2" placeholder="Repeat password" required>
+                </div>
+                <div id="signup-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="send-otp-btn">Send Verification OTP</button>
+            </form>
 
-        <div class="auth-footer" style="margin-top:2rem;">
-            Already have an account? <a href="/login/">Sign in</a>
+            <form id="otp-form" style="display:none; margin-top:1rem;">
+                <p>We've sent a 6-digit code to your email. Enter it below to complete registration.</p>
+                <div class="form-group">
+                    <label for="otp_code">Verification Code</label>
+                    <input type="text" id="otp_code" placeholder="123456" required maxlength="6" pattern="\d{6}">
+                </div>
+                <div id="otp-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="signup-btn">Verify & Create Account</button>
+            </form>
+
+            <div class="auth-footer" style="margin-top:2rem;">
+                Already have an account? <a href="/login/">Sign in</a>
+            </div>
         </div>
     </div>
 </div>

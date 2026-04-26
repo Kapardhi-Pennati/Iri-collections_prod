@@ -13,19 +13,19 @@
 
         <div class="checkout-steps">
             <div class="checkout-step active" id="step-indicator-1">
-                <div class="checkout-step-number"><i class="ph ph-truck"></i></div>
+                <div class="checkout-step-number"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256"><path d="M245.54,124,228.66,91.28A16.07,16.07,0,0,0,214.34,83H184V64a16,16,0,0,0-16-16H24A16,16,0,0,0,8,64V176a16,16,0,0,0,16,16H40.42a32,32,0,1,0,63.16,0h48.84a32,32,0,1,0,63.16,0H232a16,16,0,0,0,16-16V128A15.86,15.86,0,0,0,245.54,124ZM184,99h30.34l12.86,25H184ZM72,208a16,16,0,1,1,16-16A16,16,0,0,1,72,208Zm112,0a16,16,0,1,1,16-16A16,16,0,0,1,184,208Zm48-32H215.58a32,32,0,0,0-63.16,0H103.58a32,32,0,0,0-63.16,0H24V64H168V176a16,16,0,0,0,16,16h48Z"></path></svg></div>
                 <div class="checkout-step-label">Shipping</div>
             </div>
             <div class="checkout-step" id="step-indicator-2">
-                <div class="checkout-step-number"><i class="ph ph-receipt"></i></div>
+                <div class="checkout-step-number"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM216,200H40V56H216V200ZM184,96a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h96A8,8,0,0,1,184,96Zm0,32a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h96A8,8,0,0,1,184,128Zm0,32a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h96A8,8,0,0,1,184,160Z"></path></svg></div>
                 <div class="checkout-step-label">Review</div>
             </div>
             <div class="checkout-step" id="step-indicator-3">
-                <div class="checkout-step-number"><i class="ph ph-credit-card"></i></div>
+                <div class="checkout-step-number"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256"><path d="M224,48H32a16,16,0,0,0-16,16V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM224,192H32V112H224V192Zm0-96H32V64H224V96Z"></path></svg></div>
                 <div class="checkout-step-label">Payment</div>
             </div>
             <div class="checkout-step" id="step-indicator-4">
-                <div class="checkout-step-number"><i class="ph ph-check-circle"></i></div>
+                <div class="checkout-step-number"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm45.66-122.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,144.69l50.34-50.35A8,8,0,0,1,173.66,93.66Z"></path></svg></div>
                 <div class="checkout-step-label">Done</div>
             </div>
         </div>
@@ -77,7 +77,7 @@
                             <input type="checkbox" id="ship-save-address" checked> Save this address for future orders
                         </label>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block btn-lg">Continue to Review <i class="ph ph-arrow-right"></i></button>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg">Continue to Review <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-left:4px;"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L204.69,128,138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"></path></svg></button>
                 </form>
             </div>
 
@@ -87,8 +87,8 @@
                 <div id="review-shipping" style="margin-top:var(--space-lg); padding:var(--space-lg); background:var(--bg-elevated); border-radius:var(--radius-md);"></div>
                 <div id="review-total" style="margin-top:var(--space-lg);"></div>
                 <div style="display:flex; gap:var(--space-md); margin-top:var(--space-xl);">
-                    <button type="button" class="btn btn-ghost btn-lg" onclick="goToStep(1)"><i class="ph ph-arrow-left"></i> Back</button>
-                    <button type="button" class="btn btn-primary btn-lg" style="flex:1;" id="pay-now-btn" onclick="proceedToPayment()">Pay Now <i class="ph ph-lock-key"></i></button>
+                    <button type="button" class="btn btn-ghost btn-lg" onclick="goToStep(1)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path></svg> Back</button>
+                    <button type="button" class="btn btn-primary btn-lg" style="flex:1;" id="pay-now-btn" onclick="proceedToPayment()">Pay Now <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-left:4px;"><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-80-56a12,12,0,1,1-12,12A12,12,0,0,1,128,152Z"></path></svg></button>
                 </div>
             </div>
 
@@ -96,7 +96,7 @@
                 <h2 style="font-family:var(--font-display); margin-bottom:var(--space-md); text-align: center;">Complete Payment</h2>
                 <p class="text-muted" style="text-align: center; margin-bottom: 0.5rem;">Scan the QR code below using any UPI app to complete your payment.</p>
                 <p style="text-align: center; color: var(--gold); font-size: 0.9rem; margin-bottom: var(--space-xl); font-weight: 500;">
-                    <i class="ph ph-shield-check"></i> Security Tip: Verify that the recipient name is '{{ upi_display_name }}' before confirming.
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M208,40H48A16,16,0,0,0,32,56V200a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V56A16,16,0,0,0,208,40Zm0,160H48V56H208V200Zm-48-80a8,8,0,0,1-8,8H104a8,8,0,0,1,0-16h48A8,8,0,0,1,160,120Z"></path></svg> Security Tip: Verify that the recipient name is '{{ upi_display_name }}' before confirming.
                 </p>
 
                 <div style="display: flex; flex-direction: column; align-items: center; background: var(--bg-elevated); padding: var(--space-xl); border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: var(--space-xl);">
@@ -129,15 +129,18 @@
                         <small style="color: var(--text-muted);">You can optionally upload a screenshot of your successful transaction.</small>
                     </div>
 
+                    <div style="margin-bottom: 1.5rem; padding: 12px; background: rgba(184, 142, 47, 0.1); border-radius: 4px; font-size: 0.85rem; color: var(--gold-light); text-align: center; border: 1px solid rgba(184, 142, 47, 0.2);">
+                        <strong>Important:</strong> No returns, refunds or exchanges. All sales are final.
+                    </div>
                     <div style="display:flex; gap:var(--space-md);">
-                        <button type="button" class="btn btn-ghost btn-lg" onclick="goToStep(2)"><i class="ph ph-arrow-left"></i> Back</button>
-                        <button type="submit" class="btn btn-primary btn-lg" style="flex:1;" id="submit-proof-btn">Submit Payment Proof <i class="ph ph-check-circle"></i></button>
+                        <button type="button" class="btn btn-ghost btn-lg" onclick="goToStep(2)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path></svg> Back</button>
+                        <button type="submit" class="btn btn-primary btn-lg" style="flex:1;" id="submit-proof-btn">Submit Payment Proof <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-left:4px;"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm45.66-122.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,144.69l50.34-50.35A8,8,0,0,1,173.66,93.66Z"></path></svg></button>
                     </div>
                 </form>
             </div>
 
             <div id="step-4" class="card-glass hidden text-center">
-                <div style="font-size:4rem; margin-bottom:var(--space-lg);" id="confirmation-icon"><i class="ph ph-confetti"></i></div>
+                <div style="font-size:4rem; margin-bottom:var(--space-lg);" id="confirmation-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="var(--gold)" viewBox="0 0 256 256"><path d="M239.38,154.5l-20.17-20.17,14.45-14.45a16,16,0,0,0,0-22.63l-45.26-45.26a16,16,0,0,0-22.63,0l-14.45,14.45L131.15,46.27a16,16,0,0,0-22.63,0L46.27,108.52a16,16,0,0,0,0,22.63l20.17,20.17L52,165.77a16,16,0,0,0,0,22.63l45.26,45.26a16,16,0,0,0,22.63,0l14.45-14.45L154.5,239.38a16,16,0,0,0,22.63,0L239.38,177.13A16,16,0,0,0,239.38,154.5ZM178.63,85.13l11.31,11.31-50.91,50.91-11.31-11.31Zm-28.28-28.28,11.31,11.31-50.91,50.91L99.44,56.85Zm-45.26,45.26,11.31,11.31-50.91,50.91L54.17,102.11ZM128,216.49l-11.31-11.31,50.91-50.91,11.31,11.31Zm45.26-45.26-11.31-11.31,50.91-50.91,11.31,11.31Z"></path></svg></div>
                 <h2 style="font-family:var(--font-display); margin-bottom:var(--space-sm);" id="confirmation-title">Order Received!</h2>
                 <p class="text-muted mb-2" id="confirmation-msg">We have received your payment proof and it is under verification.</p>
                 <div id="confirmation-details" style="text-align:left; background:var(--bg-elevated); border-radius:var(--radius-md); padding:var(--space-lg); margin-bottom:var(--space-xl);"></div>
@@ -189,7 +192,7 @@ async function loadCheckoutCart() {
         if (!cartData || !cartData.items || cartData.items.length === 0) {
             document.getElementById('checkout-content').innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-state-icon"><i class="ph ph-shopping-cart"></i></div>
+                    <div class="empty-state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256"><path d="M222.14,105.85l-17.6,96.81A15.94,15.94,0,0,1,188.87,216H73.5a15.94,15.94,0,0,1-15.67-13.34L35.2,80H24a8,8,0,0,1,0-16H40a8,8,0,0,1,7.84,6.43L52.51,96H232a8,8,0,0,1,7.84,9.57Zm-161.47,94.15H188.87l14.54-80H55.13ZM96,232a16,16,0,1,0,16,16A16,16,0,0,0,96,232Zm80,0a16,16,0,1,0,16,16A16,16,0,0,0,176,232Z"></path></svg></div>
                     <h3>Your cart is empty</h3>
                     <a href="/catalog/" class="btn btn-primary mt-2">Browse Products</a>
                 </div>
@@ -472,7 +475,7 @@ document.getElementById('shipping-form').addEventListener('submit', async (event
         const reviewAddress = `${escapeHTML(document.getElementById('ship-name').value.trim())}<br>
             ${escapeHTML(document.getElementById('ship-address').value.trim())}<br>
             ${escapeHTML(document.getElementById('ship-city').value.trim())}${shippingState ? ', ' + escapeHTML(shippingState) : ''} - ${escapeHTML(document.getElementById('ship-pincode').value.trim())}<br>
-            <i class="ph ph-phone"></i> ${escapeHTML(document.getElementById('ship-phone').value.trim())}`;
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M222.37,158.46l-47.11-21.11-.13-.06a16,16,0,0,0-15.17,1.4,8.12,8.12,0,0,0-.75.56L143.16,155.3c-23.38-12.12-39.93-28.67-52.05-52.05l16.05-16.05a8.12,8.12,0,0,0,.56-.75,16,16,0,0,0,1.34-15.3l-.06-.13L87.89,43.89A16,16,0,0,0,73.18,34a15.89,15.89,0,0,0-16.5,9.4L45.48,72.74c-15,35.53-2.82,88,41.44,132.26S185,263.18,220.53,248.2l29.35-11.2a15.89,15.89,0,0,0,9.4-16.5A16,16,0,0,0,222.37,158.46ZM214.8,221.05l-29.35,11.2c-30.87,13-75.14-1.45-114.73-41s-54-83.86-41-114.73l11.2-29.35a0,0,0,0,1,0,0l21.12,47.11-17.65,17.66a8,8,0,0,0-2,7.74c12.72,31,31.7,50,62.72,62.72a8,8,0,0,0,7.74-2l17.66-17.65,47.11,21.12A0,0,0,0,1,214.8,221.05Z"></path></svg> ${escapeHTML(document.getElementById('ship-phone').value.trim())}`;
         document.getElementById('review-shipping').innerHTML = `
             <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:0.5rem;">Shipping To</div>
             <div style="line-height:1.8;">${reviewAddress}</div>
@@ -636,7 +639,7 @@ document.getElementById('payment-proof-form').addEventListener('submit', async (
 });
 
 function showConfirmation(order) {
-    document.getElementById('confirmation-icon').innerHTML = '<i class="ph ph-hourglass" style="color: var(--gold);"></i>';
+    document.getElementById('confirmation-icon').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="var(--gold)" viewBox="0 0 256 256"><path d="M144,128a16,16,0,1,1-16-16A16,16,0,0,1,144,128Zm80-48V176a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V80A16,16,0,0,1,48,64H80V40a16,16,0,0,1,16-16h64a16,16,0,0,1,16,16V64h32A16,16,0,0,1,224,80ZM96,40V64h64V40ZM208,80H48V176H208V80Z"></path></svg>';
     document.getElementById('confirmation-title').textContent = 'Order Under Verification';
     document.getElementById('confirmation-msg').textContent = 'We have received your payment proof. Our team will verify and confirm your order shortly.';
 

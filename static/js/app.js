@@ -40,7 +40,7 @@ const RouteRuntime = {
         if (!container) return;
         container.innerHTML = `
             <div class="empty-state">
-                <div class="empty-state-icon"><i class="ph ph-warning-circle"></i></div>
+                <div class="empty-state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256"><path d="M236.8,188.09,214.35,60.35a15.9,15.9,0,0,0-15.68-13.15H57.33a15.9,15.9,0,0,0-15.68,13.15L19.2,188.09a16,16,0,0,0,15.68,18.71h186.24A16,16,0,0,0,236.8,188.09ZM211.51,64,231.1,175.2H24.9L44.49,64H198.67ZM128,112a40,40,0,0,1-40,40,8,8,0,0,1,0-16,24,24,0,0,0,24-24,8,8,0,0,1,16,0Z"></path></svg></div>
                 <h3>Something went wrong</h3>
                 <p>${escapeHTML(message)}</p>
                 <button class="btn btn-primary mt-2" type="button" onclick="window.location.reload()">${escapeHTML(retryLabel)}</button>
@@ -287,7 +287,7 @@ async function updateNavbar() {
             const nameEl = userMenu.querySelector('.user-name-trigger');
             if (nameEl) {
                 const firstName = user.full_name ? user.full_name.split(' ')[0] : (user.username || 'Account');
-                nameEl.innerHTML = `${escapeHTML(firstName)} <i class="ph ph-caret-down"></i>`;
+                nameEl.innerHTML = `${escapeHTML(firstName)} <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-left:4px;"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80a8,8,0,0,1,11.32-11.32L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path></svg>`;
             }
         }
         if (adminLink && API.isAdmin()) {
@@ -358,7 +358,9 @@ function productCardHTML(product) {
     const isOOS = product.stock <= 0;
     const cardOpacity = isOOS ? '0.6' : '1';
     const isInWishlist = window.wishlistItems ? window.wishlistItems.has(product.id) : false;
-    const heartIcon = isInWishlist ? '<i class="ph-fill ph-heart"></i>' : '<i class="ph ph-heart"></i>';
+    const heartIcon = isInWishlist 
+        ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="var(--gold)" viewBox="0 0 256 256"><path d="M240,94c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,220.66,16,164,16,94A62.07,62.07,0,0,1,78,32c20.65,0,38.73,8.88,50,23.89C139.27,40.88,157.35,32,178,32A62.07,62.07,0,0,1,240,94Z"></path></svg>' 
+        : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a54.06,54.06,0,0,0-54,54c0,101.07,98.14,154.62,102.33,156.83a8.14,8.14,0,0,0,7.34,0C137.86,248.62,236,195.07,236,94A54.06,54.06,0,0,0,178,40ZM128,234.33C116.51,228.16,40,183,40,94A38,38,0,0,1,78,56c18.57,0,34.05,10.63,40.16,27.5a8,8,0,0,0,15.68,0C139.95,66.63,155.43,56,174,56a38,38,0,0,1,38,38C212,183,135.49,228.16,128,234.33Z"></path></svg>';
 
     return `
         <div class="card product-card" onclick="window.location.href='/product/${product.slug}/'" data-product-id="${product.id}" style="opacity: ${cardOpacity}; position: relative;">
@@ -369,8 +371,8 @@ function productCardHTML(product) {
                 <button class="wishlist-btn" onclick="event.stopPropagation(); toggleWishlist(${product.id})" id="btn-wishlist-${product.id}" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: var(--gold); border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 1.2rem; cursor: pointer; z-index: 2; transition: transform 0.2s; display: flex; align-items: center; justify-content: center;">${heartIcon}</button>
                 <div class="product-card-actions">
                     ${isOOS
-                        ? `<button class="product-card-action-btn" disabled style="opacity:0.5;cursor:not-allowed;" title="Out of Stock"><i class="ph ph-prohibit"></i></button>`
-                        : `<button class="product-card-action-btn" onclick="event.stopPropagation(); addToCart(${product.id})" title="Add to Cart"><i class="ph ph-shopping-cart"></i></button>`}
+                        ? `<button class="product-card-action-btn" disabled style="opacity:0.5;cursor:not-allowed;" title="Out of Stock"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm45.66-122.34a8,8,0,0,1,0,11.32l-80,80a8,8,0,0,1-11.32-11.32l80-80A8,8,0,0,1,173.66,93.66Z"></path></svg></button>`
+                        : `<button class="product-card-action-btn" onclick="event.stopPropagation(); addToCart(${product.id})" title="Add to Cart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M216,48H56a16,16,0,0,0-16,16V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V64A16,16,0,0,0,216,48ZM216,192H56V64H216V192Zm-88-88h56a8,8,0,0,1,0,16H128a8,8,0,0,1,0-16Zm0,32h56a8,8,0,0,1,0,16H128a8,8,0,0,1,0-16Zm-48-32a8,8,0,1,1-8,8A8,8,0,0,1,80,104Zm0,32a8,8,0,1,1-8,8A8,8,0,0,1,80,136Z"></path></svg></button>`}
                 </div>
             </div>
             <div class="product-card-info">
@@ -460,7 +462,9 @@ async function toggleWishlist(productId) {
 
 function updateWishlistUI(productId, added) {
     document.querySelectorAll(`#btn-wishlist-${productId}`).forEach((btn) => {
-        btn.innerHTML = added ? '<i class="ph-fill ph-heart"></i>' : '<i class="ph ph-heart"></i>';
+        btn.innerHTML = added 
+            ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="var(--gold)" viewBox="0 0 256 256"><path d="M240,94c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,220.66,16,164,16,94A62.07,62.07,0,0,1,78,32c20.65,0,38.73,8.88,50,23.89C139.27,40.88,157.35,32,178,32A62.07,62.07,0,0,1,240,94Z"></path></svg>' 
+            : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a54.06,54.06,0,0,0-54,54c0,101.07,98.14,154.62,102.33,156.83a8.14,8.14,0,0,0,7.34,0C137.86,248.62,236,195.07,236,94A54.06,54.06,0,0,0,178,40ZM128,234.33C116.51,228.16,40,183,40,94A38,38,0,0,1,78,56c18.57,0,34.05,10.63,40.16,27.5a8,8,0,0,0,15.68,0C139.95,66.63,155.43,56,174,56a38,38,0,0,1,38,38C212,183,135.49,228.16,128,234.33Z"></path></svg>';
         btn.style.transform = 'scale(1.2)';
         setTimeout(() => { btn.style.transform = 'none'; }, 200);
     });

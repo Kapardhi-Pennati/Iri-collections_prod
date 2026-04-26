@@ -29,7 +29,7 @@ async function loadOrders() {
         if (!data || !data.results || data.results.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-state-icon"><i class="ph ph-package"></i></div>
+                    <div class="empty-state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256"><path d="M224,96V184a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V96a16,16,0,0,1,16-16h32V40a16,16,0,0,1,16-16h64a16,16,0,0,1,16,16V80h32A16,16,0,0,1,224,96ZM96,40V80h64V40ZM208,96H48v88H208V96Zm-80,40a12,12,0,1,1-12,12A12,12,0,0,1,128,136Z"></path></svg></div>
                     <h3>No orders yet</h3>
                     <p>Start shopping to see your orders here</p>
                     <a href="/catalog/" class="btn btn-primary mt-2">Browse Products</a>
@@ -69,7 +69,7 @@ async function loadOrders() {
                             ${parseFloat(order.shipping_fee) > 0 ? `<div style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">(incl. ${formatPrice(order.shipping_fee)} shipping)</div>` : ''}
                         </div>
                         <div style="display:flex; gap:10px; align-items:center;">
-                            <a href="/invoice/${order.id}/" target="_blank" class="btn btn-sm btn-ghost" style="text-decoration:none;"><i class="ph ph-printer"></i> Print Bill</a>
+                            <a href="/invoice/${order.id}/" target="_blank" class="btn btn-sm btn-ghost" style="text-decoration:none;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M224,96V184a16,16,0,0,1-16,16H184v16a16,16,0,0,1-16,16H88a16,16,0,0,1-16-16V200H48a16,16,0,0,1-16-16V96a16,16,0,0,1,16-16H80V40a16,16,0,0,1,16-16h64a16,16,0,0,1,16,16V80h32A16,16,0,0,1,224,96ZM96,40V80h64V40ZM168,200H88v16h80V200Zm40-104H48v88h24V168a16,16,0,0,1,16-16h80a16,16,0,0,1,16,16v16h24V96Zm-40,88V168H88v16h80Z"></path></svg> Print Bill</a>
                         </div>
                     </div>
                     ${order.transaction ? `

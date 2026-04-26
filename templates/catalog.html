@@ -69,7 +69,7 @@ async function loadProducts(page = 1) {
         } else {
             grid.innerHTML = `
                 <div class="empty-state" style="grid-column: 1/-1;">
-                    <div class="empty-state-icon"><i class="ph ph-diamond"></i></div>
+                    <div class="empty-state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256"><path d="M245.54,117.3l-37.33-74.67A16,16,0,0,0,193.88,32H62.12a16,16,0,0,0-14.33,10.63l-37.33,74.67A15.89,15.89,0,0,0,8,123.31V208a16,16,0,0,0,16,16H232a16,16,0,0,0,16-16V123.31A15.89,15.89,0,0,0,245.54,117.3ZM62.12,48H193.88l28,56H34.12ZM232,208H24V120H232V208ZM80,152a8,8,0,0,1,8-8h80a8,8,0,0,1,0,16H88A8,8,0,0,1,80,152Z"></path></svg></div>
                     <h3>No products found</h3>
                     <p>Try adjusting your filters or search terms</p>
                 </div>
@@ -87,11 +87,11 @@ function renderPagination(data) {
 
     let html = '';
     if (data.previous) {
-        html += `<button class="btn btn-ghost btn-sm" onclick="loadProducts(${currentPage - 1}); currentPage--;"><i class="ph ph-arrow-left"></i> Prev</button>`;
+        html += `<button class="btn btn-ghost btn-sm" onclick="loadProducts(${currentPage - 1}); currentPage--;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path></svg> Prev</button>`;
     }
     html += `<span class="btn btn-ghost btn-sm" style="pointer-events:none;">Page ${currentPage}</span>`;
     if (data.next) {
-        html += `<button class="btn btn-ghost btn-sm" onclick="loadProducts(${currentPage + 1}); currentPage++;">Next <i class="ph ph-arrow-right"></i></button>`;
+        html += `<button class="btn btn-ghost btn-sm" onclick="loadProducts(${currentPage + 1}); currentPage++;">Next <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-left:4px;"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L204.69,128,138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"></path></svg></button>`;
     }
     pag.innerHTML = html;
 }
