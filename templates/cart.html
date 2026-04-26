@@ -7,11 +7,12 @@
     <div class="container">
         <!-- HEADER -->
         <div class="page-header">
-            <h1>ORDER MANIFEST</h1>
+            <h1>YOUR ORDERS </h1>
         </div>
 
         <div id="cart-content">
-            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted);">OPENING YOUR BAG...</div>
+            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted);">OPENING YOUR
+                BAG...</div>
         </div>
     </div>
 </section>
@@ -19,15 +20,15 @@
 
 {% block extra_js %}
 <script>
-let cartState = null;
-let cartMutationInFlight = false;
+    let cartState = null;
+    let cartMutationInFlight = false;
 
-function cartContainer() {
-    return document.getElementById('cart-content');
-}
+    function cartContainer() {
+        return document.getElementById('cart-content');
+    }
 
-function renderLoginRequired() {
-    cartContainer().innerHTML = `
+    function renderLoginRequired() {
+        cartContainer().innerHTML = `
         <div class="brutalist-card" style="padding: 80px; text-align: center;">
             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-md);"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             <h3 style="font-size: 1.8rem; margin-bottom: 8px;">ACCESS REQUIRED</h3>
@@ -35,12 +36,12 @@ function renderLoginRequired() {
             <a href="/login/" class="brutalist-btn" style="background: var(--text-primary); color: var(--text-inverted);">LOGIN NOW</a>
         </div>
     `;
-}
+    }
 
-function renderCart(cart) {
-    cartState = cart;
-    if (!cart || !cart.items || cart.items.length === 0) {
-        cartContainer().innerHTML = `
+    function renderCart(cart) {
+        cartState = cart;
+        if (!cart || !cart.items || cart.items.length === 0) {
+            cartContainer().innerHTML = `
             <div class="brutalist-card" style="padding: 80px; text-align: center;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-md);"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                 <h3 style="font-size: 1.8rem; margin-bottom: 8px;">BAG IS EMPTY</h3>
@@ -48,15 +49,15 @@ function renderCart(cart) {
                 <a href="/catalog/" class="brutalist-btn" style="background: var(--text-primary); color: var(--text-inverted);">START SHOPPING</a>
             </div>
         `;
-        return;
-    }
+            return;
+        }
 
-    const itemsHTML = cart.items.map((item) => {
-        const p = item.product_detail;
-        const image = p.display_image || p.image_url || p.image || '';
-        const outOfStock = item.is_out_of_stock;
+        const itemsHTML = cart.items.map((item) => {
+            const p = item.product_detail;
+            const image = p.display_image || p.image_url || p.image || '';
+            const outOfStock = item.is_out_of_stock;
 
-        return `
+            return `
             <div class="brutalist-card cart-item-grid" style="padding: var(--space-sm); margin-bottom: var(--space-md); opacity: ${outOfStock ? '0.5' : '1'};">
                 <div style="border: 2px solid var(--border-color); overflow: hidden; background: var(--bg-secondary);">
                     <img src="${image}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover;">
@@ -78,9 +79,9 @@ function renderCart(cart) {
                 </div>
             </div>
         `;
-    }).join('');
+        }).join('');
 
-    cartContainer().innerHTML = `
+        cartContainer().innerHTML = `
         <div class="cart-grid">
             <div>
                 ${itemsHTML}
@@ -116,42 +117,42 @@ function renderCart(cart) {
             </div>
         </div>
     `;
-}
-
-async function loadCart() {
-    if (!API.isLoggedIn()) { renderLoginRequired(); return; }
-    try {
-        const data = await API.get('/store/cart/');
-        renderCart(data);
-    } catch {
-        cartContainer().innerHTML = '<div style="text-align: center; padding: 60px; font-weight: 600; color: var(--error);">ERROR LOADING BAG.</div>';
     }
-}
 
-async function updateCartItem(itemId, newQty) {
-    if (cartMutationInFlight) return;
-    cartMutationInFlight = true;
-    try {
-        const res = await API.patch('/store/cart/', { item_id: itemId, quantity: newQty });
-        if (res.ok) { renderCart(res.data); updateCartCount(); }
-    } finally { cartMutationInFlight = false; }
-}
+    async function loadCart() {
+        if (!API.isLoggedIn()) { renderLoginRequired(); return; }
+        try {
+            const data = await API.get('/store/cart/');
+            renderCart(data);
+        } catch {
+            cartContainer().innerHTML = '<div style="text-align: center; padding: 60px; font-weight: 600; color: var(--error);">ERROR LOADING BAG.</div>';
+        }
+    }
 
-async function removeCartItem(itemId) {
-    if (cartMutationInFlight) return;
-    cartMutationInFlight = true;
-    try {
-        const res = await API.delete(`/store/cart/?item_id=${itemId}`);
-        if (res.ok) { renderCart(res.data); updateCartCount(); Toast.success('PIECE REMOVED'); }
-    } finally { cartMutationInFlight = false; }
-}
+    async function updateCartItem(itemId, newQty) {
+        if (cartMutationInFlight) return;
+        cartMutationInFlight = true;
+        try {
+            const res = await API.patch('/store/cart/', { item_id: itemId, quantity: newQty });
+            if (res.ok) { renderCart(res.data); updateCartCount(); }
+        } finally { cartMutationInFlight = false; }
+    }
 
-async function clearCart() {
-    if (!confirm('CLEAR ALL PIECES?')) return;
-    const res = await API.delete('/store/cart/');
-    if (res.ok) { renderCart(res.data); updateCartCount(); Toast.success('BAG CLEARED'); }
-}
+    async function removeCartItem(itemId) {
+        if (cartMutationInFlight) return;
+        cartMutationInFlight = true;
+        try {
+            const res = await API.delete(`/store/cart/?item_id=${itemId}`);
+            if (res.ok) { renderCart(res.data); updateCartCount(); Toast.success('PIECE REMOVED'); }
+        } finally { cartMutationInFlight = false; }
+    }
 
-document.addEventListener('DOMContentLoaded', loadCart);
+    async function clearCart() {
+        if (!confirm('CLEAR ALL PIECES?')) return;
+        const res = await API.delete('/store/cart/');
+        if (res.ok) { renderCart(res.data); updateCartCount(); Toast.success('BAG CLEARED'); }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadCart);
 </script>
 {% endblock %}
