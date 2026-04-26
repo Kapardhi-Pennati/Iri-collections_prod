@@ -80,9 +80,11 @@ const API = {
     setUser(user) {
         if (!user) {
             sessionStorage.removeItem(this.userCacheKey);
+            this.isBootstrapped = false;
             return;
         }
         sessionStorage.setItem(this.userCacheKey, JSON.stringify(user));
+        this.isBootstrapped = true;
     },
 
     clearSession() {
@@ -90,6 +92,7 @@ const API = {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
+        this.isBootstrapped = false;
     },
 
     isLoggedIn() {
@@ -194,12 +197,18 @@ const API = {
         return { ok: res.ok, status: res.status, data: await this.parseResponse(res) };
     },
 
+    isBootstrapped: false,
+
     async bootstrapUser() {
+        if (this.isBootstrapped) return this.getUser();
         if (this.bootstrapPromise) return this.bootstrapPromise;
 
         this.bootstrapPromise = (async () => {
             const cachedUser = this.getUser();
-            if (cachedUser) return cachedUser;
+            if (cachedUser) {
+                this.isBootstrapped = true;
+                return cachedUser;
+            }
 
             try {
                 const controller = createRequestController();
@@ -208,9 +217,11 @@ const API = {
                     skipRefresh: true,
                 });
                 this.setUser(user);
+                this.isBootstrapped = true;
                 return user;
             } catch {
                 this.clearSession();
+                this.isBootstrapped = true; // Mark as done even if it failed
                 return null;
             } finally {
                 this.bootstrapPromise = null;
