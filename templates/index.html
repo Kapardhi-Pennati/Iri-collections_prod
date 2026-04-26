@@ -9,21 +9,26 @@
     <div class="container">
         <div class="hero-grid">
             <div class="hero-text">
-                <div class="badge" style="background: var(--bg-accent); margin-bottom: var(--space-md);">DIRECT WHOLESALE DROPS</div>
+                <div class="badge" style="background: var(--bg-accent); margin-bottom: var(--space-md);">DIRECT
+                    WHOLESALE DROPS</div>
                 <h1>THE VAULT IS OPEN.</h1>
                 <p>
-                    Curated jewelry and timepieces at genuine wholesale pricing. Direct manufacturing sources. No markups. No compromises.
+                    Curated jewelry and timepieces at genuine wholesale pricing. Direct manufacturing sources. No
+                    markups. No compromises.
                 </p>
                 <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                    <a href="/catalog/" class="brutalist-btn" style="background: var(--text-primary); color: var(--text-inverted);">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-6.05-6.05m0 0a7 7 0 1 0-9.9-9.9 7 7 0 0 0 9.9 9.9Z"/></svg>
+                    <a href="/catalog/" class="brutalist-btn"
+                        style="background: var(--text-primary); color: var(--text-inverted);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m21 21-6.05-6.05m0 0a7 7 0 1 0-9.9-9.9 7 7 0 0 0 9.9 9.9Z" />
+                        </svg>
                         EXPLORE DROPS
                     </a>
                     <a href="/about/" class="brutalist-btn">OUR MISSION</a>
                 </div>
             </div>
             <div class="hero-image">
-                <img src="{% static 'img/hero.jpg' %}" alt="Direct Wholesale Jewelry">
             </div>
         </div>
     </div>
@@ -34,31 +39,43 @@
     <div class="container">
         <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
             <h2 style="font-size: clamp(1.5rem, 4vw, 2.2rem);">SHOP BY CATEGORY</h2>
-            <a href="/catalog/" style="font-weight: 700; font-size: 0.85rem; text-decoration: underline; color: var(--text-secondary);">VIEW ALL →</a>
+            <a href="/catalog/"
+                style="font-weight: 700; font-size: 0.85rem; text-decoration: underline; color: var(--text-secondary);">VIEW
+                ALL →</a>
         </div>
 
-        <div class="product-grid" id="categories-grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-top: 0;">
+        <div class="product-grid" id="categories-grid"
+            style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-top: 0;">
             <!-- Populated by JS -->
         </div>
     </div>
 </section>
 
 <!-- FEATURED DROPS -->
-<section style="padding: var(--space-xl) 0; background: var(--bg-secondary); border-top: var(--border-width) solid var(--border-color); border-bottom: var(--border-width) solid var(--border-color);">
+<section
+    style="padding: var(--space-xl) 0; background: var(--bg-secondary); border-top: var(--border-width) solid var(--border-color); border-bottom: var(--border-width) solid var(--border-color);">
     <div class="container">
         <div style="margin-bottom: var(--space-xl); text-align: center;">
             <h2 style="font-size: clamp(1.5rem, 4vw, 2.5rem); margin-bottom: 8px;">CURRENT WHOLESALE DROPS</h2>
-            <p style="font-weight: 500; color: var(--text-muted); font-size: 0.9rem;">Meticulously sourced. Ready for dispatch.</p>
+            <p style="font-weight: 500; color: var(--text-muted); font-size: 0.9rem;">Meticulously sourced. Ready for
+                dispatch.</p>
         </div>
 
         <div class="product-grid" id="featured-products">
-            <div style="padding: 60px; text-align: center; font-weight: 600; color: var(--text-muted); grid-column: 1/-1;">LOADING FRESH DROPS...</div>
+            <div
+                style="padding: 60px; text-align: center; font-weight: 600; color: var(--text-muted); grid-column: 1/-1;">
+                LOADING FRESH DROPS...</div>
         </div>
 
         <div style="margin-top: var(--space-xl); text-align: center;">
-            <a href="/catalog/" class="brutalist-btn" style="background: var(--text-primary); color: var(--text-inverted); padding: 1rem 2.5rem;">
+            <a href="/catalog/" class="brutalist-btn"
+                style="background: var(--text-primary); color: var(--text-inverted); padding: 1rem 2.5rem;">
                 VIEW FULL VAULT
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                </svg>
             </a>
         </div>
     </div>
@@ -69,8 +86,10 @@
     <div class="container">
         <div class="brutalist-card" style="padding: var(--space-xl); background: var(--bg-accent); text-align: center;">
             <h2 style="font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: var(--space-sm);">WHOLESALE REALITY.</h2>
-            <p style="font-weight: 500; font-size: 0.95rem; max-width: 640px; margin: 0 auto var(--space-md); color: var(--text-secondary); line-height: 1.7;">
-                To maintain genuine wholesale pricing and hygiene standards, we do not accept returns, refunds, or exchanges. Every piece is inspected before sourcing.
+            <p
+                style="font-weight: 500; font-size: 0.95rem; max-width: 640px; margin: 0 auto var(--space-md); color: var(--text-secondary); line-height: 1.7;">
+                To maintain genuine wholesale pricing and hygiene standards, we do not accept returns, refunds, or
+                exchanges. Every piece is inspected before sourcing.
             </p>
             <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                 <span class="badge" style="background: var(--bg-elevated);">NO REFUNDS</span>
