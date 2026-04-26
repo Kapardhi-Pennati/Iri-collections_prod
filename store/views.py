@@ -29,6 +29,7 @@ from core.throttling import (
 )
 
 from .models import Category, Product, Cart, CartItem, Order, OrderItem, Wishlist, StockReservation, Transaction
+from accounts.models import Address
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
@@ -444,6 +445,23 @@ class OrderCreateView(APIView):
             notes=escape(serializer.validated_data.get("notes", ""))[:500],
         )
 
+        if serializer.validated_data.get("save_address", True):
+            street = serializer.validated_data.get("street", "").strip()
+            city = serializer.validated_data.get("city", "").strip()
+            state = serializer.validated_data.get("state", "").strip()
+            pincode = serializer.validated_data.get("pincode", "").strip()
+            if street and city and state and pincode:
+                phone = serializer.validated_data.get("phone", "")
+                name = serializer.validated_data.get("recipient_name", "").strip() or "Shipping"
+                Address.objects.get_or_create(
+                    user=request.user,
+                    street=street,
+                    city=city,
+                    state=state,
+                    pincode=pincode,
+                    defaults={"name": name[:150], "phone": phone},
+                )
+
         for data in order_items_data:
             item = data["item"]
             product = data["product"]
@@ -553,11 +571,11 @@ class OrderConfirmPaymentView(APIView):
             order=order,
             defaults={
                 "amount": order.total_amount,
-                "status": "pending_verification",
+                "status": "paid",
             },
         )
-        if not created and txn.status != "pending_verification":
-            txn.status = "pending_verification"
+        if not created and txn.status != "paid":
+            txn.status = "paid"
             txn.save(update_fields=["status"])
 
         audit_log(
@@ -571,9 +589,9 @@ class OrderConfirmPaymentView(APIView):
         )
 
         return Response({
-            "message": "Payment noted. Awaiting admin verification.",
+            "message": "Payment marked as paid.",
             "order_number": order.order_number,
-            "status": "pending_verification",
+            "status": "paid",
         })
 
 
@@ -925,8 +943,7 @@ class AdminOrderStatusView(APIView):
     _allowed_transitions = {
         "pending": {"confirmed", "cancelled"},
         "confirmed": {"shipped", "cancelled"},
-        "shipped": {"delivered", "cancelled"},
-        "delivered": set(),
+        "shipped": {"cancelled"},
         "cancelled": set(),
     }
 
@@ -959,7 +976,7 @@ class AdminOrderStatusView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            if new_status in {"confirmed", "shipped", "delivered"}:
+            if new_status in {"confirmed", "shipped"}:
                 txn = getattr(order, "transaction", None)
                 if not txn or txn.status != "paid":
                     return Response(

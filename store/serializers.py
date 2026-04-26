@@ -174,6 +174,11 @@ class OrderCreateSerializer(serializers.Serializer):
     shipping_address = serializers.CharField(max_length=500, trim_whitespace=True)
     state = serializers.CharField(max_length=100, required=False, allow_blank=True, trim_whitespace=True)
     phone = serializers.CharField(max_length=20, trim_whitespace=True)
+    recipient_name = serializers.CharField(max_length=150, required=False, allow_blank=True, trim_whitespace=True)
+    street = serializers.CharField(max_length=500, required=False, allow_blank=True, trim_whitespace=True)
+    city = serializers.CharField(max_length=100, required=False, allow_blank=True, trim_whitespace=True)
+    pincode = serializers.CharField(max_length=10, required=False, allow_blank=True, trim_whitespace=True)
+    save_address = serializers.BooleanField(required=False, default=True)
     notes = serializers.CharField(max_length=500, required=False, allow_blank=True, trim_whitespace=True)
 
     def validate_shipping_address(self, value: str) -> str:
@@ -190,3 +195,14 @@ class OrderCreateSerializer(serializers.Serializer):
 
     def validate_state(self, value: str) -> str:
         return value.strip()[:100]
+
+    def validate_city(self, value: str) -> str:
+        return value.strip()[:100]
+
+    def validate_pincode(self, value: str) -> str:
+        if not value:
+            return value
+        is_valid, normalized = InputValidator.validate_pincode(value)
+        if not is_valid:
+            raise serializers.ValidationError("Enter a valid pincode.")
+        return normalized

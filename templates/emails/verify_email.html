@@ -5,57 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Your Email</title>
 </head>
-<body style="margin:0; padding:0; background-color:#0e0e14; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0e0e14; padding:40px 20px;">
+<body style="margin:0; padding:0; background:#f3f1ec; font-family:Arial,Helvetica,sans-serif; color:#111;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f1ec; padding:24px 12px;">
         <tr>
             <td align="center">
-                <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#16161f; border-radius:12px; overflow:hidden; border:1px solid #2a2a3d;">
-                    <!-- Header -->
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border:2px solid #111;">
                     <tr>
-                        <td style="background:linear-gradient(135deg,#c9a84c,#d4af5a); padding:32px; text-align:center;">
-                            <h1 style="margin:0; color:#0e0e14; font-size:28px; letter-spacing:1px;">Iri Collections</h1>
+                        <td style="padding:20px; border-bottom:2px solid #111; text-align:center;">
+                            <h1 style="margin:0; font-size:22px; letter-spacing:1px;">IRI COLLECTIONS</h1>
                         </td>
                     </tr>
-                    <!-- Body -->
                     <tr>
-                        <td style="padding:40px 32px;">
-                            <h2 style="color:#c9a84c; margin:0 0 16px; font-size:22px;">Verify Your Email Address</h2>
-                            <p style="color:#a0a0b8; line-height:1.8; margin:0 0 24px; font-size:15px;">
-                                Hi {{ user_name }}, click the button below to verify your email address and activate your account.
+                        <td style="padding:24px 20px;">
+                            <h2 style="margin:0 0 12px; font-size:20px;">Verify Your Email</h2>
+                            <p style="margin:0 0 16px; font-size:14px; line-height:1.6;">
+                                Hi {{ user_name }}, confirm your email to activate your account.
                             </p>
-                            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:32px 0;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;">
                                 <tr>
-                                    <td style="background:linear-gradient(135deg,#c9a84c,#d4af5a); border-radius:8px; padding:14px 32px;">
-                                        <a href="{{ verification_url }}" style="color:#0e0e14; text-decoration:none; font-weight:700; font-size:15px; display:block;">
-                                            Verify Email Address →
+                                    <td style="background:#111; padding:12px 20px;">
+                                        <a href="{{ verification_url }}" style="color:#fff; text-decoration:none; font-weight:700; font-size:14px; display:block;">
+                                            VERIFY EMAIL
                                         </a>
                                     </td>
                                 </tr>
                             </table>
-                            <p style="color:#6b6b80; font-size:13px; line-height:1.6; margin:24px 0 0;">
+                            <p style="font-size:13px; line-height:1.6; margin:16px 0 0;">
                                 This link expires in {{ expiry_hours }} hours. If you didn't create an account, you can safely ignore this email.
                             </p>
-                            <!-- Fallback URL for email clients that don't render buttons -->
-                            <p style="color:#6b6b80; font-size:12px; line-height:1.6; margin:16px 0 0; word-break:break-all;">
-                                If the button doesn't work, copy and paste this link into your browser:<br>
-                                <a href="{{ verification_url }}" style="color:#c9a84c; text-decoration:none;">{{ verification_url }}</a>
+                            <p style="font-size:12px; line-height:1.6; margin:14px 0 0; word-break:break-all;">
+                                {{ verification_url }}
                             </p>
                         </td>
                     </tr>
-                    <!-- Security Notice -->
                     <tr>
-                        <td style="padding:0 32px 24px;">
-                            <div style="background-color:#1e1e2e; border-radius:8px; padding:16px; border-left:3px solid #c9a84c;">
-                                <p style="color:#a0a0b8; font-size:12px; margin:0; line-height:1.6;">
-                                    🔒 <strong style="color:#c9a84c;">Security Note:</strong> This is a one-time link generated specifically for your account. Never share this link with anyone.
+                        <td style="padding:0 20px 20px;">
+                            <div style="background:#f7f7f7; border:1px solid #ddd; padding:12px;">
+                                <p style="font-size:12px; margin:0; line-height:1.5;">
+                                    Security note: never share verification links.
                                 </p>
                             </div>
                         </td>
                     </tr>
-                    <!-- Footer -->
                     <tr>
-                        <td style="padding:24px 32px; border-top:1px solid #2a2a3d; text-align:center;">
-                            <p style="color:#6b6b80; font-size:12px; margin:0; line-height:1.6;">
+                        <td style="padding:14px 20px; border-top:2px solid #111; text-align:center;">
+                            <p style="font-size:12px; margin:0; line-height:1.5;">
                                 © {{ current_year }} Iri Collections. All rights reserved.
                             </p>
                         </td>

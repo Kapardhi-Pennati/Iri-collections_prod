@@ -8,7 +8,7 @@
     <div class="container" style="max-width: 860px;">
         <!-- HEADER -->
         <div class="page-header" style="text-align: center;">
-            <h1>ACQUISITION FLOW</h1>
+            <h1>CHECKOUT</h1>
         </div>
 
         <!-- PROGRESS -->
@@ -73,8 +73,8 @@
             <!-- STEP 2: REVIEW -->
             <div id="step-2" class="brutalist-card hidden" style="padding: var(--space-xl); background: var(--bg-elevated);">
                 <h2 style="font-size: 1.5rem; margin-bottom: var(--space-lg); border-bottom: var(--border-width) solid var(--border-color); padding-bottom: 10px;">2. REVIEW ORDER</h2>
-                <div id="review-items" style="margin-bottom: var(--space-lg);"></div>
                 <div id="review-shipping" class="brutalist-card" style="margin-bottom: var(--space-lg); background: var(--bg-secondary); padding: var(--space-md); font-weight: 600; font-size: 0.85rem;"></div>
+                <div id="review-items" style="margin-bottom: var(--space-lg);"></div>
                 <div id="review-total" class="brutalist-card" style="padding: var(--space-md); margin-bottom: var(--space-lg);"></div>
 
                 <div style="display: flex; gap: var(--space-md);">
@@ -260,6 +260,11 @@ async function proceedToPayment() {
             shipping_address: address,
             state: checkoutShippingState,
             phone: document.getElementById('ship-phone').value,
+            recipient_name: document.getElementById('ship-name').value,
+            street: document.getElementById('ship-address').value,
+            city: document.getElementById('ship-city').value,
+            pincode: document.getElementById('ship-pincode').value,
+            save_address: true,
             notes: ''
         });
         if (res.ok) {

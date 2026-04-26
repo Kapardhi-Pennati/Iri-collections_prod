@@ -447,13 +447,11 @@ class RegisterView(generics.CreateAPIView):
 
         otp.delete()  # Consume the OTP — cannot be reused
 
-        from core.tasks import task_send_verification_email, task_send_welcome_email
+        from core.tasks import task_send_verification_email
         from core.services.email_service import (
             send_verification_email,
-            send_welcome_email,
         )
 
-        _dispatch_email_task(task_send_welcome_email, send_welcome_email, user.id)
         _dispatch_email_task(
             task_send_verification_email,
             send_verification_email,

@@ -26,26 +26,6 @@ logger = logging.getLogger("accounts")
 @shared_task(
     bind=True,
     max_retries=3,
-    default_retry_delay=60,  # 60 seconds between retries
-    autoretry_for=(Exception,),
-    retry_backoff=True,  # Exponential backoff: 60s, 120s, 240s
-    retry_jitter=True,   # Add randomness to prevent thundering herd
-)
-def task_send_welcome_email(self, user_id: int) -> bool:
-    """
-    Send welcome email after successful registration.
-
-    Triggered from: accounts/views.py → RegisterView.create()
-    """
-    from core.services.email_service import send_welcome_email
-    # ✅ Deferred import: avoids circular imports and ensures the
-    # email service module is only loaded inside the worker process.
-    return send_welcome_email(user_id)
-
-
-@shared_task(
-    bind=True,
-    max_retries=3,
     default_retry_delay=60,
     autoretry_for=(Exception,),
     retry_backoff=True,

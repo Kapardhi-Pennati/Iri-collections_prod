@@ -147,41 +147,7 @@ def send_otp_email(email: str, otp_code: str) -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 1. WELCOME EMAIL
-# ═══════════════════════════════════════════════════════════════════════════
-
-def send_welcome_email(user_id: int) -> bool:
-    """
-    Send a welcome email after successful registration.
-
-    Args:
-        user_id: The primary key of the newly registered user
-
-    Security:
-        ✅ Fetches user from DB (never trusts serialized user data)
-        ✅ Gracefully handles deleted users (race condition protection)
-    """
-    try:
-        user = User.objects.get(id=user_id)
-    except User.DoesNotExist:
-        logger.warning(f"Welcome email skipped: user {user_id} not found")
-        return False
-
-    context = {
-        "user_name": user.full_name or user.username,
-        "user_email": user.email,
-    }
-
-    return send_html_email(
-        subject="Welcome to Iri Collections! ✨",
-        template_name="emails/welcome.html",
-        context=context,
-        recipient_list=[user.email],
-    )
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# 2. ACCOUNT VERIFICATION EMAIL
+# 1. ACCOUNT VERIFICATION EMAIL
 # ═══════════════════════════════════════════════════════════════════════════
 
 def send_verification_email(user_id: int) -> bool:
@@ -235,7 +201,7 @@ def send_verification_email(user_id: int) -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 3. PASSWORD RESET EMAIL
+# 2. PASSWORD RESET EMAIL
 # ═══════════════════════════════════════════════════════════════════════════
 
 def send_password_reset_email(user_id: int) -> bool:
@@ -283,7 +249,7 @@ def send_password_reset_email(user_id: int) -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 4. ORDER STATUS UPDATE EMAIL
+# 3. ORDER STATUS UPDATE EMAIL
 # ═══════════════════════════════════════════════════════════════════════════
 
 def send_order_status_email(
@@ -315,7 +281,6 @@ def send_order_status_email(
         "pending": ("Pending", "⏳"),
         "confirmed": ("Confirmed", "✅"),
         "shipped": ("Shipped", "🚚"),
-        "delivered": ("Delivered", "📦"),
         "cancelled": ("Cancelled", "❌"),
     }
 
@@ -327,8 +292,6 @@ def send_order_status_email(
         subject = f"Order {order.order_number} — Cancelled"
     elif new_status == "shipped":
         subject = f"Order {order.order_number} — Your order has been shipped! 🚚"
-    elif new_status == "delivered":
-        subject = f"Order {order.order_number} — Delivered! 📦"
     else:
         subject = f"Order {order.order_number} — Status Update: {new_label}"
 
@@ -341,7 +304,6 @@ def send_order_status_email(
         "total_amount": order.total_amount,
         "is_cancelled": new_status == "cancelled",
         "is_shipped": new_status == "shipped",
-        "is_delivered": new_status == "delivered",
     }
 
     return send_html_email(

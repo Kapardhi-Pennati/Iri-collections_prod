@@ -179,7 +179,6 @@ class Order(models.Model):
         ("pending", "Pending"),
         ("confirmed", "Confirmed"),
         ("shipped", "Shipped"),
-        ("delivered", "Delivered"),
         ("cancelled", "Cancelled"),
     )
     order_number = models.CharField(max_length=20, unique=True, editable=False)
@@ -214,11 +213,6 @@ class Order(models.Model):
     def save(self, *args, **kwargs):
         if not self.order_number:
             self.order_number = f"IRI-{uuid.uuid4().hex[:8].upper()}"
-
-        # If image uploaded while shipped -> move to delivered
-        if self.status == "shipped" and self.tracking_image and not getattr(self, "_delivering", False):
-            self.status = "delivered"
-            self._delivering = True
 
         super().save(*args, **kwargs)
 

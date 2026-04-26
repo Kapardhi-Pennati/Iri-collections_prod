@@ -88,6 +88,11 @@
                     <canvas id="status-chart" height="300"></canvas>
                 </div>
             </div>
+
+            <div class="brutalist-card" style="padding: 30px; background: var(--bg-elevated); margin-top: var(--space-xl);">
+                <h3 style="margin-bottom: 20px;">TOP PRODUCTS</h3>
+                <div id="top-products-list"></div>
+            </div>
         </div>
 
         <!-- Section: Traffic -->
@@ -232,7 +237,6 @@
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
                 <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
             </select>
         </div>
@@ -249,7 +253,7 @@
         <h2>Upload Tracking Image</h2>
         <form id="tracking-form">
             <input type="hidden" id="tracking-order-id">
-            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">Uploading a tracking slip will automatically change the order status to Delivered.</p>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">Upload tracking slip for shipping proof.</p>
             <div class="form-group">
                 <label>Tracking Slip Image</label>
                 <input type="file" id="track-image-file" accept="image/*" required>
@@ -391,7 +395,7 @@ async function loadOverview() {
         const ctx2 = document.getElementById('status-chart').getContext('2d');
         const statusLabels = data.status_breakdown.map(s => s.status);
         const statusCounts = data.status_breakdown.map(s => s.count);
-        const statusColors = { pending: '#fbbf24', confirmed: '#60a5fa', shipped: '#c9a84c', delivered: '#4ade80', cancelled: '#f87171' };
+        const statusColors = { pending: '#fbbf24', confirmed: '#60a5fa', shipped: '#c9a84c', cancelled: '#f87171' };
 
         if (statusChart) statusChart.destroy();
         statusChart = new Chart(ctx2, {
@@ -415,7 +419,7 @@ async function loadOverview() {
 
         // Top products
         const topList = document.getElementById('top-products-list');
-        if (data.top_products.length > 0) {
+        if (topList && data.top_products.length > 0) {
             topList.innerHTML = data.top_products.map((p, i) => `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; ${i < data.top_products.length - 1 ? 'border-bottom:1px solid var(--border);' : ''}">
                     <div style="display:flex; align-items:center; gap:var(--space-md);">
@@ -428,7 +432,7 @@ async function loadOverview() {
                     </div>
                 </div>
             `).join('');
-        } else {
+        } else if (topList) {
             topList.innerHTML = '<p class="text-muted">No sales data yet</p>';
         }
     } catch (err) {
@@ -792,21 +796,19 @@ document.getElementById('tracking-form').addEventListener('submit', async (e) =>
     const formData = new FormData();
     formData.append('tracking_image', file);
 
-    const token = API.getToken();
-    const res = await fetch(`/api/store/admin/orders/${orderId}/tracking/`, {
+    const res = await API.request(`/store/admin/orders/${orderId}/tracking/`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
+        body: formData,
     });
 
-    if (res.ok) {
-        Toast.success('Tracking image uploaded. Status is now Delivered.');
+    if (res && res.ok) {
+        Toast.success('Tracking image uploaded.');
         closeModal('tracking-modal');
         loadAdminOrders();
         loadOverview();
     } else {
-        const err = await res.json();
-        Toast.error(err.error || 'Failed to upload tracking image.');
+        const err = await API.parseResponse(res);
+        Toast.error(err?.error || 'Failed to upload tracking image.');
     }
     btn.disabled = false;
     btn.textContent = 'Upload';

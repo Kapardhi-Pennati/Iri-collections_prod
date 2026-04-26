@@ -77,11 +77,16 @@ class AtomicRateThrottle(BaseThrottle):
             return True
         except Exception:
             logger.exception("Throttle backend failure for scope=%s", self.scope)
-            return False
+            # Fail open when cache is unavailable so critical endpoints remain
+            # functional instead of returning 429 for every request.
+            return True
 
         if not isinstance(current, int):
             logger.warning("Throttle backend returned non-int counter for scope=%s", self.scope)
-            return False
+            try:
+                current = int(current)
+            except (TypeError, ValueError):
+                return True
 
         if current > self.num_requests:
             self._wait = self._get_wait_seconds()
