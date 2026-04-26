@@ -9,7 +9,13 @@
 
 {% block content %}
 <div class="auth-page fade-in">
-    <!-- Form Side -->
+    <section class="auth-visual auth-visual-login" aria-hidden="true">
+        <div class="auth-visual-content">
+            <h2>Welcome Back</h2>
+            <p>Revisit your favorite collections and manage your artisanal jewelry wishlist.</p>
+        </div>
+    </section>
+
     <div class="auth-content">
         <div class="auth-card">
             <h1 id="form-title">Login <span class="text-gold">Account</span></h1>
@@ -17,8 +23,8 @@
 
             <form id="login-form">
                 <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" placeholder="you@example.com" required autocomplete="email">
+                    <label for="email">Email or Username</label>
+                    <input type="text" id="email" placeholder="you@example.com or your username" required autocomplete="username">
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
@@ -98,11 +104,11 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     btn.textContent = 'Signing in...';
     errEl.style.display = 'none';
 
-    const email = document.getElementById('email').value;
+    const identifier = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
 
     try {
-        const res = await API.post('/auth/login/', { email, password });
+        const res = await API.post('/auth/login/', { identifier, password });
         if (res && res.ok) {
             API.setUser(res.data.user);
             Toast.success('Welcome back!');

@@ -484,8 +484,11 @@ function updateWishlistUI(productId, added) {
 document.addEventListener('DOMContentLoaded', async () => {
     Toast.init();
     RouteRuntime.installGlobalErrorGuards();
-    await updateNavbar();
-    await loadWishlistItems();
+    const isAuthPage = document.body.classList.contains('auth-body');
+    if (!isAuthPage) {
+        await updateNavbar();
+        await loadWishlistItems();
+    }
     initLazyLoading();
 
     const navbar = document.getElementById('navbar');

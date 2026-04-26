@@ -491,9 +491,29 @@ class LoginView(APIView):
     throttle_classes = [LoginThrottle]
 
     def post(self, request) -> Response:
-        ok, email, err = _require_valid_email(request.data.get("email", ""))
-        if not ok:
-            # Return generic message — don't reveal email validation details
+        identifier = str(
+            request.data.get("identifier", request.data.get("email", ""))
+        ).strip()
+        if not identifier:
+            return Response(
+                {"error": "Email/username and password are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        lookup_email = ""
+        if "@" in identifier:
+            ok, lookup_email, err = _require_valid_email(identifier)
+            if not ok:
+                # Return generic message — don't reveal email validation details
+                return Response(
+                    {"error": "Invalid credentials."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+            user = User.objects.filter(email=lookup_email).first()
+        else:
+            user = User.objects.filter(username__iexact=identifier).first()
+
+        if user is None:
             return Response(
                 {"error": "Invalid credentials."},
                 status=status.HTTP_401_UNAUTHORIZED,
@@ -508,24 +528,11 @@ class LoginView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            audit_log(
-                action="LOGIN_ATTEMPT_NONEXISTENT_EMAIL",
-                details={"email": email, "ip": client_ip},
-                severity="INFO",
-            )
-            return Response(
-                {"error": "Invalid credentials."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
         if is_account_locked(user.id):
             audit_log(
                 action="LOGIN_ATTEMPT_LOCKED_ACCOUNT",
                 user_id=user.id,
-                details={"email": email, "ip": client_ip},
+                details={"email": user.email, "ip": client_ip, "identifier": identifier},
                 severity="WARNING",
             )
             return Response(
@@ -534,7 +541,7 @@ class LoginView(APIView):
             )
 
         authenticated_user = authenticate(
-            request, username=email, password=password
+            request, username=user.email, password=password
         )
 
         if authenticated_user is None:
@@ -544,8 +551,9 @@ class LoginView(APIView):
                 action="LOGIN_FAILED_INVALID_PASSWORD",
                 user_id=user.id,
                 details={
-                    "email": email,
+                    "email": user.email,
                     "ip": client_ip,
+                    "identifier": identifier,
                     "failed_attempts": str(failed_count),
                 },
                 severity="WARNING",
@@ -565,7 +573,7 @@ class LoginView(APIView):
         audit_log(
             action="LOGIN_SUCCESS",
             user_id=user.id,
-            details={"email": email, "ip": client_ip},
+            details={"email": user.email, "ip": client_ip, "identifier": identifier},
             severity="INFO",
         )
         return _build_authenticated_response(
