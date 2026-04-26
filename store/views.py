@@ -10,20 +10,25 @@ import json
 from datetime import timedelta
 
 from rest_framework import generics, status, viewsets
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db import transaction
-from django.db.models import Sum, Count, F
+from django.db.models import Sum, Count, F, Q
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from django.utils.html import escape
 
 from core.security import audit_log
+from core.permissions import IsAdminUser, IsCustomerUser
 from core.validators import InputValidator
-from core.throttling import PincodeVerifyThrottle
+from core.throttling import (
+    AdminMutationThrottle,
+    CheckoutThrottle,
+    PincodeVerifyThrottle,
+)
 
-from .models import Category, Product, Cart, CartItem, Order, OrderItem, Wishlist
+from .models import Category, Product, Cart, CartItem, Order, OrderItem, Wishlist, StockReservation
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
@@ -36,16 +41,17 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 # ─── Permission helpers ────────────────────────────────────────
-class IsAdminRole(IsAuthenticated):
+class IsAdminRole(IsAdminUser):
     """
     Grants access only to authenticated users with role='admin'
     or the is_superuser flag. Extends IsAuthenticated so unauthenticated
     requests are rejected at the authentication stage.
     """
-    def has_permission(self, request, view) -> bool:
-        if not super().has_permission(request, view):
-            return False
-        return request.user.role == "admin" or request.user.is_superuser
+    pass
+
+
+class IsCustomerRole(IsCustomerUser):
+    pass
 
 
 def _parse_product_id(raw_value) -> tuple:
@@ -73,9 +79,25 @@ def _parse_product_id(raw_value) -> tuple:
         )
 
 
+def _cart_queryset():
+    return Cart.objects.select_related("user").prefetch_related(
+        "items__product__category"
+    )
+
+
+def _get_or_create_cart(user):
+    cart = _cart_queryset().filter(user=user).first()
+    if cart:
+        return cart
+    cart, _ = Cart.objects.get_or_create(user=user)
+    return _cart_queryset().get(pk=cart.pk)
+
+
 # ─── Public: Categories ────────────────────────────────────────
 class CategoryListView(generics.ListAPIView):
-    queryset = Category.objects.all()
+    queryset = Category.objects.annotate(
+        product_count=Count("products", filter=Q(products__is_active=True))
+    )
     serializer_class = CategorySerializer
     permission_classes = [AllowAny]
     pagination_class = None
@@ -119,90 +141,195 @@ class ProductDetailView(generics.RetrieveAPIView):
 
 # ─── Cart ──────────────────────────────────────────────────────
 class CartView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomerRole]
 
     def get(self, request):
-        cart, _ = Cart.objects.get_or_create(user=request.user)
+        cart = _get_or_create_cart(request.user)
         return Response(CartSerializer(cart).data)
 
+    @transaction.atomic
     def post(self, request):
-        """Add item to cart."""
-        cart, _ = Cart.objects.get_or_create(user=request.user)
-        product_id = request.data.get("product_id")
-        
-        try:
-            quantity = int(request.data.get("quantity", 1))
-        except (ValueError, TypeError):
-            return Response({"error": "Invalid quantity."}, status=status.HTTP_400_BAD_REQUEST)
-
-        if quantity <= 0:
+        """Add an item to the cart while holding a reservation lock on the SKU."""
+        ok, quantity = InputValidator.validate_quantity(request.data.get("quantity", 1))
+        if not ok:
             return Response(
-                {"error": "Quantity must be at least 1."},
+                {"error": "Quantity must be between 1 and 100."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        ok, product_id = _parse_product_id(request.data.get("product_id"))
+        if not ok:
+            return product_id
+
+        cart = _get_or_create_cart(request.user)
+        cart = Cart.objects.select_for_update().get(pk=cart.pk)
+
         try:
-            product = Product.objects.get(id=product_id, is_active=True)
+            product = Product.objects.select_for_update().select_related("category").get(
+                id=product_id,
+                is_active=True,
+            )
         except Product.DoesNotExist:
             return Response(
-                {"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND
+                {"error": "Product not found."},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
-        if quantity > product.stock:
+        item = (
+            CartItem.objects.select_for_update()
+            .filter(cart=cart, product=product)
+            .first()
+        )
+        new_quantity = quantity + (item.quantity if item else 0)
+        available = product.get_available_stock_for_user(request.user.id)
+        if new_quantity > available:
             return Response(
-                {"error": "Not enough stock."}, status=status.HTTP_400_BAD_REQUEST
+                {
+                    "error": f"Only {available} item(s) are available after active reservations are applied."
+                },
+                status=status.HTTP_409_CONFLICT,
             )
 
-        item, created = CartItem.objects.get_or_create(cart=cart, product=product)
-        if not created:
-            item.quantity += quantity
+        if item:
+            item.quantity = new_quantity
+            item.save(update_fields=["quantity"])
         else:
-            item.quantity = quantity
-        
-        if item.quantity > product.stock:
-             return Response(
-                {"error": "Total quantity exceeds available stock."}, status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        item.save()
-        return Response(CartSerializer(cart).data, status=status.HTTP_200_OK)
+            item = CartItem.objects.create(cart=cart, product=product, quantity=new_quantity)
 
+        reservation = (
+            StockReservation.objects.select_for_update()
+            .filter(user=request.user, product=product, order__isnull=True)
+            .first()
+        )
+        expires_at = timezone.now() + timedelta(minutes=30)
+        if reservation:
+            reservation.quantity = item.quantity
+            reservation.expires_at = expires_at
+            reservation.save(update_fields=["quantity", "expires_at"])
+        else:
+            StockReservation.objects.create(
+                user=request.user,
+                product=product,
+                order=None,
+                quantity=item.quantity,
+                expires_at=expires_at,
+            )
+
+        return Response(
+            CartSerializer(_cart_queryset().get(pk=cart.pk)).data,
+            status=status.HTTP_200_OK,
+        )
+
+    @transaction.atomic
     def patch(self, request):
-        """Update item quantity."""
-        cart = Cart.objects.get(user=request.user)
-        item_id = request.data.get("item_id")
+        """Update a cart item quantity under row locks."""
+        ok, item_id = _parse_product_id(request.data.get("item_id"))
+        if not ok:
+            return item_id
+
         try:
             quantity = int(request.data.get("quantity", 1))
         except (ValueError, TypeError):
-             return Response({"error": "Invalid quantity."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            item = CartItem.objects.get(id=item_id, cart=cart)
-        except CartItem.DoesNotExist:
             return Response(
-                {"error": "Item not found in cart."}, status=status.HTTP_404_NOT_FOUND
+                {"error": "Invalid quantity."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
+        cart = _get_or_create_cart(request.user)
+        cart = Cart.objects.select_for_update().get(pk=cart.pk)
+
+        try:
+            item = (
+                CartItem.objects.select_for_update()
+                .select_related("product__category")
+                .get(id=item_id, cart=cart)
+            )
+        except CartItem.DoesNotExist:
+            return Response(
+                {"error": "Item not found in cart."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        product = Product.objects.select_for_update().get(pk=item.product_id)
+        reservation = (
+            StockReservation.objects.select_for_update()
+            .filter(user=request.user, product=product, order__isnull=True)
+            .first()
+        )
+
         if quantity <= 0:
+            if reservation:
+                reservation.delete()
             item.delete()
         else:
-            if quantity > item.product.stock:
+            ok, validated_quantity = InputValidator.validate_quantity(quantity)
+            if not ok:
                 return Response(
-                    {"error": "Not enough stock."}, status=status.HTTP_400_BAD_REQUEST
+                    {"error": "Quantity must be between 1 and 100."},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
-            item.quantity = quantity
-            item.save()
-        return Response(CartSerializer(cart).data)
 
+            available = product.get_available_stock_for_user(request.user.id)
+            if validated_quantity > available:
+                return Response(
+                    {
+                        "error": f"Only {available} item(s) are available after active reservations are applied."
+                    },
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+            item.quantity = validated_quantity
+            item.save(update_fields=["quantity"])
+
+            expires_at = timezone.now() + timedelta(minutes=30)
+            if reservation:
+                reservation.quantity = validated_quantity
+                reservation.expires_at = expires_at
+                reservation.save(update_fields=["quantity", "expires_at"])
+            else:
+                StockReservation.objects.create(
+                    user=request.user,
+                    product=product,
+                    order=None,
+                    quantity=validated_quantity,
+                    expires_at=expires_at,
+                )
+
+        return Response(CartSerializer(_cart_queryset().get(pk=cart.pk)).data)
+
+    @transaction.atomic
     def delete(self, request):
-        """Remove item from cart or clear cart."""
-        cart = Cart.objects.get(user=request.user)
+        """Remove one cart item or clear the cart and its reservations."""
+        cart = _get_or_create_cart(request.user)
+        cart = Cart.objects.select_for_update().get(pk=cart.pk)
         item_id = request.data.get("item_id") or request.query_params.get("item_id")
+
         if item_id:
-            CartItem.objects.filter(id=item_id, cart=cart).delete()
+            try:
+                item_id = int(item_id)
+            except (TypeError, ValueError):
+                return Response(
+                    {"error": "Invalid item_id."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            item = (
+                CartItem.objects.select_for_update()
+                .filter(id=item_id, cart=cart)
+                .first()
+            )
+            if item:
+                StockReservation.objects.filter(
+                    user=request.user,
+                    product=item.product,
+                    order__isnull=True,
+                ).delete()
+                item.delete()
         else:
+            StockReservation.objects.filter(user=request.user, order__isnull=True).delete()
             cart.items.all().delete()
-        return Response(CartSerializer(cart).data)
+
+        return Response(CartSerializer(_cart_queryset().get(pk=cart.pk)).data)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -220,67 +347,49 @@ class OrderCreateView(APIView):
     ✅ Stock validation
     ✅ Audit logging
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomerRole]
+    throttle_classes = [CheckoutThrottle]
     
     @transaction.atomic
     def post(self, request):
-        # ✅ Validate input
         serializer = OrderCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         try:
-            cart = Cart.objects.prefetch_related("items__product").get(
-                user=request.user
+            cart = (
+                Cart.objects.select_for_update()
+                .prefetch_related("items__product__category")
+                .get(user=request.user)
             )
         except Cart.DoesNotExist:
             return Response(
                 {"error": "Cart is empty or not found."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        if cart.items.count() == 0:
-            return Response(
-                {"error": "Cannot create order from empty cart."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # ✅ Validate shipping address
-        # Note: Original used 'shipping_address', Secure uses 'address_text'. 
-        # Checking serializer field names from context if possible, but I'll use what's in views_secure.
-        address_text = serializer.validated_data.get("address_text") or serializer.validated_data.get("shipping_address")
-        if not address_text:
-             return Response({"error": "Address is required."}, status=status.HTTP_400_BAD_REQUEST)
-             
-        is_valid, sanitized_address = InputValidator.validate_address(address_text)
-        if not is_valid:
-            return Response(
-                {"error": "Invalid shipping address."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # ✅ Validate phone number
-        phone = serializer.validated_data["phone"]
-        is_valid, normalized_phone = InputValidator.validate_phone(phone)
-        if not is_valid:
-            return Response(
-                {"error": "Invalid phone number."},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ✅ Lock product rows to prevent race conditions during stock checks.
-        product_ids = [item.product_id for item in cart.items.all()]
+        cart_items = list(cart.items.all())
+        if not cart_items:
+            return Response(
+                {"error": "Cannot create order from empty cart."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        sanitized_address = serializer.validated_data["shipping_address"]
+        normalized_phone = serializer.validated_data["phone"]
+
+        product_ids = [item.product_id for item in cart_items if item.product_id]
         products = Product.objects.select_for_update().filter(id__in=product_ids)
         product_map = {p.id: p for p in products}
 
-        # ✅ Validate stock against locked rows
         order_items_data = []
-        for item in cart.items.all():
+        for item in cart_items:
             locked_product = product_map.get(item.product_id)
 
-            if not locked_product or locked_product.stock <= 0:
-                continue  # Skip out-of-stock items
+            if not locked_product:
+                continue
 
-            if item.quantity > locked_product.stock:
+            available = locked_product.get_available_stock_for_user(request.user.id)
+            if item.quantity > available:
                 audit_log(
                     action="ORDER_INSUFFICIENT_STOCK",
                     user_id=request.user.id,
@@ -288,19 +397,16 @@ class OrderCreateView(APIView):
                         "product_id": item.product_id,
                         "product_name": item.product.name,
                         "requested": item.quantity,
-                        "available": locked_product.stock,
+                        "available": available,
                     },
                     severity="WARNING",
                 )
                 return Response(
-                    {"error": f"Insufficient stock for {item.product.name}."},
-                    status=status.HTTP_400_BAD_REQUEST,
+                    {"error": f"Insufficient available stock for {item.product.name}."},
+                    status=status.HTTP_409_CONFLICT,
                 )
 
-            order_items_data.append({
-                "item": item,
-                "product": locked_product,
-            })
+            order_items_data.append({"item": item, "product": locked_product})
 
         if not order_items_data:
             return Response(
@@ -308,18 +414,15 @@ class OrderCreateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Recompute subtotal from locked product rows for consistency.
         items_total = sum(
             data["product"].price * data["item"].quantity
             for data in order_items_data
         )
 
-        # ✅ Calculate shipping fee based on state (Tamil Nadu vs rest of India)
         shipping_state = str(serializer.validated_data.get("state", "")).strip()
         shipping_fee = _calculate_shipping_fee(sanitized_address, shipping_state)
         final_total = items_total + shipping_fee
 
-        # ✅ Prevent negative/suspicious amounts
         if final_total <= 0 or final_total > 999999:
             audit_log(
                 action="ORDER_INVALID_TOTAL",
@@ -332,7 +435,6 @@ class OrderCreateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ✅ Create order
         order = Order.objects.create(
             user=request.user,
             total_amount=final_total,
@@ -342,8 +444,6 @@ class OrderCreateView(APIView):
             notes=escape(serializer.validated_data.get("notes", ""))[:500],
         )
 
-        # ✅ Create order items — stock is validated now and deducted
-        # only after successful payment confirmation in payment services.
         for data in order_items_data:
             item = data["item"]
             product = data["product"]
@@ -356,7 +456,26 @@ class OrderCreateView(APIView):
                 price_at_purchase=product.price,
             )
 
-        # ✅ Clear cart after successful order creation
+            reservation = (
+                StockReservation.objects.select_for_update()
+                .filter(user=request.user, product=product, order__isnull=True)
+                .first()
+            )
+            expires_at = timezone.now() + timedelta(hours=24)
+            if reservation:
+                reservation.order = order
+                reservation.quantity = item.quantity
+                reservation.expires_at = expires_at
+                reservation.save(update_fields=["order", "quantity", "expires_at"])
+            else:
+                StockReservation.objects.create(
+                    user=request.user,
+                    product=product,
+                    order=order,
+                    quantity=item.quantity,
+                    expires_at=expires_at,
+                )
+
         cart.items.all().delete()
 
         audit_log(
@@ -367,12 +486,19 @@ class OrderCreateView(APIView):
                 "order_number": order.order_number,
                 "total": float(order.total_amount),
                 "items_count": len(order_items_data),
-                "note": "Stock validated, deduction deferred to payment confirmation",
+                "note": "Inventory reserved atomically; hard stock deduction deferred to payment approval",
             },
             severity="INFO",
         )
-        
-        return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+
+        return Response(
+            OrderSerializer(
+                Order.objects.select_related("transaction")
+                .prefetch_related("items")
+                .get(pk=order.pk)
+            ).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 def _calculate_shipping_fee(address: str, state: str = "") -> int:
@@ -461,7 +587,7 @@ class PincodeVerifyView(APIView):
 
 # ─── Wishlist (Secure) ──────────────────────────────────────────
 class WishlistView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomerRole]
     
     def get(self, request):
         wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
@@ -506,7 +632,7 @@ class WishlistToggleView(APIView):
     Toggle a product in/out of the user's wishlist.
     Returns {"added": true/false} so the frontend can update the UI.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomerRole]
 
     def post(self, request):
         ok, product_id = _parse_product_id(request.data.get("product_id"))
@@ -543,23 +669,25 @@ class WishlistToggleView(APIView):
 # ─── Orders List & Detail ──────────────────────────────────────
 class OrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomerRole]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).prefetch_related(
-            "items", "transaction"
+        return (
+            Order.objects.filter(user=self.request.user)
+            .select_related("transaction")
+            .prefetch_related("items")
         )
 
 
 class OrderDetailView(generics.RetrieveAPIView):
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomerRole]
 
     def get_queryset(self):
-        if self.request.user.role == "admin":
-            return Order.objects.all().prefetch_related("items", "transaction")
-        return Order.objects.filter(user=self.request.user).prefetch_related(
-            "items", "transaction"
+        return (
+            Order.objects.filter(user=self.request.user)
+            .select_related("transaction")
+            .prefetch_related("items")
         )
 
 
@@ -568,6 +696,7 @@ class AdminProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all().select_related("category")
     serializer_class = ProductAdminSerializer
     permission_classes = [IsAdminRole]
+    throttle_classes = [AdminMutationThrottle]
 
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):
@@ -576,26 +705,38 @@ class AdminProductViewSet(viewsets.ModelViewSet):
 
 
 class AdminCategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
+    queryset = Category.objects.annotate(
+        product_count=Count("products", filter=Q(products__is_active=True))
+    )
     serializer_class = CategorySerializer
     permission_classes = [IsAdminRole]
+    throttle_classes = [AdminMutationThrottle]
 
 
 # ─── Admin: Orders & Analytics ────────────────────────────────
 class AdminOrderListView(generics.ListAPIView):
-    queryset = Order.objects.all().prefetch_related("items", "transaction").select_related("user")
+    queryset = (
+        Order.objects.all()
+        .select_related("user", "transaction")
+        .prefetch_related("items")
+    )
     serializer_class = OrderSerializer
     permission_classes = [IsAdminRole]
 
 
 class AdminOrderDetailView(generics.RetrieveDestroyAPIView):
-    queryset = Order.objects.all()
+    queryset = (
+        Order.objects.all()
+        .select_related("user", "transaction")
+        .prefetch_related("items")
+    )
     serializer_class = OrderSerializer
     permission_classes = [IsAdminRole]
 
 
 class AdminOrderStatusView(APIView):
     permission_classes = [IsAdminRole]
+    throttle_classes = [AdminMutationThrottle]
 
     _allowed_transitions = {
         "pending": {"confirmed", "cancelled"},
@@ -605,9 +746,12 @@ class AdminOrderStatusView(APIView):
         "cancelled": set(),
     }
 
+    @transaction.atomic
     def patch(self, request, pk):
         try:
-            order = Order.objects.select_related("transaction").get(pk=pk)
+            order = Order.objects.select_for_update().select_related("transaction").get(
+                pk=pk
+            )
             new_status = str(request.data.get("status", "")).strip().lower()
 
             valid_statuses = {choice[0] for choice in Order.STATUS_CHOICES}
@@ -644,6 +788,9 @@ class AdminOrderStatusView(APIView):
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
+            if new_status == "cancelled" and order.status == "pending":
+                StockReservation.objects.filter(order=order).delete()
+
             order.status = new_status
             order.save(update_fields=["status"])
 
@@ -665,6 +812,7 @@ class AdminOrderStatusView(APIView):
 
 class AdminOrderTrackingUploadView(APIView):
     permission_classes = [IsAdminRole]
+    throttle_classes = [AdminMutationThrottle]
 
     def post(self, request, pk):
         try:
@@ -672,6 +820,16 @@ class AdminOrderTrackingUploadView(APIView):
             image = request.FILES.get("tracking_image")
             if not image:
                 return Response({"error": "tracking_image is required."}, status=status.HTTP_400_BAD_REQUEST)
+            if image.content_type not in {"image/jpeg", "image/png", "image/webp"}:
+                return Response(
+                    {"error": "Only JPEG, PNG, and WebP tracking images are allowed."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if image.size > 5 * 1024 * 1024:
+                return Response(
+                    {"error": "Tracking image must be 5 MB or smaller."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             order.tracking_image = image
             order.save()
             return Response({"message": "Tracking image uploaded."})

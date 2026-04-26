@@ -1,12 +1,14 @@
 from decimal import Decimal
+from datetime import timedelta
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from accounts.models import User
-from store.models import Category, Order, OrderItem, Product, Transaction
+from store.models import Category, Order, OrderItem, Product, StockReservation, Transaction
 
 
 @override_settings(
@@ -84,9 +86,19 @@ class UpiProofPaymentFlowTests(TestCase):
         self.assertEqual(txn.upi_reference_id, "123456789012")
         self.assertTrue(bool(txn.payment_screenshot))
         self.product.refresh_from_db()
-        self.assertEqual(self.product.stock, 8)
+        self.assertEqual(self.product.stock, 10)
+        self.assertTrue(
+            StockReservation.objects.filter(order=self.order, product=self.product).exists()
+        )
 
     def test_admin_approve_marks_paid_and_confirms_order(self):
+        StockReservation.objects.create(
+            user=self.user,
+            product=self.product,
+            order=self.order,
+            quantity=2,
+            expires_at=timezone.now() + timedelta(hours=1),
+        )
         Transaction.objects.create(
             order=self.order,
             amount=self.order.total_amount,
@@ -103,17 +115,22 @@ class UpiProofPaymentFlowTests(TestCase):
         txn = Transaction.objects.get(order=self.order)
         self.assertEqual(txn.status, "paid")
         self.assertEqual(self.order.status, "confirmed")
-        self.assertEqual(self.product.stock, 10)
+        self.assertEqual(self.product.stock, 8)
+        self.assertFalse(StockReservation.objects.filter(order=self.order).exists())
 
-    def test_admin_reject_restores_stock_and_cancels_order(self):
+    def test_admin_reject_releases_reservations_and_cancels_order(self):
+        StockReservation.objects.create(
+            user=self.user,
+            product=self.product,
+            order=self.order,
+            quantity=2,
+            expires_at=timezone.now() + timedelta(hours=1),
+        )
         Transaction.objects.create(
             order=self.order,
             amount=self.order.total_amount,
             status="pending_verification",
         )
-        # Simulate stock already reserved at proof upload stage.
-        self.product.stock = 8
-        self.product.save(update_fields=["stock"])
         self.client.force_authenticate(user=self.admin)
 
         response = self.client.post(self.reject_url, {"admin_notes": "Proof mismatch"}, format="json")
@@ -125,3 +142,4 @@ class UpiProofPaymentFlowTests(TestCase):
         self.assertEqual(txn.status, "rejected")
         self.assertEqual(self.order.status, "cancelled")
         self.assertEqual(self.product.stock, 10)
+        self.assertFalse(StockReservation.objects.filter(order=self.order).exists())

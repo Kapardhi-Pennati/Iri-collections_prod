@@ -78,11 +78,11 @@ class OrderStatusSecurityTests(TestCase):
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, "confirmed")
 
-    def test_rejected_transaction_auto_cancels_pending_order(self):
+    def test_rejected_transaction_does_not_implicitly_cancel_without_workflow(self):
         self.txn.status = "rejected"
         self.txn.save(update_fields=["status"])
 
         self.order.refresh_from_db()
         self.txn.refresh_from_db()
-        self.assertEqual(self.order.status, "cancelled")
+        self.assertEqual(self.order.status, "pending")
         self.assertEqual(self.txn.status, "rejected")

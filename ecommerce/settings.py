@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Third-party
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     # Local apps
     "core",  # Security utilities
@@ -84,6 +85,7 @@ TEMPLATES = [
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
+                "django.template.context_processors.csrf",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
@@ -161,7 +163,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-        "OPTIONS": {"min_length": 12},  # Enforce strong passwords
+        "OPTIONS": {"min_length": 8},  # Enforce strong passwords
     },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -180,10 +182,9 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # ─────────────────────────────────────────────────────────────────────────────
 
 REST_FRAMEWORK = {
-    # ✅ Authentication (JWT + Sessions)
+    # ✅ Authentication (JWT cookie/header auth with CSRF enforcement)
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
+        "accounts.authentication.CookieJWTAuthentication",
     ],
     # ✅ Default to authenticated-only access (opt-in to AllowAny)
     "DEFAULT_PERMISSION_CLASSES": [
@@ -223,7 +224,16 @@ SIMPLE_JWT = {
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     # ✅ Sign tokens with HS256 (default; use RS256 for external verification)
     "ALGORITHM": "HS256",
-    # Future: Consider adding token blacklist app for explicit logout
+    "UPDATE_LAST_LOGIN": True,
+    "LEEWAY": 30,
+    # First-party browser clients use HttpOnly cookies instead of exposing JWTs
+    # to JavaScript storage.
+    "AUTH_COOKIE_ACCESS": "iri_access",
+    "AUTH_COOKIE_REFRESH": "iri_refresh",
+    "AUTH_COOKIE_SECURE": not DEBUG,
+    "AUTH_COOKIE_HTTP_ONLY": True,
+    "AUTH_COOKIE_SAMESITE": "Strict",
+    "AUTH_COOKIE_REFRESH_PATH": "/api/auth/refresh/",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────

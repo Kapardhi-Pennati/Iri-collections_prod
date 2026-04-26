@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Checkout — Iri Collections{% endblock %}
+{% block title %}Checkout - Iri Collections{% endblock %}
 
 {% block content %}
 <section class="section">
@@ -11,31 +11,29 @@
             <div class="section-divider"></div>
         </div>
 
-        <!-- Checkout Steps Indicator -->
         <div class="checkout-steps">
             <div class="checkout-step active" id="step-indicator-1">
-                <div class="checkout-step-number">1</div>
+                <div class="checkout-step-number"><i class="ph ph-truck"></i></div>
                 <div class="checkout-step-label">Shipping</div>
             </div>
             <div class="checkout-step" id="step-indicator-2">
-                <div class="checkout-step-number">2</div>
+                <div class="checkout-step-number"><i class="ph ph-receipt"></i></div>
                 <div class="checkout-step-label">Review</div>
             </div>
             <div class="checkout-step" id="step-indicator-3">
-                <div class="checkout-step-number">3</div>
+                <div class="checkout-step-number"><i class="ph ph-credit-card"></i></div>
                 <div class="checkout-step-label">Payment</div>
             </div>
             <div class="checkout-step" id="step-indicator-4">
-                <div class="checkout-step-number">4</div>
+                <div class="checkout-step-number"><i class="ph ph-check-circle"></i></div>
                 <div class="checkout-step-label">Done</div>
             </div>
         </div>
 
         <div class="checkout-panel" id="checkout-content">
-            <!-- Step 1: Shipping -->
             <div id="step-1" class="card-glass">
                 <h2 style="font-family:var(--font-display); margin-bottom:var(--space-lg);">Shipping Details</h2>
-                
+
                 <div id="saved-addresses-container" style="margin-bottom: var(--space-xl); display: none;">
                     <label style="font-weight:600; font-size: 0.9rem;">Saved Addresses</label>
                     <select id="saved-address-select" class="form-control" style="margin-bottom: var(--space-md); padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); border-color: var(--gold);" onchange="fillSavedAddress()">
@@ -47,20 +45,20 @@
                 <form id="shipping-form">
                     <div class="form-group">
                         <label for="ship-name">Full Name</label>
-                        <input type="text" id="ship-name" required>
+                        <input type="text" id="ship-name" required maxlength="150">
                     </div>
                     <div class="form-group">
                         <label for="ship-phone">Phone Number</label>
-                        <input type="tel" id="ship-phone" required placeholder="+91 9876543210">
+                        <input type="tel" id="ship-phone" required placeholder="+91 9876543210" maxlength="20">
                     </div>
                     <div class="form-group">
                         <label for="ship-address">Complete Address</label>
-                        <textarea id="ship-address" rows="3" required placeholder="House/Flat No., Street, Landmark"></textarea>
+                        <textarea id="ship-address" rows="3" required maxlength="500" placeholder="House/Flat No., Street, Landmark"></textarea>
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
                         <div class="form-group">
                             <label for="ship-city">City</label>
-                            <input type="text" id="ship-city" required>
+                            <input type="text" id="ship-city" required maxlength="100">
                         </div>
                         <div class="form-group">
                             <label for="ship-pincode">Pincode</label>
@@ -72,7 +70,7 @@
                     </div>
                     <div class="form-group">
                         <label for="ship-notes">Order Notes <span style="color:var(--text-muted); text-transform:none;">(optional)</span></label>
-                        <textarea id="ship-notes" rows="2" placeholder="Any special instructions..."></textarea>
+                        <textarea id="ship-notes" rows="2" maxlength="500" placeholder="Any special instructions..."></textarea>
                     </div>
                     <div class="form-group" style="margin-bottom: 1.5rem;">
                         <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.9rem; font-weight:normal;">
@@ -83,7 +81,6 @@
                 </form>
             </div>
 
-            <!-- Step 2: Review (hidden initially) -->
             <div id="step-2" class="card-glass hidden">
                 <h2 style="font-family:var(--font-display); margin-bottom:var(--space-lg);">Review Your Order</h2>
                 <div id="review-items"></div>
@@ -95,20 +92,18 @@
                 </div>
             </div>
 
-            <!-- Step 3: Payment (UPI QR) -->
             <div id="step-3" class="card-glass hidden">
                 <h2 style="font-family:var(--font-display); margin-bottom:var(--space-md); text-align: center;">Complete Payment</h2>
                 <p class="text-muted" style="text-align: center; margin-bottom: 0.5rem;">Scan the QR code below using any UPI app to complete your payment.</p>
                 <p style="text-align: center; color: var(--gold); font-size: 0.9rem; margin-bottom: var(--space-xl); font-weight: 500;">
                     <i class="ph ph-shield-check"></i> Security Tip: Verify that the recipient name is '{{ upi_display_name }}' before confirming.
                 </p>
-                
+
                 <div style="display: flex; flex-direction: column; align-items: center; background: var(--bg-elevated); padding: var(--space-xl); border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: var(--space-xl);">
-                    <!-- Dynamic UPI QR generated securely server-side -->
                     <img src="/api/payments/qr-code/?amount=0" alt="UPI QR Code" style="width: 250px; height: 250px; border-radius: var(--radius-sm); border: 4px solid #fff; background: #fff; margin-bottom: var(--space-md);">
                     <div style="font-weight: 600; font-size: 1.1rem;">UPI ID: <span class="text-gold" style="user-select: all;">{{ upi_id }}</span></div>
                     <div style="font-size: 0.9rem; color: var(--text-muted);">{{ upi_display_name }}</div>
-                    
+
                     <div style="margin-top: var(--space-lg); font-size: 1.2rem; font-weight: 700;">
                         Amount to Pay: <span id="payment-amount-display" class="text-gold"></span>
                     </div>
@@ -125,15 +120,15 @@
                     <h3 style="margin-bottom: var(--space-md);">Submit Payment Details</h3>
                     <div class="form-group" style="margin-bottom: var(--space-md);">
                         <label for="payment-utr">UPI Transaction ID / UTR <span style="color:var(--error);">*</span></label>
-                        <input type="text" id="payment-utr" placeholder="e.g. 312345678901" required>
-                        <small style="color: var(--text-muted);">Enter the 12-digit UTR or Transaction ID from your payment app.</small>
+                        <input type="text" id="payment-utr" placeholder="e.g. 312345678901" required maxlength="64">
+                        <small style="color: var(--text-muted);">Enter the UTR or transaction ID from your payment app.</small>
                     </div>
                     <div class="form-group" style="margin-bottom: var(--space-xl);">
                         <label for="payment-screenshot">Payment Screenshot <span style="color:var(--text-muted);">(Optional)</span></label>
-                        <input type="file" id="payment-screenshot" accept="image/png, image/jpeg, image/webp">
+                        <input type="file" id="payment-screenshot" accept="image/png, image/jpeg, image/webp, image/gif">
                         <small style="color: var(--text-muted);">You can optionally upload a screenshot of your successful transaction.</small>
                     </div>
-                    
+
                     <div style="display:flex; gap:var(--space-md);">
                         <button type="button" class="btn btn-ghost btn-lg" onclick="goToStep(2)"><i class="ph ph-arrow-left"></i> Back</button>
                         <button type="submit" class="btn btn-primary btn-lg" style="flex:1;" id="submit-proof-btn">Submit Payment Proof <i class="ph ph-check-circle"></i></button>
@@ -141,9 +136,7 @@
                 </form>
             </div>
 
-            <!-- Step 4: Confirmation (hidden initially) -->
             <div id="step-4" class="card-glass hidden text-center">
-                <!-- Dynamic icon: set by showConfirmation() -->
                 <div style="font-size:4rem; margin-bottom:var(--space-lg);" id="confirmation-icon"><i class="ph ph-confetti"></i></div>
                 <h2 style="font-family:var(--font-display); margin-bottom:var(--space-sm);" id="confirmation-title">Order Received!</h2>
                 <p class="text-muted mb-2" id="confirmation-msg">We have received your payment proof and it is under verification.</p>
@@ -160,19 +153,15 @@
 
 {% block extra_js %}
 <script>
-/**
- * ═══════════════════════════════════════════════════════════════════════════
- * CHECKOUT FLOW — Static UPI Manual Flow
- * ═══════════════════════════════════════════════════════════════════════════
- */
-
 let cartData = null;
 let currentStep = 1;
 let createdOrder = null;
 const UPI_ID = '{{ upi_id|escapejs }}';
 const UPI_DISPLAY_NAME = '{{ upi_display_name|escapejs }}';
-let checkoutShippingState = "";
+let checkoutShippingState = '';
 let shippingQuoteTimer = null;
+let shippingRequestController = null;
+let pageBusy = false;
 let shippingQuote = {
     fee: 80,
     state: '',
@@ -181,59 +170,61 @@ let shippingQuote = {
     error: '',
 };
 
-// ─── Page Load ─────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
     bindShippingEstimateListeners();
     renderShippingEstimate();
     await loadCheckoutCart();
 });
 
-// ─── Load Cart ─────────────────────────────────────────────────────────
 async function loadCheckoutCart() {
-    if (!API.isLoggedIn()) {
+    const user = await API.bootstrapUser();
+    if (!user) {
         window.location.href = '/login/';
         return;
     }
-    cartData = await API.get('/store/cart/');
-    if (!cartData || !cartData.items || cartData.items.length === 0) {
-        document.getElementById('checkout-content').innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon"><i class="ph ph-shopping-cart"></i></div>
-                <h3>Your cart is empty</h3>
-                <a href="/catalog/" class="btn btn-primary mt-2">Browse Products</a>
-            </div>`;
-        return;
-    }
-    // Pre-fill user info
-    const user = API.getUser();
-    if (user) {
+
+    try {
+        const cartController = createRequestController();
+        cartData = await API.get('/store/cart/', { signal: cartController.signal });
+        if (!cartData || !cartData.items || cartData.items.length === 0) {
+            document.getElementById('checkout-content').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="ph ph-shopping-cart"></i></div>
+                    <h3>Your cart is empty</h3>
+                    <a href="/catalog/" class="btn btn-primary mt-2">Browse Products</a>
+                </div>
+            `;
+            return;
+        }
+
         document.getElementById('ship-name').value = user.full_name || '';
         document.getElementById('ship-phone').value = user.phone || '';
-    }
 
-    // Fetch saved addresses
-    try {
-        const addrRes = await API.get('/auth/addresses/');
-        if (addrRes && addrRes.length > 0) {
-            window.userAddresses = addrRes;
+        const addressController = createRequestController();
+        const addresses = await API.get('/auth/addresses/', { signal: addressController.signal });
+        if (addresses && addresses.length > 0) {
+            window.userAddresses = addresses;
             const container = document.getElementById('saved-addresses-container');
             const select = document.getElementById('saved-address-select');
             container.style.display = 'block';
-            addrRes.forEach(a => {
-                const opt = document.createElement('option');
-                opt.value = a.id;
-                opt.textContent = `${a.name || 'Address'} - ${a.street}, ${a.city} - ${a.pincode}`;
-                select.appendChild(opt);
+            select.innerHTML = '<option value="">-- Choose a saved address or enter a new one --</option>';
+
+            addresses.forEach((address) => {
+                const option = document.createElement('option');
+                option.value = address.id;
+                option.textContent = `${address.name || 'Address'} - ${address.street}, ${address.city} - ${address.pincode}`;
+                select.appendChild(option);
             });
-            
-            // Auto select default if exists
-            const defAddr = addrRes.find(a => a.is_default) || addrRes[0];
-            if (defAddr) {
-                select.value = defAddr.id;
+
+            const defaultAddress = addresses.find((entry) => entry.is_default) || addresses[0];
+            if (defaultAddress) {
+                select.value = defaultAddress.id;
                 fillSavedAddress();
             }
         }
-    } catch (e) { console.error('Error fetching addresses', e); }
+    } catch {
+        RouteRuntime.renderPageError('#checkout-content', 'We could not load checkout details right now.');
+    }
 }
 
 function fillSavedAddress() {
@@ -248,21 +239,18 @@ function fillSavedAddress() {
         renderShippingEstimate();
         return;
     }
-    const a = window.userAddresses.find(x => x.id == id);
-    if (a) {
-        document.getElementById('ship-address').value = a.street;
-        document.getElementById('ship-city').value = a.city;
-        document.getElementById('ship-pincode').value = a.pincode;
-        if (a.phone) document.getElementById('ship-phone').value = a.phone;
-        const user = API.getUser();
-        if (user) {
-            document.getElementById('ship-name').value = a.name || user.full_name || '';
-        }
-        refreshShippingEstimate(true);
-    }
+
+    const address = window.userAddresses.find((entry) => String(entry.id) === String(id));
+    if (!address) return;
+
+    document.getElementById('ship-address').value = address.street;
+    document.getElementById('ship-city').value = address.city;
+    document.getElementById('ship-pincode').value = address.pincode;
+    if (address.phone) document.getElementById('ship-phone').value = address.phone;
+    if (address.name) document.getElementById('ship-name').value = address.name;
+    refreshShippingEstimate(true);
 }
 
-// ─── Shipping Estimate (Step 1) ──────────────────────────────────────────
 function bindShippingEstimateListeners() {
     const pincodeInput = document.getElementById('ship-pincode');
     const addressInput = document.getElementById('ship-address');
@@ -282,42 +270,40 @@ function bindShippingEstimateListeners() {
 }
 
 function renderShippingEstimate() {
-    const el = document.getElementById('shipping-estimate');
-    if (!el) return;
+    const element = document.getElementById('shipping-estimate');
+    if (!element) return;
 
     const pincode = (document.getElementById('ship-pincode')?.value || '').trim();
-
     if (!pincode || pincode.length < 6) {
-        el.style.borderColor = 'var(--border)';
-        el.style.color = 'var(--text-muted)';
-        el.innerHTML = 'Shipping charge will appear after you enter a valid pincode.';
+        element.style.borderColor = 'var(--border)';
+        element.style.color = 'var(--text-muted)';
+        element.innerHTML = 'Shipping charge will appear after you enter a valid pincode.';
         return;
     }
 
     if (shippingQuote.error) {
-        el.style.borderColor = 'var(--error)';
-        el.style.color = 'var(--error)';
-        el.innerHTML = `Shipping not available: ${escapeHTML(shippingQuote.error)}`;
+        element.style.borderColor = 'var(--error)';
+        element.style.color = 'var(--error)';
+        element.innerHTML = `Shipping not available: ${escapeHTML(shippingQuote.error)}`;
         return;
     }
 
     if (shippingQuote.verified && shippingQuote.pincode === pincode) {
         const stateLabel = shippingQuote.state || 'India';
         const tierLabel = stateLabel.toLowerCase() === 'tamil nadu' ? 'Tamil Nadu rate' : 'Rest of India rate';
-        el.style.borderColor = 'var(--gold)';
-        el.style.color = 'var(--text)';
-        el.innerHTML = `Shipping Charge: <strong>${formatPrice(shippingQuote.fee)}</strong> · ${escapeHTML(stateLabel)} (${tierLabel})`;
+        element.style.borderColor = 'var(--gold)';
+        element.style.color = 'var(--text)';
+        element.innerHTML = `Shipping Charge: <strong>${formatPrice(shippingQuote.fee)}</strong> - ${escapeHTML(stateLabel)} (${tierLabel})`;
         return;
     }
 
-    el.style.borderColor = 'var(--border)';
-    el.style.color = 'var(--text-muted)';
-    el.innerHTML = 'Checking shipping charge...';
+    element.style.borderColor = 'var(--border)';
+    element.style.color = 'var(--text-muted)';
+    element.innerHTML = 'Checking shipping charge...';
 }
 
 async function refreshShippingEstimate(forceApi = false) {
     const pincode = (document.getElementById('ship-pincode')?.value || '').trim();
-
     if (!/^\d{6}$/.test(pincode)) {
         shippingQuote = { ...shippingQuote, pincode, verified: false, state: '', error: '' };
         renderShippingEstimate();
@@ -336,11 +322,16 @@ async function refreshShippingEstimate(forceApi = false) {
         };
     }
 
-    const res = await API.post('/store/orders/pincode-verify/', { pincode });
-    if (res && res.ok) {
+    if (shippingRequestController) {
+        shippingRequestController.abort();
+    }
+    shippingRequestController = createRequestController();
+
+    const response = await API.post('/store/orders/pincode-verify/', { pincode }, { signal: shippingRequestController.signal });
+    if (response.ok) {
         shippingQuote = {
-            fee: Number(res.data.shipping_fee || 80),
-            state: String(res.data.state || '').trim(),
+            fee: Number(response.data.shipping_fee || 80),
+            state: String(response.data.state || '').trim(),
             pincode,
             verified: true,
             error: '',
@@ -352,36 +343,33 @@ async function refreshShippingEstimate(forceApi = false) {
             pincode,
             verified: false,
             state: '',
-            error: res?.data?.error || 'Cannot verify serviceability.',
+            error: response.data?.error || 'Cannot verify serviceability.',
         };
     }
 
     renderShippingEstimate();
-    return res;
+    return response;
 }
 
-// ─── Step Navigation ───────────────────────────────────────────────────
 function goToStep(step) {
     currentStep = step;
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 4; i += 1) {
         document.getElementById(`step-${i}`)?.classList.toggle('hidden', i !== step);
-        const ind = document.getElementById(`step-indicator-${i}`);
-        if(ind) {
-            ind.classList.remove('active', 'completed');
-            if (i < step) ind.classList.add('completed');
-            if (i === step) ind.classList.add('active');
-        }
+        const indicator = document.getElementById(`step-indicator-${i}`);
+        if (!indicator) continue;
+        indicator.classList.remove('active', 'completed');
+        if (i < step) indicator.classList.add('completed');
+        if (i === step) indicator.classList.add('active');
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function updatePaymentQRCode(totalAmount) {
+function updatePaymentQRCode(totalAmount, orderNumber = '') {
     const amountValue = Number(totalAmount || 0).toFixed(2);
-    const upiUri = `upi://pay?pa=${UPI_ID}&pn=${UPI_DISPLAY_NAME}&am=${amountValue}&cu=INR`;
-    
-    // Secure server-side QR generation
-    const qrSrc = `/api/payments/qr-code/?amount=${amountValue}`;
-    
+    const note = orderNumber ? `Order-${orderNumber}` : 'Payment';
+    const qrSrc = `/api/payments/qr-code/?amount=${encodeURIComponent(amountValue)}&note=${encodeURIComponent(note)}`;
+    const upiUri = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_DISPLAY_NAME)}&am=${amountValue}&cu=INR&tn=${encodeURIComponent(note)}`;
+
     const qrImg = document.querySelector('#step-3 img[alt="UPI QR Code"]');
     if (qrImg) qrImg.src = qrSrc;
     const upiUrlInput = document.getElementById('upi-payment-url');
@@ -395,199 +383,258 @@ function copyUpiUrl() {
         return;
     }
 
-    upiUrlInput.select();
-    upiUrlInput.setSelectionRange(0, 99999);
     navigator.clipboard.writeText(upiUrlInput.value)
-        .then(() => Toast.success('UPI URL copied!'))
+        .then(() => Toast.success('UPI URL copied'))
         .catch(() => Toast.error('Unable to copy UPI URL.'));
 }
 
-// ─── Step 1 → Step 2: Shipping → Review ────────────────────────────────
-document.getElementById('shipping-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // Check if any OOS items
-    const hasOOS = cartData.items.some(i => i.is_out_of_stock);
-    if (hasOOS) {
-        Toast.error("Please remove out-of-stock items from your cart before proceeding.");
+function validateShippingForm() {
+    const name = document.getElementById('ship-name').value.trim();
+    const phone = document.getElementById('ship-phone').value.trim().replace(/\s+/g, '');
+    const address = document.getElementById('ship-address').value.trim();
+    const city = document.getElementById('ship-city').value.trim();
+    const pincode = document.getElementById('ship-pincode').value.trim();
+    const notes = document.getElementById('ship-notes').value.trim();
+    const errors = [];
+
+    if (name.length < 2 || name.length > 150) errors.push('Enter a valid full name.');
+    if (!/^(\+91|0)?[6-9]\d{9}$/.test(phone)) errors.push('Enter a valid Indian phone number.');
+    if (address.length < 5 || address.length > 500) errors.push('Enter a valid shipping address.');
+    if (city.length < 2 || city.length > 100) errors.push('Enter a valid city.');
+    if (!/^\d{6}$/.test(pincode)) errors.push('Enter a valid 6-digit pincode.');
+    if (notes.length > 500) errors.push('Order notes must be 500 characters or less.');
+
+    return { valid: errors.length === 0, errors };
+}
+
+document.getElementById('shipping-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!cartData || pageBusy) return;
+
+    const validation = validateShippingForm();
+    if (!validation.valid) {
+        Toast.error(validation.errors[0]);
         return;
     }
 
-    const btn = e.submitter;
-    if (btn) { btn.disabled = true; btn.textContent = 'Verifying Pincode...'; }
-
-    const pincode = document.getElementById('ship-pincode').value;
-    const res = await refreshShippingEstimate(true);
-    
-    if (btn) { btn.disabled = false; btn.textContent = 'Continue to Review →'; }
-
-    let shippingFee = 80;
-    let shippingState = '';
-    if (res && res.ok) {
-        shippingFee = Number(res.data.shipping_fee || 80);
-        shippingState = String(res.data.state || '').trim();
-        checkoutShippingState = shippingState;
-        
-        // Save Address if checked
-        const saveAddr = document.getElementById('ship-save-address')?.checked;
-        const selId = document.getElementById('saved-address-select')?.value;
-        if (saveAddr && !selId) {
-            API.post('/auth/addresses/', {
-                street: document.getElementById('ship-address').value,
-                city: document.getElementById('ship-city').value,
-                pincode: pincode,
-                phone: document.getElementById('ship-phone').value,
-                state: shippingState || "India",
-                name: document.getElementById('ship-name').value || "Address"
-            }).catch(e => console.error("Could not save address", e));
-        }
-
-    } else {
-        Toast.error("Invalid Pincode: " + (res?.data?.error || 'Cannot verify serviceability.'));
+    const hasOutOfStockItems = cartData.items.some((item) => item.is_out_of_stock);
+    if (hasOutOfStockItems) {
+        Toast.error('Please remove out-of-stock items from your cart before proceeding.');
         return;
     }
 
-    // Render review
-    const items = cartData.items.map(item => {
-        const p = item.product_detail;
-        return `<div style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid var(--border);">
-            <div>
-                <div style="font-weight:600;">${p.name}</div>
-                <div style="font-size:0.85rem; color:var(--text-muted);">Qty: ${item.quantity} × ${formatPrice(p.price)}</div>
-            </div>
-            <div style="font-weight:600; color:var(--gold-light);">${formatPrice(item.subtotal)}</div>
-        </div>`;
-    }).join('');
-    document.getElementById('review-items').innerHTML = items;
-
-    const addr = `${document.getElementById('ship-name').value}<br>
-        ${document.getElementById('ship-address').value}<br>
-        ${document.getElementById('ship-city').value}${shippingState ? ', ' + escapeHTML(shippingState) : ''} - ${document.getElementById('ship-pincode').value}<br>
-        <i class="ph ph-phone"></i> ${document.getElementById('ship-phone').value}`;
-    document.getElementById('review-shipping').innerHTML = `
-        <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:0.5rem;">Shipping To</div>
-        <div style="line-height:1.8;">${addr}</div>`;
-
-    const total = cartData.total + shippingFee;
-    document.getElementById('review-total').innerHTML = `
-        <div class="cart-summary-row"><span>Subtotal</span><span>${formatPrice(cartData.total)}</span></div>
-        <div class="cart-summary-row"><span>Shipping</span><span style="color:var(--success);">${shippingFee === 0 ? 'Free' : formatPrice(shippingFee)}</span></div>
-        <div class="cart-summary-row total"><span>Total</span><span>${formatPrice(total)}</span></div>`;
-
-    // Also update the final amount in Step 3
-    document.getElementById('payment-amount-display').textContent = formatPrice(total);
-    updatePaymentQRCode(total);
-
-    goToStep(2);
-});
-
-// ─── Step 2 → Step 3: Review → Payment ──────────────────────────────────
-async function proceedToPayment() {
-    // If the order is already created, resume directly at payment-proof step.
-    if (createdOrder) {
-        document.getElementById('payment-amount-display').textContent = formatPrice(createdOrder.total_amount);
-        updatePaymentQRCode(createdOrder.total_amount);
-        goToStep(3);
-        return;
+    const button = event.submitter;
+    pageBusy = true;
+    if (button) {
+        button.disabled = true;
+        button.textContent = 'Verifying Pincode...';
     }
-
-    // We create the order now in "pending" status, then move to step 3 to upload proof
-    const btn = document.getElementById('pay-now-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Creating Order...'; }
 
     try {
-        const state = checkoutShippingState || shippingQuote.state || '';
-        const address = `${document.getElementById('ship-name').value}, ${document.getElementById('ship-address').value}, ${document.getElementById('ship-city').value}${state ? ', ' + state : ''} - ${document.getElementById('ship-pincode').value}, India`;
-        const phone = document.getElementById('ship-phone').value;
-        const notes = document.getElementById('ship-notes').value;
-
-        const orderRes = await API.post('/store/orders/create/', {
-            shipping_address: address,
-            state: state,
-            phone: phone,
-            notes: notes,
-        });
-
-        if (!orderRes || !orderRes.ok) {
-            Toast.error(orderRes?.data?.error || 'Failed to create order.');
-            if (btn) { btn.disabled = false; btn.textContent = 'Pay Now'; }
+        const response = await refreshShippingEstimate(true);
+        if (!response.ok) {
+            Toast.error(`Invalid Pincode: ${response.data?.error || 'Cannot verify serviceability.'}`);
             return;
         }
 
-        createdOrder = orderRes.data;
-        updateCartCount(); // cart is cleared on the backend since order was placed
-        document.getElementById('payment-amount-display').textContent = formatPrice(createdOrder.total_amount);
-        updatePaymentQRCode(createdOrder.total_amount);
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = 'Continue Payment';
-        }
-        goToStep(3);
+        const shippingFee = Number(response.data.shipping_fee || 80);
+        const shippingState = String(response.data.state || '').trim();
+        checkoutShippingState = shippingState;
 
-    } catch (err) {
-        console.error('Order creation error:', err);
+        const saveAddress = document.getElementById('ship-save-address')?.checked;
+        const selectedAddressId = document.getElementById('saved-address-select')?.value;
+        if (saveAddress && !selectedAddressId) {
+            const addressSaveResponse = await API.post('/auth/addresses/', {
+                street: document.getElementById('ship-address').value.trim(),
+                city: document.getElementById('ship-city').value.trim(),
+                pincode: document.getElementById('ship-pincode').value.trim(),
+                phone: document.getElementById('ship-phone').value.trim(),
+                state: shippingState || 'India',
+                name: document.getElementById('ship-name').value.trim() || 'Address',
+            });
+            if (!addressSaveResponse.ok) {
+                Toast.info('Address was not saved, but you can still complete checkout.');
+            }
+        }
+
+        const items = cartData.items.map((item) => {
+            const product = item.product_detail;
+            return `<div style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid var(--border);">
+                <div>
+                    <div style="font-weight:600;">${escapeHTML(product.name)}</div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">Qty: ${item.quantity} x ${formatPrice(product.price)}</div>
+                </div>
+                <div style="font-weight:600; color:var(--gold-light);">${formatPrice(item.subtotal)}</div>
+            </div>`;
+        }).join('');
+        document.getElementById('review-items').innerHTML = items;
+
+        const reviewAddress = `${escapeHTML(document.getElementById('ship-name').value.trim())}<br>
+            ${escapeHTML(document.getElementById('ship-address').value.trim())}<br>
+            ${escapeHTML(document.getElementById('ship-city').value.trim())}${shippingState ? ', ' + escapeHTML(shippingState) : ''} - ${escapeHTML(document.getElementById('ship-pincode').value.trim())}<br>
+            <i class="ph ph-phone"></i> ${escapeHTML(document.getElementById('ship-phone').value.trim())}`;
+        document.getElementById('review-shipping').innerHTML = `
+            <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:0.5rem;">Shipping To</div>
+            <div style="line-height:1.8;">${reviewAddress}</div>
+        `;
+
+        const total = cartData.total + shippingFee;
+        document.getElementById('review-total').innerHTML = `
+            <div class="cart-summary-row"><span>Subtotal</span><span>${formatPrice(cartData.total)}</span></div>
+            <div class="cart-summary-row"><span>Shipping</span><span style="color:var(--success);">${shippingFee === 0 ? 'Free' : formatPrice(shippingFee)}</span></div>
+            <div class="cart-summary-row total"><span>Total</span><span>${formatPrice(total)}</span></div>
+        `;
+
+        document.getElementById('payment-amount-display').textContent = formatPrice(total);
+        updatePaymentQRCode(total);
+        goToStep(2);
+    } finally {
+        pageBusy = false;
+        if (button) {
+            button.disabled = false;
+            button.textContent = 'Continue to Review';
+        }
+    }
+});
+
+async function proceedToPayment() {
+    if (createdOrder) {
+        document.getElementById('payment-amount-display').textContent = formatPrice(createdOrder.total_amount);
+        updatePaymentQRCode(createdOrder.total_amount, createdOrder.order_number);
+        goToStep(3);
+        return;
+    }
+
+    if (pageBusy) return;
+    pageBusy = true;
+    const button = document.getElementById('pay-now-btn');
+    if (button) {
+        button.disabled = true;
+        button.textContent = 'Creating Order...';
+    }
+
+    try {
+        const state = checkoutShippingState || shippingQuote.state || '';
+        const address = `${document.getElementById('ship-name').value.trim()}, ${document.getElementById('ship-address').value.trim()}, ${document.getElementById('ship-city').value.trim()}${state ? ', ' + state : ''} - ${document.getElementById('ship-pincode').value.trim()}, India`;
+        const phone = document.getElementById('ship-phone').value.trim();
+        const notes = document.getElementById('ship-notes').value.trim();
+
+        const controller = createRequestController();
+        const response = await API.post('/store/orders/create/', {
+            shipping_address: address,
+            state,
+            phone,
+            notes,
+        }, { signal: controller.signal });
+
+        if (!response.ok) {
+            Toast.error(response.data?.error || 'Failed to create order.');
+            await loadCheckoutCart();
+            return;
+        }
+
+        createdOrder = response.data;
+        cartData = { items: [], total: 0, item_count: 0 };
+        updateCartCount();
+        document.getElementById('payment-amount-display').textContent = formatPrice(createdOrder.total_amount);
+        updatePaymentQRCode(createdOrder.total_amount, createdOrder.order_number);
+        goToStep(3);
+    } catch {
         Toast.error('An unexpected error occurred. Please try again.');
-        if (btn) { btn.disabled = false; btn.textContent = 'Pay Now'; }
+    } finally {
+        pageBusy = false;
+        if (button) {
+            button.disabled = false;
+            button.textContent = 'Pay Now';
+        }
     }
 }
 
-// ─── Step 3 → Step 4: Upload Proof → Confirmation ───────────────────────
-document.getElementById('payment-proof-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!createdOrder) {
-        Toast.error('Order not found. Please refresh and try again.');
+document.getElementById('payment-proof-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!createdOrder || pageBusy) {
+        if (!createdOrder) Toast.error('Order not found. Please refresh and try again.');
         return;
     }
 
-    const btn = document.getElementById('submit-proof-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Uploading...'; }
+    const button = document.getElementById('submit-proof-btn');
+    pageBusy = true;
+    if (button) {
+        button.disabled = true;
+        button.textContent = 'Uploading...';
+    }
 
     const fileInput = document.getElementById('payment-screenshot');
     const utrInput = document.getElementById('payment-utr');
-    
-    if (!utrInput.value.trim()) {
-        Toast.error('Please enter the UPI Transaction ID.');
-        if (btn) { btn.disabled = false; btn.textContent = 'Submit Payment Proof'; }
+    const utr = utrInput.value.trim();
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(utr)) {
+        Toast.error('Please enter a valid UPI Transaction ID.');
+        pageBusy = false;
+        if (button) {
+            button.disabled = false;
+            button.textContent = 'Submit Payment Proof';
+        }
         return;
     }
 
-    if (fileInput.files && fileInput.files.length > 0 && fileInput.files[0].size === 0) {
-        Toast.error('The uploaded screenshot is empty (0 bytes). Please select a valid file.');
-        if (btn) { btn.disabled = false; btn.textContent = 'Submit Payment Proof'; }
-        return;
+    if (fileInput.files && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+        if (file.size === 0) {
+            Toast.error('The uploaded screenshot is empty (0 bytes). Please select a valid file.');
+            pageBusy = false;
+            if (button) {
+                button.disabled = false;
+                button.textContent = 'Submit Payment Proof';
+            }
+            return;
+        }
+        if (!allowedTypes.includes(file.type)) {
+            Toast.error('Screenshot must be a PNG, JPEG, WebP, or GIF image.');
+            pageBusy = false;
+            if (button) {
+                button.disabled = false;
+                button.textContent = 'Submit Payment Proof';
+            }
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            Toast.error('Screenshot must be 5 MB or smaller.');
+            pageBusy = false;
+            if (button) {
+                button.disabled = false;
+                button.textContent = 'Submit Payment Proof';
+            }
+            return;
+        }
     }
-    
+
     const formData = new FormData();
     formData.append('order_id', createdOrder.id);
-    formData.append('upi_reference_id', utrInput.value.trim());
+    formData.append('upi_reference_id', utr);
     if (fileInput.files && fileInput.files.length > 0) {
         formData.append('payment_screenshot', fileInput.files[0]);
     }
 
     try {
-        const token = API.getToken();
-        const res = await fetch('/api/payments/upload-proof/', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: formData
-        });
-
-        const data = await res.json();
-        
-        if (res.ok) {
+        const controller = createRequestController();
+        const response = await API.post('/payments/upload-proof/', formData, { signal: controller.signal });
+        if (response.ok) {
             showConfirmation(createdOrder);
         } else {
-            Toast.error(data.error || 'Failed to upload payment proof.');
-            if (btn) { btn.disabled = false; btn.textContent = 'Submit Payment Proof'; }
+            Toast.error(response.data?.error || 'Failed to upload payment proof.');
         }
-    } catch (err) {
-        console.error('Proof upload error:', err);
+    } catch {
         Toast.error('An unexpected error occurred during upload.');
-        if (btn) { btn.disabled = false; btn.textContent = 'Submit Payment Proof'; }
+    } finally {
+        pageBusy = false;
+        if (button) {
+            button.disabled = false;
+            button.textContent = 'Submit Payment Proof';
+        }
     }
 });
 
-// ─── Final Confirmation ─────────────────────────────────────────────────
 function showConfirmation(order) {
     document.getElementById('confirmation-icon').innerHTML = '<i class="ph ph-hourglass" style="color: var(--gold);"></i>';
     document.getElementById('confirmation-title').textContent = 'Order Under Verification';
@@ -596,14 +643,15 @@ function showConfirmation(order) {
     document.getElementById('confirmation-details').innerHTML = `
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
             <div><div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Order Number</div>
-                <div style="font-weight:700; color:var(--gold-light); font-size:1.1rem;">${order.order_number}</div></div>
+                <div style="font-weight:700; color:var(--gold-light); font-size:1.1rem;">${escapeHTML(order.order_number)}</div></div>
             <div><div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Total Amount</div>
                 <div style="font-weight:700; font-size:1.1rem;">${formatPrice(order.total_amount)}</div></div>
             <div><div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Payment Status</div>
                 <div><span class="order-status pending">Pending Verification</span></div></div>
             <div><div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">Date</div>
                 <div>${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</div></div>
-        </div>`;
+        </div>
+    `;
 
     document.querySelector('.checkout-steps').style.display = 'none';
     goToStep(4);

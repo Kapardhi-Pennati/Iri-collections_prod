@@ -1,69 +1,119 @@
 """
-payments/views.py — Static UPI QR Code Payment Views
-
-Endpoints:
-  POST /api/payments/upload-proof/    → Customer uploads payment screenshot + UTR
-  POST /api/payments/approve/<pk>/    → Admin approves payment (confirms order)
-  POST /api/payments/reject/<pk>/     → Admin rejects payment (cancels order)
-
-Flow:
-  1. Customer places order → order status = 'pending'
-  2. Customer scans static UPI QR, pays, uploads screenshot + UTR
-  3. On proof upload → stock is reserved (deducted)
-  4. Admin reviews screenshot in dashboard
-  5. Admin approves → order confirmed
-  5. Admin rejects → order cancelled
-
-Security:
-  ✅ QR code is a static image — cannot be changed even if site is compromised
-  ✅ Admin manually verifies every payment before confirming
-  ✅ Stock is reserved at proof upload and restored on rejection
-  ✅ All actions are audit-logged
+Manual UPI payment flow with atomic stock settlement.
 """
 
-import logging
-
-from rest_framework import status
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from django.db import transaction
-from django.http import HttpResponse
-from django.conf import settings
 import io
+import logging
 import qrcode
 
+from datetime import timedelta
+from django.conf import settings
+from django.db import transaction
+from django.http import HttpResponse
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from core.permissions import IsCustomerUser
 from core.security import audit_log, get_client_ip
-from store.models import Order, OrderItem, Product, Transaction
+from core.throttling import AdminMutationThrottle, PaymentThrottle
+from store.models import Order, OrderItem, Product, StockReservation, Transaction
 from store.views import IsAdminRole
 
 logger = logging.getLogger("payments")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 1. UPLOAD PAYMENT PROOF (Customer)
-# ─────────────────────────────────────────────────────────────────────────────
+def _validate_upi_reference(value: str) -> str:
+    reference = str(value or "").strip()
+    if not reference:
+        raise ValueError("UPI Transaction ID is required.")
+    if len(reference) < 8 or len(reference) > 64:
+        raise ValueError("UPI Transaction ID must be between 8 and 64 characters.")
+    if not all(char.isalnum() or char in {"-", "_"} for char in reference):
+        raise ValueError("UPI Transaction ID may only contain letters, numbers, '-' or '_'.")
+    return reference
+
+
+def _validate_screenshot(screenshot) -> None:
+    if screenshot is None:
+        return
+    if screenshot.size == 0:
+        raise ValueError("The uploaded screenshot is empty (0 bytes).")
+    if screenshot.content_type not in {"image/jpeg", "image/png", "image/webp", "image/gif"}:
+        raise ValueError("Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.")
+    if screenshot.size > 5 * 1024 * 1024:
+        raise ValueError("File too large. Maximum 5 MB allowed.")
+
+
+def _load_locked_order(order_id: int, user=None) -> Order:
+    queryset = Order.objects.select_for_update()
+    if user is not None:
+        queryset = queryset.filter(user=user)
+    return queryset.get(id=order_id)
+
+
+def _ensure_order_reservations(order: Order, acting_user) -> list[OrderItem]:
+    """
+    Ensure the order still has an active reservation for every line item.
+
+    Upload-proof requests extend reservations instead of deducting stock. Admin
+    approval is the only place where on-hand stock is decremented.
+    """
+
+    order_items = list(OrderItem.objects.filter(order=order).select_related("product"))
+    product_ids = [item.product_id for item in order_items if item.product_id]
+    products = Product.objects.select_for_update().filter(id__in=product_ids)
+    product_map = {product.id: product for product in products}
+    reservation_expiry = timezone.now() + timedelta(hours=24)
+
+    for item in order_items:
+        if not item.product_id:
+            continue
+
+        product = product_map.get(item.product_id)
+        if not product:
+            raise ValueError(
+                f"Product for line item {item.product_name} is no longer available."
+            )
+
+        reservation = (
+            StockReservation.objects.select_for_update()
+            .filter(order=order, product=product)
+            .first()
+        )
+        held_quantity = (
+            reservation.quantity
+            if reservation and reservation.expires_at > timezone.now()
+            else 0
+        )
+        reservable_quantity = product.get_available_stock() + held_quantity
+        if item.quantity > reservable_quantity:
+            raise ValueError(
+                f"Insufficient reserved stock for {product.name}. "
+                "The payment window expired and stock is no longer available."
+            )
+
+        if reservation:
+            reservation.quantity = item.quantity
+            reservation.expires_at = reservation_expiry
+            reservation.save(update_fields=["quantity", "expires_at"])
+        else:
+            StockReservation.objects.create(
+                user=acting_user,
+                product=product,
+                order=order,
+                quantity=item.quantity,
+                expires_at=reservation_expiry,
+            )
+
+    return order_items
+
 
 class UploadPaymentProofView(APIView):
-    """
-    Customer uploads UPI payment screenshot and UTR reference for a pending order.
-
-    Request:
-        POST /api/payments/upload-proof/
-        Content-Type: multipart/form-data
-        Body:
-          - order_id: int (required)
-          - payment_screenshot: file (required, image)
-          - upi_reference_id: str (optional but recommended)
-
-    Security:
-        ✅ Only the order owner can upload proof
-        ✅ Only pending orders accept proof uploads
-        ✅ File upload validated (image only)
-        ✅ Audit logged
-    """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomerUser]
+    throttle_classes = [PaymentThrottle]
     parser_classes = [MultiPartParser, FormParser]
 
     @transaction.atomic
@@ -83,9 +133,15 @@ class UploadPaymentProofView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ── Fetch order with lock (scoped to this user — IDOR guard) ──
         try:
-            order = Order.objects.select_for_update().get(id=order_id, user=request.user)
+            upi_reference = _validate_upi_reference(request.data.get("upi_reference_id"))
+            screenshot = request.FILES.get("payment_screenshot")
+            _validate_screenshot(screenshot)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            order = _load_locked_order(order_id, user=request.user)
         except Order.DoesNotExist:
             return Response(
                 {"error": "Order not found."},
@@ -94,80 +150,30 @@ class UploadPaymentProofView(APIView):
 
         if order.status != "pending":
             return Response(
-                {"error": f"Order is already {order.status}. Cannot upload payment proof."},
+                {
+                    "error": f"Order is already {order.status}. Cannot upload payment proof."
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        upi_reference = str(request.data.get("upi_reference_id", "")).strip()
-        if not upi_reference:
+        try:
+            _ensure_order_reservations(order, request.user)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_409_CONFLICT)
+
+        txn = Transaction.objects.select_for_update().filter(order=order).first()
+        if txn and txn.status in {"paid", "rejected"}:
             return Response(
-                {"error": "UPI Transaction ID is required."},
+                {"error": f"Payment is already {txn.status}. Cannot upload proof again."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ── Validate screenshot file (Optional) ──────────────────────
-        screenshot = request.FILES.get("payment_screenshot")
-        if screenshot:
-            if screenshot.size == 0:
-                return Response(
-                    {"error": "The uploaded screenshot is empty (0 bytes)."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            # Validate file type
-            allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-            if screenshot.content_type not in allowed_types:
-                return Response(
-                    {"error": "Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            # Validate file size (max 5 MB)
-            if screenshot.size > 5 * 1024 * 1024:
-                return Response(
-                    {"error": "File too large. Maximum 5 MB allowed."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-        # ── Create transaction and reserve stock on first upload ──────
-        txn = Transaction.objects.filter(order=order).first()
-
-        if txn and txn.status == "pending_verification":
-            # Proof re-upload before admin action: update proof only.
+        if txn:
             txn.payment_screenshot = screenshot
             txn.upi_reference_id = upi_reference
-            txn.save(update_fields=["payment_screenshot", "upi_reference_id"])
+            txn.status = "pending_verification"
+            txn.save(update_fields=["payment_screenshot", "upi_reference_id", "status"])
         else:
-            if txn and txn.status in {"paid", "rejected"}:
-                return Response(
-                    {"error": f"Payment is already {txn.status}. Cannot upload proof again."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            order_items = OrderItem.objects.filter(order=order).select_related("product")
-            for item in order_items:
-                if not item.product:
-                    continue
-
-                product = Product.objects.select_for_update().get(id=item.product_id)
-                if product.stock < item.quantity:
-                    return Response(
-                        {
-                            "error": (
-                                f"Insufficient stock for {product.name}. "
-                                "Please contact support."
-                            )
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-            for item in order_items:
-                if not item.product:
-                    continue
-                product = Product.objects.select_for_update().get(id=item.product_id)
-                product.stock -= item.quantity
-                product.save(update_fields=["stock"])
-
             txn = Transaction.objects.create(
                 order=order,
                 payment_screenshot=screenshot,
@@ -183,38 +189,25 @@ class UploadPaymentProofView(APIView):
                 "order_id": str(order.id),
                 "order_number": order.order_number,
                 "upi_reference_id": upi_reference,
-                "file_size": str(screenshot.size),
+                "has_screenshot": "true" if screenshot else "false",
+                "file_size": str(screenshot.size) if screenshot else "0",
             },
             severity="INFO",
             ip_address=get_client_ip(request),
         )
 
-        return Response({
-            "message": "Payment proof uploaded successfully. Awaiting admin verification.",
-            "order_number": order.order_number,
-            "status": "pending_verification",
-        })
+        return Response(
+            {
+                "message": "Payment proof uploaded successfully. Awaiting admin verification.",
+                "order_number": order.order_number,
+                "status": "pending_verification",
+            }
+        )
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 2. APPROVE PAYMENT (Admin)
-# ─────────────────────────────────────────────────────────────────────────────
 
 class ApprovePaymentView(APIView):
-    """
-    Admin approves a payment after verifying the screenshot.
-
-    This atomically:
-      1. Sets transaction status to 'paid'
-      2. Confirms the order
-
-    Security:
-        ✅ Admin-only access
-        ✅ Atomic transaction with row-level locking
-        ✅ Idempotent (safe to call twice)
-        ✅ Stock already reserved at proof upload
-    """
     permission_classes = [IsAdminRole]
+    throttle_classes = [AdminMutationThrottle]
 
     @transaction.atomic
     def post(self, request, pk) -> Response:
@@ -226,12 +219,8 @@ class ApprovePaymentView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # Idempotency guard
         if txn.status == "paid":
-            return Response({
-                "message": "Payment already approved.",
-                "status": "paid",
-            })
+            return Response({"message": "Payment already approved.", "status": "paid"})
 
         if txn.status == "rejected":
             return Response(
@@ -239,12 +228,62 @@ class ApprovePaymentView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        try:
+            order = _load_locked_order(pk)
+        except Order.DoesNotExist:
+            return Response(
+                {"error": "Order not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
         admin_notes = str(request.data.get("admin_notes", "")).strip()
+        order_items = list(OrderItem.objects.filter(order=order).select_related("product"))
+        product_ids = [item.product_id for item in order_items if item.product_id]
+        products = Product.objects.select_for_update().filter(id__in=product_ids)
+        product_map = {product.id: product for product in products}
 
-        # ── Lock order ────────────────────────────────────────────────
-        order = Order.objects.select_for_update().get(id=pk)
+        for item in order_items:
+            if not item.product_id:
+                continue
 
-        # ── Confirm transaction and order ─────────────────────────────
+            product = product_map.get(item.product_id)
+            if not product:
+                return Response(
+                    {"error": f"Product for line item {item.product_name} is no longer available."},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+            reservation = (
+                StockReservation.objects.select_for_update()
+                .filter(order=order, product=product)
+                .first()
+            )
+            held_quantity = (
+                reservation.quantity
+                if reservation and reservation.expires_at > timezone.now()
+                else 0
+            )
+            reservable_quantity = product.get_available_stock() + held_quantity
+            if item.quantity > reservable_quantity:
+                return Response(
+                    {
+                        "error": (
+                            f"Inventory for {product.name} is no longer available. "
+                            "Reject and recreate the order."
+                        )
+                    },
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+        for item in order_items:
+            if not item.product_id:
+                continue
+            product = product_map[item.product_id]
+            product.stock -= item.quantity
+            product.save(update_fields=["stock"])
+
+        StockReservation.objects.filter(order=order).delete()
+
         txn.status = "paid"
         txn.admin_notes = admin_notes
         txn.save(update_fields=["status", "admin_notes"])
@@ -265,35 +304,25 @@ class ApprovePaymentView(APIView):
             severity="INFO",
         )
 
-        return Response({
-            "message": "Payment approved. Order confirmed.",
-            "order_number": order.order_number,
-            "status": "confirmed",
-        })
+        return Response(
+            {
+                "message": "Payment approved. Order confirmed.",
+                "order_number": order.order_number,
+                "status": "confirmed",
+            }
+        )
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 3. REJECT PAYMENT (Admin)
-# ─────────────────────────────────────────────────────────────────────────────
 
 class RejectPaymentView(APIView):
-    """
-    Admin rejects a payment proof (screenshot doesn't match, fake, etc.).
-
-    This:
-      1. Sets transaction status to 'rejected'
-      2. Cancels the order (via Transaction.save() hook)
-
-    Security:
-        ✅ Admin-only access
-        ✅ Audit logged
-    """
     permission_classes = [IsAdminRole]
+    throttle_classes = [AdminMutationThrottle]
 
     @transaction.atomic
     def post(self, request, pk) -> Response:
         try:
-            txn = Transaction.objects.select_related("order").select_for_update().get(order_id=pk)
+            txn = Transaction.objects.select_related("order").select_for_update().get(
+                order_id=pk
+            )
         except Transaction.DoesNotExist:
             return Response(
                 {"error": "No payment proof found for this order."},
@@ -307,26 +336,29 @@ class RejectPaymentView(APIView):
             )
 
         if txn.status == "rejected":
-            return Response({
-                "message": "Payment already rejected.",
-                "status": "rejected",
-            })
+            return Response(
+                {"message": "Payment already rejected.", "status": "rejected"}
+            )
+
+        try:
+            order = _load_locked_order(pk)
+        except Order.DoesNotExist:
+            return Response(
+                {"error": "Order not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         admin_notes = str(request.data.get("admin_notes", "")).strip()
 
-        order = Order.objects.select_for_update().get(id=pk)
-        order_items = OrderItem.objects.filter(order=order).select_related("product")
-        for item in order_items:
-            if not item.product:
-                continue
-            product = Product.objects.select_for_update().get(id=item.product_id)
-            product.stock += item.quantity
-            product.save(update_fields=["stock"])
+        StockReservation.objects.filter(order=order).delete()
 
         txn.status = "rejected"
         txn.admin_notes = admin_notes
         txn.save(update_fields=["status", "admin_notes"])
-        # Transaction.save() hook auto-cancels the order
+
+        if order.status == "pending":
+            order.status = "cancelled"
+            order.save(update_fields=["status"])
 
         audit_log(
             action="PAYMENT_REJECTED",
@@ -340,23 +372,18 @@ class RejectPaymentView(APIView):
             severity="WARNING",
         )
 
-        return Response({
-            "message": "Payment rejected. Order has been cancelled.",
-            "order_number": txn.order.order_number,
-            "status": "rejected",
-        })
+        return Response(
+            {
+                "message": "Payment rejected. Order has been cancelled.",
+                "order_number": txn.order.order_number,
+                "status": "rejected",
+            }
+        )
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 4. SERVER-SIDE QR GENERATION (Security enhancement)
-# ─────────────────────────────────────────────────────────────────────────────
 
 class GenerateUPIQRView(APIView):
-    """
-    Generates a UPI QR code server-side to prevent tampering
-    and reduce reliance on third-party QR generators.
-    """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCustomerUser]
+    throttle_classes = [PaymentThrottle]
 
     def get(self, request) -> HttpResponse:
         amount = request.query_params.get("amount", "0")
@@ -370,9 +397,10 @@ class GenerateUPIQRView(APIView):
 
         upi_id = getattr(settings, "UPI_ID", "")
         upi_name = getattr(settings, "UPI_DISPLAY_NAME", "")
-        
-        upi_uri = f"upi://pay?pa={upi_id}&pn={upi_name}&am={amount}&cu=INR"
-        
+        note = request.query_params.get("note", "Payment")
+
+        upi_uri = f"upi://pay?pa={upi_id}&pn={upi_name}&am={amount}&cu=INR&tn={note}"
+
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -381,11 +409,11 @@ class GenerateUPIQRView(APIView):
         )
         qr.add_data(upi_uri)
         qr.make(fit=True)
-        
+
         img = qr.make_image(fill_color="black", back_color="white")
-        
+
         buf = io.BytesIO()
         img.save(buf, format="PNG")
         buf.seek(0)
-        
+
         return HttpResponse(buf.getvalue(), content_type="image/png")

@@ -1,8 +1,10 @@
 """
-Custom DRF throttle classes for endpoint-specific rate limiting.
+Atomic DRF throttle classes for sensitive endpoints.
 """
 
 import logging
+import re
+from typing import Optional
 
 from django.core.cache import cache
 from rest_framework.throttling import BaseThrottle
@@ -10,166 +12,154 @@ from rest_framework.throttling import BaseThrottle
 logger = logging.getLogger(__name__)
 
 
-def _safe_cache_get(key: str, default: int = 0) -> int:
-    """Read cache safely; fail open on backend outages."""
-    try:
-        return cache.get(key, default)
-    except Exception:
-        logger.warning("Throttle cache read failed for key=%s", key)
-        return default
-
-
-def _safe_cache_set(key: str, value: int, ttl_seconds: int) -> None:
-    """Write cache safely; fail open on backend outages."""
-    try:
-        cache.set(key, value, ttl_seconds)
-    except Exception:
-        logger.warning("Throttle cache write failed for key=%s", key)
-
-
-class OTPThrottle(BaseThrottle):
+class AtomicRateThrottle(BaseThrottle):
     """
-    Rate limit OTP requests: 3 per hour per email.
-    
-    Prevents brute-force OTP generation attacks.
+    Counter-based throttle that uses cache.add()/cache.incr() atomically.
+
+    DRF's list-history throttles are easy to reason about, but they allow race
+    windows under heavy concurrency. Sensitive auth and checkout endpoints
+    benefit from monotonic counters instead.
     """
-    
-    def allow_request(self, request, view):
-        email = request.data.get('email', '').lower()
-        if not email:
-            return False  # Reject if no email provided
-        
-        cache_key = f"throttle_otp:{email}"
-        request_count = _safe_cache_get(cache_key, 0)
-        
-        if request_count >= 3:
-            logger.warning(f"OTP rate limit exceeded for email: {email}")
-            return False
-        
-        _safe_cache_set(cache_key, request_count + 1, 3600)  # 1 hour
-        return True
-    
-    def throttle_success(self):
-        return True
-    
-    def throttle_failure(self):
-        return {
-            'error': 'OTP request limit exceeded. Maximum 3 requests per hour per email.'
+
+    scope = "atomic"
+    rate = "10/min"
+
+    def __init__(self) -> None:
+        self.num_requests, self.duration = self._parse_rate(self.rate)
+        self.key = None
+        self._wait = None
+
+    def _parse_rate(self, rate: str) -> tuple[int, int]:
+        amount, period = rate.split("/")
+        num_requests = int(amount)
+        token = period.strip().lower()
+
+        named_windows = {
+            "second": 1,
+            "sec": 1,
+            "s": 1,
+            "minute": 60,
+            "min": 60,
+            "m": 60,
+            "hour": 3600,
+            "h": 3600,
+            "day": 86400,
+            "d": 86400,
         }
+        if token in named_windows:
+            return num_requests, named_windows[token]
 
+        match = re.fullmatch(r"(\d+)([smhd])", token)
+        if not match:
+            raise ValueError(f"Unsupported throttle rate: {rate}")
 
-class LoginThrottle(BaseThrottle):
-    """
-    Rate limit login attempts: 5 per hour per email.
-    
-    Prevents brute-force password attacks. After 5 failed attempts,
-    account is temporarily locked (see accounts/views.py).
-    """
-    
-    def allow_request(self, request, view):
-        email = request.data.get('email', '').lower()
-        if not email:
+        value = int(match.group(1))
+        multiplier = {"s": 1, "m": 60, "h": 3600, "d": 86400}[match.group(2)]
+        return num_requests, value * multiplier
+
+    def get_cache_key(self, request, view) -> Optional[str]:
+        raise NotImplementedError
+
+    def allow_request(self, request, view) -> bool:
+        cache_key = self.get_cache_key(request, view)
+        if not cache_key:
+            return True
+
+        self.key = f"throttle:{self.scope}:{cache_key}"
+
+        try:
+            if cache.add(self.key, 1, self.duration):
+                return True
+
+            current = cache.incr(self.key)
+        except ValueError:
+            cache.set(self.key, 1, self.duration)
+            return True
+        except Exception:
+            logger.exception("Throttle backend failure for scope=%s", self.scope)
             return False
-        
-        cache_key = f"throttle_login:{email}"
-        attempt_count = _safe_cache_get(cache_key, 0)
-        
-        # Hard rate limit at 5 attempts per hour
-        if attempt_count >= 5:
-            logger.warning(f"Login rate limit exceeded for email: {email}")
+
+        if not isinstance(current, int):
+            logger.warning("Throttle backend returned non-int counter for scope=%s", self.scope)
             return False
-        
-        _safe_cache_set(cache_key, attempt_count + 1, 3600)
+
+        if current > self.num_requests:
+            self._wait = self._get_wait_seconds()
+            return False
+
         return True
-    
-    def throttle_failure(self):
-        return {
-            'error': 'Too many login attempts. Maximum 5 per hour. Account temporarily locked.'
-        }
+
+    def _get_wait_seconds(self) -> Optional[int]:
+        try:
+            ttl = cache.ttl(self.key)
+            if ttl is None:
+                return self.duration
+            return max(1, int(ttl))
+        except Exception:
+            return self.duration
+
+    def wait(self) -> Optional[int]:
+        return self._wait
 
 
-class PaymentThrottle(BaseThrottle):
-    """
-    Rate limit payment operations: 10 per minute per user.
-    
-    Prevents rapid-fire payment requests or verification attempts.
-    """
-    
-    def allow_request(self, request, view):
-        if not request.user or not request.user.is_authenticated:
-            return True  # Skip throttling for unauthenticated (payment_webhook)
-        
-        user_id = request.user.id
-        cache_key = f"throttle_payment:{user_id}"
-        attempt_count = _safe_cache_get(cache_key, 0)
-        
-        if attempt_count >= 10:
-            logger.warning(f"Payment rate limit exceeded for user: {user_id}")
-            return False
-        
-        _safe_cache_set(cache_key, attempt_count + 1, 60)
-        return True
-    
-    def throttle_failure(self):
-        return {
-            'error': 'Payment request rate limit exceeded. Please wait 1 minute.'
-        }
+class OTPThrottle(AtomicRateThrottle):
+    scope = "otp"
+    rate = "3/hour"
 
-
-class AdminThrottle(BaseThrottle):
-    """
-    Rate limit admin endpoints: 100 per minute per admin user.
-    
-    Allows bulk operations but prevents denial-of-service attacks.
-    """
-    
-    def allow_request(self, request, view):
-        if not request.user or not request.user.is_authenticated:
-            return False
-        
-        if not (request.user.role == 'admin' or request.user.is_superuser):
-            return True  # Skip for non-admins
-        
-        user_id = request.user.id
-        cache_key = f"throttle_admin:{user_id}"
-        attempt_count = _safe_cache_get(cache_key, 0)
-        
-        if attempt_count >= 100:
-            logger.warning(f"Admin rate limit exceeded for user: {user_id}")
-            return False
-        
-        _safe_cache_set(cache_key, attempt_count + 1, 60)
-        return True
-    
-    def throttle_failure(self):
-        return {
-            'error': 'Admin endpoint rate limit exceeded. Maximum 100 requests per minute.'
-        }
-
-
-class PincodeVerifyThrottle(BaseThrottle):
-    """
-    Rate limit external API calls: 20 per hour per IP.
-    
-    Pincode verification calls an external service. Rate limit
-    prevents abuse of that service and SSRF attack attempts.
-    """
-    
-    def allow_request(self, request, view):
+    def get_cache_key(self, request, view) -> Optional[str]:
         from core.security import get_client_ip
-        
-        client_ip = get_client_ip(request)
-        cache_key = f"throttle_pincode:{client_ip}"
-        attempt_count = _safe_cache_get(cache_key, 0)
-        
-        if attempt_count >= 20:
-            logger.warning(f"Pincode verify rate limit exceeded for IP: {client_ip}")
-            return False
-        
-        _safe_cache_set(cache_key, attempt_count + 1, 3600)
-        return True
-    
-    def throttle_failure(self):
-        return {
-            'error': 'Pincode verification rate limit exceeded. Maximum 20 per hour.'
-        }
+
+        email = str(request.data.get("email", "")).strip().lower()
+        if not email:
+            return None
+        return f"{email}:{get_client_ip(request)}"
+
+
+class LoginThrottle(AtomicRateThrottle):
+    scope = "login"
+    rate = "12/hour"
+
+    def get_cache_key(self, request, view) -> Optional[str]:
+        from core.security import get_client_ip
+
+        email = str(request.data.get("email", "")).strip().lower()
+        if not email:
+            return get_client_ip(request)
+        return f"{email}:{get_client_ip(request)}"
+
+
+class CheckoutThrottle(AtomicRateThrottle):
+    scope = "checkout"
+    rate = "5/10m"
+
+    def get_cache_key(self, request, view) -> Optional[str]:
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return None
+        return str(user.id)
+
+
+class PaymentThrottle(CheckoutThrottle):
+    scope = "payment"
+    rate = "6/10m"
+
+
+class AdminMutationThrottle(AtomicRateThrottle):
+    scope = "admin_mutation"
+    rate = "60/min"
+
+    def get_cache_key(self, request, view) -> Optional[str]:
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return None
+        return str(user.id)
+
+
+class PincodeVerifyThrottle(AtomicRateThrottle):
+    scope = "pincode"
+    rate = "20/hour"
+
+    def get_cache_key(self, request, view) -> Optional[str]:
+        from core.security import get_client_ip
+
+        return get_client_ip(request)

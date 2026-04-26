@@ -21,24 +21,29 @@ Refactoring changes from original:
 import logging
 from typing import Optional, Tuple
 
+from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.db import transaction
 from django.utils.html import escape
 from rest_framework import generics, status, viewsets
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from core.security import (
     audit_log,
     generate_secure_otp,
+    generate_otp_session_token,
     get_client_ip,
     increment_failed_login_attempts,
     is_account_locked,
     is_rate_limited,
     unlock_account,
+    verify_otp_session_token,
 )
+from core.permissions import IsAdminOrCustomerUser
 from core.throttling import LoginThrottle, OTPThrottle
 from core.validators import InputValidator
 
@@ -67,6 +72,59 @@ def _build_jwt_response(user) -> dict:
     """
     refresh = RefreshToken.for_user(user)
     return {"refresh": str(refresh), "access": str(refresh.access_token)}
+
+
+def _set_auth_cookies(response: Response, refresh: str, access: str) -> None:
+    cookie_settings = settings.SIMPLE_JWT
+    secure = cookie_settings["AUTH_COOKIE_SECURE"]
+    samesite = cookie_settings["AUTH_COOKIE_SAMESITE"]
+    http_only = cookie_settings["AUTH_COOKIE_HTTP_ONLY"]
+
+    response.set_cookie(
+        cookie_settings["AUTH_COOKIE_ACCESS"],
+        access,
+        max_age=int(cookie_settings["ACCESS_TOKEN_LIFETIME"].total_seconds()),
+        httponly=http_only,
+        secure=secure,
+        samesite=samesite,
+        path="/",
+    )
+    response.set_cookie(
+        cookie_settings["AUTH_COOKIE_REFRESH"],
+        refresh,
+        max_age=int(cookie_settings["REFRESH_TOKEN_LIFETIME"].total_seconds()),
+        httponly=http_only,
+        secure=secure,
+        samesite=samesite,
+        path=cookie_settings["AUTH_COOKIE_REFRESH_PATH"],
+    )
+
+
+def _clear_auth_cookies(response: Response) -> None:
+    cookie_settings = settings.SIMPLE_JWT
+    response.delete_cookie(
+        cookie_settings["AUTH_COOKIE_ACCESS"],
+        path="/",
+        samesite=cookie_settings["AUTH_COOKIE_SAMESITE"],
+    )
+    response.delete_cookie(
+        cookie_settings["AUTH_COOKIE_REFRESH"],
+        path=cookie_settings["AUTH_COOKIE_REFRESH_PATH"],
+        samesite=cookie_settings["AUTH_COOKIE_SAMESITE"],
+    )
+
+
+def _build_authenticated_response(user, message: str, status_code: int) -> Response:
+    tokens = _build_jwt_response(user)
+    response = Response(
+        {
+            "message": message,
+            "user": UserSerializer(user).data,
+        },
+        status=status_code,
+    )
+    _set_auth_cookies(response, tokens["refresh"], tokens["access"])
+    return response
 
 
 def _require_valid_email(
@@ -142,6 +200,21 @@ class RequestOTPView(APIView):
             return err
 
         action = request.data.get("action", "signup")
+        
+        # New: Validate password early if signing up
+        if action == "signup":
+            password = request.data.get("password", "")
+            if not password:
+                return Response(
+                    {"error": "Password is required."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            pwd_valid, pwd_error = InputValidator.validate_password(password)
+            if not pwd_valid:
+                return Response(
+                    {"error": pwd_error},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         if action not in ("signup", "reset"):
             return Response(
                 {"error": "Invalid action. Must be 'signup' or 'reset'."},
@@ -290,7 +363,12 @@ class VerifyOTPView(APIView):
             details={"email": email},
             severity="INFO",
         )
-        return Response({"message": "OTP verified successfully."})
+        return Response(
+            {
+                "message": "OTP verified successfully.",
+                "otp_session_token": generate_otp_session_token(email),
+            }
+        )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -317,6 +395,19 @@ class RegisterView(generics.CreateAPIView):
         ok, email, err = _require_valid_email(request.data.get("email", ""))
         if not ok:
             return err
+
+        otp_session_token = str(request.data.get("otp_session_token", "")).strip()
+        verified_email = verify_otp_session_token(otp_session_token)
+        if verified_email != email:
+            audit_log(
+                action="SIGNUP_FAILED_INVALID_OTP_SESSION",
+                details={"email": email},
+                severity="WARNING",
+            )
+            return Response(
+                {"error": "Verified OTP session is missing or expired. Please verify again."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         try:
             otp = OTP.objects.select_for_update().get(
@@ -375,13 +466,10 @@ class RegisterView(generics.CreateAPIView):
             details={"email": email},
             severity="INFO",
         )
-        return Response(
-            {
-                "message": "Registration successful!",
-                "user": UserSerializer(user).data,
-                "tokens": _build_jwt_response(user),  # D.R.Y. helper
-            },
-            status=status.HTTP_201_CREATED,
+        return _build_authenticated_response(
+            user,
+            message="Registration successful!",
+            status_code=status.HTTP_201_CREATED,
         )
 
 
@@ -480,13 +568,10 @@ class LoginView(APIView):
             details={"email": email, "ip": client_ip},
             severity="INFO",
         )
-        return Response(
-            {
-                "message": "Login successful!",
-                "user": UserSerializer(authenticated_user).data,
-                "tokens": _build_jwt_response(authenticated_user),  # D.R.Y. helper
-            },
-            status=status.HTTP_200_OK,
+        return _build_authenticated_response(
+            authenticated_user,
+            message="Login successful!",
+            status_code=status.HTTP_200_OK,
         )
 
 
@@ -510,6 +595,14 @@ class ResetPasswordView(APIView):
         ok, email, err = _require_valid_email(request.data.get("email", ""))
         if not ok:
             return err
+
+        otp_session_token = str(request.data.get("otp_session_token", "")).strip()
+        verified_email = verify_otp_session_token(otp_session_token)
+        if verified_email != email:
+            return Response(
+                {"error": "Verified OTP session is missing or expired. Please verify again."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         new_password = request.data.get("new_password", "").strip()
         if not new_password:
@@ -569,6 +662,69 @@ class ResetPasswordView(APIView):
         return Response({"message": "Password reset successfully."})
 
 
+class RefreshTokenCookieView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request) -> Response:
+        refresh_cookie_name = settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"]
+        refresh_token = request.COOKIES.get(refresh_cookie_name) or request.data.get(
+            "refresh", ""
+        )
+        if not refresh_token:
+            response = Response(
+                {"error": "Refresh token missing."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+            _clear_auth_cookies(response)
+            return response
+
+        try:
+            refresh = RefreshToken(refresh_token)
+            access = str(refresh.access_token)
+
+            if settings.SIMPLE_JWT.get("ROTATE_REFRESH_TOKENS"):
+                refresh.set_jti()
+                refresh.set_exp()
+                refresh.set_iat()
+                rotated_refresh = str(refresh)
+                if settings.SIMPLE_JWT.get("BLACKLIST_AFTER_ROTATION"):
+                    try:
+                        RefreshToken(refresh_token).blacklist()
+                    except TokenError:
+                        pass
+            else:
+                rotated_refresh = str(refresh)
+        except TokenError:
+            response = Response(
+                {"error": "Refresh token invalid or expired."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+            _clear_auth_cookies(response)
+            return response
+
+        response = Response({"message": "Token refreshed."}, status=status.HTTP_200_OK)
+        _set_auth_cookies(response, rotated_refresh, access)
+        return response
+
+
+class LogoutView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request) -> Response:
+        refresh_cookie_name = settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"]
+        refresh_token = request.COOKIES.get(refresh_cookie_name)
+
+        if refresh_token:
+            try:
+                RefreshToken(refresh_token).blacklist()
+            except TokenError:
+                pass
+
+        response = Response({"message": "Logged out."}, status=status.HTTP_200_OK)
+        _clear_auth_cookies(response)
+        return response
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # USER PROFILE & ADDRESSES
 # ─────────────────────────────────────────────────────────────────────────────
@@ -580,7 +736,7 @@ class ProfileView(generics.RetrieveUpdateAPIView):
     Security: IsAuthenticated — users can only access their own record.
     """
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminOrCustomerUser]
 
     def get_object(self):
         return self.request.user
@@ -599,7 +755,7 @@ class AddressViewSet(viewsets.ModelViewSet):
         ✅ Audit logging on every mutating operation
     """
     serializer_class = AddressSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminOrCustomerUser]
 
     def get_queryset(self):
         return Address.objects.filter(user=self.request.user)

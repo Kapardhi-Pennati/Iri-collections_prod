@@ -2,7 +2,14 @@ import uuid
 from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
-from django.core.mail import send_mail
+from django.utils import timezone
+
+
+class StockReservationQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(expires_at__gt=timezone.now()).filter(
+            models.Q(order__isnull=True) | models.Q(order__status="pending")
+        )
 
 
 class Category(models.Model):
@@ -81,6 +88,32 @@ class Product(models.Model):
         if self.image:
             return self.image.url
         return self.image_url or ""
+
+    def get_available_stock(self):
+        """Return stock minus active cart/order reservations."""
+        reserved = (
+            StockReservation.objects.active()
+            .filter(product=self)
+            .aggregate(total=models.Sum("quantity"))["total"]
+            or 0
+        )
+        return max(0, self.stock - reserved)
+
+    def get_available_stock_for_user(self, user_id):
+        """
+        Return available stock while ignoring the caller's own cart reservation.
+
+        This lets customers edit their existing hold without self-blocking while
+        still accounting for every other active reservation.
+        """
+        reserved = (
+            StockReservation.objects.active()
+            .filter(product=self)
+            .exclude(user_id=user_id, order__isnull=True)
+            .aggregate(total=models.Sum("quantity"))["total"]
+            or 0
+        )
+        return max(0, self.stock - reserved)
 
 
 class Cart(models.Model):
@@ -257,15 +290,6 @@ class Transaction(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        # Auto-cancel order when payment is rejected
-        if self.status == "rejected":
-            self.order.refresh_from_db(fields=["status"])
-            if self.order.status == "pending":
-                self.order.status = "cancelled"
-                self.order.save(update_fields=["status"])
-
     def __str__(self):
         return f"Txn for Order {self.order.order_number} - {self.status}"
 
@@ -305,3 +329,32 @@ class PageView(models.Model):
 
     def __str__(self):
         return f"{self.path} @ {self.created_at:%Y-%m-%d %H:%M}"
+
+
+class StockReservation(models.Model):
+    """
+    Temporary reservation of stock when an item is in a user's cart or a pending order.
+    Reservations expire if not converted to an order or paid within a window.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reservations")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reservations")
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="reservations", null=True, blank=True)
+    quantity = models.PositiveIntegerField()
+    expires_at = models.DateTimeField(db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = StockReservationQuerySet.as_manager()
+
+    class Meta:
+        db_table = "stock_reservations"
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(quantity__gt=0),
+                name="stockreservation_quantity_positive",
+            )
+        ]
+
+    def __str__(self):
+        if self.order_id:
+            return f"Reserve {self.quantity}x {self.product.name} for Order {self.order.order_number}"
+        return f"Reserve {self.quantity}x {self.product.name} in cart for {self.user.email}"

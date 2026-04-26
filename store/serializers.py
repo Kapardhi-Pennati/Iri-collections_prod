@@ -1,17 +1,15 @@
+from django.conf import settings
 from rest_framework import serializers
 from .models import Category, Product, Cart, CartItem, Order, OrderItem, Transaction
+from core.validators import InputValidator
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    product_count = serializers.SerializerMethodField()
+    product_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Category
         fields = ("id", "name", "slug", "description", "image", "product_count")
-
-    def get_product_count(self, obj):
-        return obj.products.filter(is_active=True).count()
-
 
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source="category.name", read_only=True)
@@ -64,6 +62,28 @@ class ProductAdminSerializer(serializers.ModelSerializer):
             "weight",
         )
         read_only_fields = ("slug",)
+
+    def validate(self, attrs):
+        price = attrs.get("price", getattr(self.instance, "price", None))
+        compare_price = attrs.get(
+            "compare_price",
+            getattr(self.instance, "compare_price", None),
+        )
+        stock = attrs.get("stock", getattr(self.instance, "stock", 0))
+
+        if price is not None and price < 0:
+            raise serializers.ValidationError({"price": "Price must be non-negative."})
+        if compare_price is not None and compare_price < 0:
+            raise serializers.ValidationError(
+                {"compare_price": "Compare price must be non-negative."}
+            )
+        if compare_price is not None and price is not None and compare_price < price:
+            raise serializers.ValidationError(
+                {"compare_price": "Compare price cannot be lower than price."}
+            )
+        if stock is not None and stock < 0:
+            raise serializers.ValidationError({"stock": "Stock must be non-negative."})
+        return attrs
 
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -121,6 +141,7 @@ class TransactionSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     transaction = TransactionSerializer(read_only=True)
+    upi_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
@@ -136,13 +157,36 @@ class OrderSerializer(serializers.ModelSerializer):
             "tracking_image",
             "items",
             "transaction",
+            "upi_url",
             "created_at",
             "updated_at",
         )
 
+    def get_upi_url(self, obj):
+        """Generates a standard UPI payment URI."""
+        upi_id = getattr(settings, "UPI_ID", "your-upi-id@paytm")
+        name = getattr(settings, "UPI_DISPLAY_NAME", "Iri Collections")
+        # Format: upi://pay?pa=VPA&pn=NAME&am=AMOUNT&cu=INR&tn=NOTES
+        return f"upi://pay?pa={upi_id}&pn={name}&am={obj.total_amount}&cu=INR&tn=Order-{obj.order_number}"
+
 
 class OrderCreateSerializer(serializers.Serializer):
-    shipping_address = serializers.CharField()
-    state = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    phone = serializers.CharField(max_length=15)
-    notes = serializers.CharField(required=False, allow_blank=True)
+    shipping_address = serializers.CharField(max_length=500, trim_whitespace=True)
+    state = serializers.CharField(max_length=100, required=False, allow_blank=True, trim_whitespace=True)
+    phone = serializers.CharField(max_length=20, trim_whitespace=True)
+    notes = serializers.CharField(max_length=500, required=False, allow_blank=True, trim_whitespace=True)
+
+    def validate_shipping_address(self, value: str) -> str:
+        is_valid, sanitized = InputValidator.validate_address(value)
+        if not is_valid:
+            raise serializers.ValidationError("Enter a valid shipping address.")
+        return sanitized
+
+    def validate_phone(self, value: str) -> str:
+        is_valid, normalized = InputValidator.validate_phone(value)
+        if not is_valid:
+            raise serializers.ValidationError("Enter a valid phone number.")
+        return normalized
+
+    def validate_state(self, value: str) -> str:
+        return value.strip()[:100]

@@ -63,6 +63,7 @@
 {% block extra_js %}
 <script>
 let resetEmail = "";
+let resetOtpSessionToken = "";
 
 // Toggle views
 document.getElementById('forgot-password-link').addEventListener('click', (e) => {
@@ -95,18 +96,19 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
-    const res = await API.post('/auth/login/', { email, password });
-
-    if (res && res.ok) {
-        API.setTokens(res.data.tokens);
-        API.setUser(res.data.user);
-        Toast.success('Welcome back!');
-        setTimeout(() => {
-            window.location.href = res.data.user.role === 'admin' ? '/admin-dashboard/' : '/';
-        }, 500);
-    } else {
+    try {
+        const res = await API.post('/auth/login/', { email, password });
+        if (res && res.ok) {
+            API.setUser(res.data.user);
+            Toast.success('Welcome back!');
+            setTimeout(() => {
+                window.location.href = res.data.user.role === 'admin' ? '/admin-dashboard/' : '/';
+            }, 500);
+            return;
+        }
         errEl.textContent = res?.data?.error || 'Invalid credentials. Please try again.';
         errEl.style.display = 'block';
+    } finally {
         btn.disabled = false;
         btn.textContent = 'Sign In';
     }
@@ -122,16 +124,18 @@ document.getElementById('forgot-email-form').addEventListener('submit', async (e
 
     resetEmail = document.getElementById('reset-email').value;
 
-    const res = await API.post('/auth/request-otp/', { email: resetEmail, action: 'reset' });
-
-    if (res && res.ok) {
-        Toast.success('OTP sent to your email!');
-        document.getElementById('forgot-email-form').style.display = 'none';
-        document.getElementById('reset-password-form').style.display = 'block';
-        document.getElementById('form-subtitle').textContent = 'Verify OTP and set new password';
-    } else {
-        errEl.textContent = res?.data?.error || 'Failed to send OTP. Account may not exist.';
+    try {
+        const res = await API.post('/auth/request-otp/', { email: resetEmail, action: 'reset' });
+        if (res && res.ok) {
+            Toast.success('OTP sent to your email');
+            document.getElementById('forgot-email-form').style.display = 'none';
+            document.getElementById('reset-password-form').style.display = 'block';
+            document.getElementById('form-subtitle').textContent = 'Verify OTP and set new password';
+            return;
+        }
+        errEl.textContent = res?.data?.error || 'Failed to send OTP. Please try again.';
         errEl.style.display = 'block';
+    } finally {
         btn.disabled = false;
         btn.textContent = 'Send OTP';
     }
@@ -145,27 +149,41 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
     btn.textContent = 'Resetting...';
     errEl.style.display = 'none';
 
-    const otp_code = document.getElementById('reset-otp').value;
+    const otp_code = document.getElementById('reset-otp').value.trim();
     const new_password = document.getElementById('new-password').value;
 
-    // Step 1: Verify OTP
-    const verifyRes = await API.post('/auth/verify-otp/', { email: resetEmail, otp_code });
-    if (!verifyRes || !verifyRes.ok) {
-        errEl.textContent = verifyRes?.data?.error || 'Invalid OTP. Try again.';
+    if (!/^\d{6}$/.test(otp_code)) {
+        errEl.textContent = 'Enter a valid 6-digit OTP.';
         errEl.style.display = 'block';
         btn.disabled = false;
         btn.textContent = 'Reset Password';
         return;
     }
 
-    // Step 2: Set New Password
-    const resetRes = await API.post('/auth/reset-password/', { email: resetEmail, new_password });
-    if (resetRes && resetRes.ok) {
-        Toast.success('Password reset successfully! You can now log in.');
-        document.getElementById('back-to-login-link').click(); // Back to login view
-    } else {
+    try {
+        const verifyRes = await API.post('/auth/verify-otp/', { email: resetEmail, otp_code });
+        if (!verifyRes || !verifyRes.ok) {
+            errEl.textContent = verifyRes?.data?.error || 'Invalid OTP. Try again.';
+            errEl.style.display = 'block';
+            return;
+        }
+
+        resetOtpSessionToken = verifyRes.data?.otp_session_token || '';
+        const resetRes = await API.post('/auth/reset-password/', {
+            email: resetEmail,
+            new_password,
+            otp_session_token: resetOtpSessionToken,
+        });
+
+        if (resetRes && resetRes.ok) {
+            Toast.success('Password reset successfully. You can now log in.');
+            document.getElementById('back-to-login-link').click();
+            return;
+        }
+
         errEl.textContent = resetRes?.data?.error || 'Failed to reset password.';
         errEl.style.display = 'block';
+    } finally {
         btn.disabled = false;
         btn.textContent = 'Reset Password';
     }

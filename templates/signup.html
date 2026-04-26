@@ -56,6 +56,7 @@
 {% block extra_js %}
 <script>
 let userEmail = "";
+let otpSessionToken = "";
 
 document.getElementById('signup-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -76,17 +77,18 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
     btn.textContent = 'Sending OTP...';
     errEl.style.display = 'none';
 
-    // Step 1: Request OTP
-    const res = await API.post('/auth/request-otp/', { email: email, action: 'signup' });
-
-    if (res && res.ok) {
-        userEmail = email;
-        Toast.success('OTP sent to your email!');
-        document.getElementById('signup-form').style.display = 'none';
-        document.getElementById('otp-form').style.display = 'block';
-    } else {
+    try {
+        const res = await API.post('/auth/request-otp/', { email: email, password: password, action: 'signup' });
+        if (res && res.ok) {
+            userEmail = email;
+            Toast.success('OTP sent to your email');
+            document.getElementById('signup-form').style.display = 'none';
+            document.getElementById('otp-form').style.display = 'block';
+            return;
+        }
         errEl.textContent = res?.data?.error || 'Failed to send OTP. Please try again.';
         errEl.style.display = 'block';
+    } finally {
         btn.disabled = false;
         btn.textContent = 'Send Verification OTP';
     }
@@ -102,34 +104,41 @@ document.getElementById('otp-form').addEventListener('submit', async (e) => {
 
     const otp_code = document.getElementById('otp_code').value;
 
-    // Step 2: Verify OTP
-    const verifyRes = await API.post('/auth/verify-otp/', { email: userEmail, otp_code });
-    if (!verifyRes || !verifyRes.ok) {
-        errEl.textContent = verifyRes?.data?.error || 'Invalid OTP. Try again.';
+    if (!/^\d{6}$/.test(otp_code)) {
+        errEl.textContent = 'Enter a valid 6-digit OTP.';
         errEl.style.display = 'block';
         btn.disabled = false;
         btn.textContent = 'Verify & Create Account';
         return;
     }
 
-    // Step 3: Register Details
-    const data = {
-        full_name: document.getElementById('full_name').value,
-        email: userEmail,
-        username: userEmail.split('@')[0],
-        phone: document.getElementById('phone').value,
-        password: document.getElementById('password').value,
-        password2: document.getElementById('password2').value,
-    };
+    try {
+        const verifyRes = await API.post('/auth/verify-otp/', { email: userEmail, otp_code });
+        if (!verifyRes || !verifyRes.ok) {
+            errEl.textContent = verifyRes?.data?.error || 'Invalid OTP. Try again.';
+            errEl.style.display = 'block';
+            return;
+        }
 
-    const res = await API.post('/auth/register/', data);
+        otpSessionToken = verifyRes.data?.otp_session_token || '';
+        const data = {
+            full_name: document.getElementById('full_name').value.trim(),
+            email: userEmail,
+            username: userEmail.split('@')[0],
+            phone: document.getElementById('phone').value.trim(),
+            password: document.getElementById('password').value,
+            password2: document.getElementById('password2').value,
+            otp_session_token: otpSessionToken,
+        };
 
-    if (res && res.ok) {
-        API.setTokens(res.data.tokens);
-        API.setUser(res.data.user);
-        Toast.success('Account created successfully!');
-        setTimeout(() => window.location.href = '/', 500);
-    } else {
+        const res = await API.post('/auth/register/', data);
+        if (res && res.ok) {
+            API.setUser(res.data.user);
+            Toast.success('Account created successfully');
+            setTimeout(() => window.location.href = '/', 500);
+            return;
+        }
+
         const errors = res?.data;
         let msg = 'Registration failed. ';
         if (errors) {
@@ -140,6 +149,7 @@ document.getElementById('otp-form').addEventListener('submit', async (e) => {
         }
         errEl.textContent = msg;
         errEl.style.display = 'block';
+    } finally {
         btn.disabled = false;
         btn.textContent = 'Verify & Create Account';
     }
