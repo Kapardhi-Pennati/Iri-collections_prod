@@ -949,12 +949,12 @@
 
  /* ─── Auth Forms ────────────────────────────────────────────── */
   .auth-page {
-      min-height: 100vh;
+      min-height: 80vh;
       display: flex;
-      align-items: stretch;
+      align-items: center;
       background: var(--bg-primary);
-      padding: 0;
-      overflow: hidden;
+      padding: var(--space-xl);
+      justify-content: center;
   }
 
   .auth-visual {
@@ -993,7 +993,7 @@
   }
 
   .auth-content {
-      flex: 1;
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1005,7 +1005,7 @@
 
   .auth-card {
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       animation: fadeIn 0.8s ease-out;
   }
 
