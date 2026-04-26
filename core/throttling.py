@@ -104,7 +104,7 @@ class AtomicRateThrottle(BaseThrottle):
 
 class OTPThrottle(AtomicRateThrottle):
     scope = "otp"
-    rate = "5/hour"
+    rate = "20/hour"
 
     def get_cache_key(self, request, view) -> Optional[str]:
         from core.security import get_client_ip
