@@ -4,14 +4,13 @@
 
 {% block content %}
 <section style="padding: var(--space-xl) 0;">
-    <div class="container" style="max-width: 900px;">
-        <!-- 🏷️ HEADER -->
-        <div style="margin-bottom: 50px; border-bottom: var(--border-width) solid #000; padding-bottom: 20px;">
-            <h1 style="font-size: 3.5rem; margin: 0;">PAST ACQUISITIONS</h1>
+    <div class="container" style="max-width: 860px;">
+        <div class="page-header">
+            <h1>PAST ACQUISITIONS</h1>
         </div>
 
         <div id="orders-list">
-            <div style="text-align: center; padding: 100px; font-weight: 800;">COLLECTING HISTORY...</div>
+            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted);">COLLECTING HISTORY...</div>
         </div>
     </div>
 </section>
@@ -26,10 +25,11 @@ async function loadOrders() {
         const container = document.getElementById('orders-list');
         if (!data || !data.results || data.results.length === 0) {
             container.innerHTML = `
-                <div class="brutalist-card" style="padding: 100px; text-align: center;">
-                    <h3 style="font-size: 2.5rem; margin-bottom: 20px;">NO HISTORY.</h3>
-                    <p style="font-weight: 700;">YOUR COLLECTION JOURNEY HASN'T STARTED YET.</p>
-                    <a href="/catalog/" class="brutalist-btn" style="margin-top: 30px;">START SHOPPING</a>
+                <div class="brutalist-card" style="padding: 80px; text-align: center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-md);"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                    <h3 style="font-size: 1.8rem; margin-bottom: 8px;">NO HISTORY</h3>
+                    <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">Your collection journey hasn't started yet.</p>
+                    <a href="/catalog/" class="brutalist-btn" style="background: var(--text-primary); color: var(--text-inverted);">START SHOPPING</a>
                 </div>`;
             return;
         }
@@ -37,34 +37,37 @@ async function loadOrders() {
         container.innerHTML = data.results.map(order => {
             const date = new Date(order.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }).toUpperCase();
             const itemsList = order.items.map(i => `
-                <div style="display:flex; justify-content:space-between; padding:8px 0; font-weight: 700; font-size: 0.9rem;">
+                <div style="display:flex; justify-content:space-between; padding:8px 0; font-weight: 600; font-size: 0.85rem;">
                     <span>${i.product_name.toUpperCase()} (x${i.quantity})</span>
                     <span>${formatPrice(i.subtotal)}</span>
                 </div>
             `).join('');
 
             return `
-                <div class="brutalist-card" style="margin-bottom: 40px; padding: 30px; background: #fff;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; border-bottom: 4px solid #000; padding-bottom: 15px;">
+                <div class="brutalist-card" style="margin-bottom: var(--space-lg); padding: var(--space-lg); background: var(--bg-elevated);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md); border-bottom: var(--border-width) solid var(--border-color); padding-bottom: 12px;">
                         <div>
-                            <div style="font-weight: 800; font-size: 1.5rem; color: var(--gold-light);">${order.order_number}</div>
-                            <div style="font-weight: 800; font-size: 0.8rem; color: #666;">${date}</div>
+                            <div style="font-weight: 700; font-size: 1.2rem;">${order.order_number}</div>
+                            <div style="font-weight: 500; font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">${date}</div>
                         </div>
-                        <div class="brutalist-card" style="background: #000; color: #fff; padding: 5px 15px; font-weight: 800; font-size: 0.7rem; box-shadow: 3px 3px 0 0 #000;">
+                        <div class="badge" style="background: var(--text-primary); color: var(--text-inverted);">
                             ${order.status.toUpperCase()}
                         </div>
                     </div>
-                    
-                    <div style="margin-bottom: 25px;">
+
+                    <div style="margin-bottom: var(--space-md);">
                         ${itemsList}
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 20px; border-top: 2px solid #000;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: var(--space-md); border-top: 2px solid var(--border-color);">
                         <div>
-                            <div style="font-weight: 800; font-size: 1.2rem;">TOTAL: ${formatPrice(order.total_amount)}</div>
-                            ${parseFloat(order.shipping_fee) > 0 ? `<div style="font-weight: 700; font-size: 0.7rem; color: #666;">INCL. ${formatPrice(order.shipping_fee)} SHIPPING</div>` : ''}
+                            <div style="font-weight: 700; font-size: 1.1rem;">TOTAL: ${formatPrice(order.total_amount)}</div>
+                            ${parseFloat(order.shipping_fee) > 0 ? `<div style="font-weight: 500; font-size: 0.7rem; color: var(--text-muted);">INCL. ${formatPrice(order.shipping_fee)} SHIPPING</div>` : ''}
                         </div>
-                        <a href="/invoice/${order.id}/" target="_blank" class="brutalist-btn" style="background: #fff; font-size: 0.8rem; padding: 8px 15px;">PRINT INVOICE</a>
+                        <a href="/invoice/${order.id}/" target="_blank" class="brutalist-btn" style="font-size: 0.75rem; padding: 6px 14px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            INVOICE
+                        </a>
                     </div>
                 </div>
             `;

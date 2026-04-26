@@ -300,7 +300,7 @@ async function updateNavbar() {
             const nameEl = userMenu.querySelector('.user-name-trigger');
             if (nameEl) {
                 const firstName = user.full_name ? user.full_name.split(' ')[0] : (user.username || 'Account');
-                nameEl.innerHTML = `${escapeHTML(firstName)} <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-left:4px;"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80a8,8,0,0,1,11.32-11.32L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path></svg>`;
+                nameEl.innerHTML = `${escapeHTML(firstName)} <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-left:4px;"><path d="m6 9 6 6 6-6"/></svg>`;
             }
         }
         if (adminLink && API.isAdmin()) {
@@ -385,25 +385,25 @@ function productCardHTML(product) {
     const isOOS = product.stock <= 0;
     const cardOpacity = isOOS ? '0.6' : '1';
     const isInWishlist = window.wishlistItems ? window.wishlistItems.has(product.id) : false;
-    const heartIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${isInWishlist ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+    const heartIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="${isInWishlist ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
 
     return `
         <div class="brutalist-card product-card" onclick="window.location.href='/product/${product.slug}/'" data-product-id="${product.id}" style="opacity: ${cardOpacity};">
             <div class="product-image-container">
                 <img data-src="${imgSrc}" alt="${escapeHTML(product.name)}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Crect fill='%23F4F4F4' width='400' height='400'/%3E%3C/svg%3E">
-                ${discount > 0 && !isOOS ? `<span class="product-card-badge" style="background:var(--bg-accent); color:black; border:2px solid #000; position:absolute; top:10px; left:10px; font-weight:800; padding:2px 8px; font-size:0.7rem;">${discount}% OFF</span>` : ''}
-                ${isOOS ? `<span class="product-card-badge" style="background:#000; color:white; position:absolute; top:10px; left:10px; font-weight:800; padding:2px 8px; font-size:0.7rem;">SOLD OUT</span>` : ''}
-                <button class="brutalist-btn" onclick="event.stopPropagation(); toggleWishlist(${product.id})" id="btn-wishlist-${product.id}" style="position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; box-shadow: 2px 2px 0 0 #000; background:#fff; padding:0; display:flex; align-items:center; justify-content:center;">${heartIcon}</button>
+                ${discount > 0 && !isOOS ? `<span class="badge" style="background:var(--bg-accent); position:absolute; top:10px; left:10px;">${discount}% OFF</span>` : ''}
+                ${isOOS ? `<span class="badge" style="background:var(--text-primary); color:var(--text-inverted); position:absolute; top:10px; left:10px;">SOLD OUT</span>` : ''}
+                <button class="brutalist-btn" onclick="event.stopPropagation(); toggleWishlist(${product.id})" id="btn-wishlist-${product.id}" style="position:absolute; top:10px; right:10px; width:36px; height:36px; box-shadow:2px 2px 0 0 var(--shadow-color); background:var(--bg-elevated); padding:0;">${heartIcon}</button>
             </div>
             <div class="product-info">
-                <div style="font-size: 0.7rem; font-weight: 800; color: #666; margin-bottom: 5px; text-transform: uppercase;">${escapeHTML(product.category_name || 'JEWELRY')}</div>
-                <h3 style="font-size: 1.1rem; margin-bottom: 10px;">${escapeHTML(product.name)}</h3>
+                <div style="font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em;">${escapeHTML(product.category_name || 'JEWELRY')}</div>
+                <h3 style="font-size: 0.95rem; margin-bottom: 8px;">${escapeHTML(product.name)}</h3>
                 <div style="display:flex; align-items:center; justify-content:space-between;">
                     <div class="product-price">${formatPrice(product.price)}</div>
                     ${isOOS 
                         ? `<span style="font-weight:800; font-size:0.7rem;">OUT</span>`
-                        : `<button class="brutalist-btn" onclick="event.stopPropagation(); addToCart(${product.id})" style="width:40px; height:40px; box-shadow: 3px 3px 0 0 #000; padding:0; display:flex; align-items:center; justify-content:center;">
-                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                        : `<button class="brutalist-btn" onclick="event.stopPropagation(); addToCart(${product.id})" style="width:36px; height:36px; box-shadow:2px 2px 0 0 var(--shadow-color); padding:0;">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                            </button>`
                     }
                 </div>
@@ -546,8 +546,8 @@ async function toggleWishlist(productId) {
 function updateWishlistUI(productId, added) {
     document.querySelectorAll(`#btn-wishlist-${productId}`).forEach((btn) => {
         btn.innerHTML = added 
-            ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="var(--gold)" viewBox="0 0 256 256"><path d="M240,94c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,220.66,16,164,16,94A62.07,62.07,0,0,1,78,32c20.65,0,38.73,8.88,50,23.89C139.27,40.88,157.35,32,178,32A62.07,62.07,0,0,1,240,94Z"></path></svg>' 
-            : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a54.06,54.06,0,0,0-54,54c0,101.07,98.14,154.62,102.33,156.83a8.14,8.14,0,0,0,7.34,0C137.86,248.62,236,195.07,236,94A54.06,54.06,0,0,0,178,40ZM128,234.33C116.51,228.16,40,183,40,94A38,38,0,0,1,78,56c18.57,0,34.05,10.63,40.16,27.5a8,8,0,0,0,15.68,0C139.95,66.63,155.43,56,174,56a38,38,0,0,1,38,38C212,183,135.49,228.16,128,234.33Z"></path></svg>';
+            ? '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>' 
+            : '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>';
         btn.style.transform = 'scale(1.2)';
         setTimeout(() => { btn.style.transform = 'none'; }, 200);
     });

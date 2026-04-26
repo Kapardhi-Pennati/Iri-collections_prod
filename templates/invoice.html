@@ -4,63 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice - Iri Collections</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #ffffff;
-            --text: #1a1a24;
-            --text-muted: #666666;
-            --border: #e0e0e0;
-            --gold: #A8863A;
-            --font-display: 'Bodoni Moda', serif;
-            --font-sans: 'Montserrat', sans-serif;
+            --bg: #FAFAF8;
+            --bg-elevated: #FFFFFF;
+            --text: #1A1A1A;
+            --text-muted: #7A7A7A;
+            --border: #1A1A1A;
+            --border-light: #E0E0E0;
+            --accent: #E8DCC8;
+            --font-display: 'Archivo', sans-serif;
+            --font-body: 'Inter', sans-serif;
         }
-        
+
         body {
-            font-family: var(--font-sans);
+            font-family: var(--font-body);
             color: var(--text);
-            background: #f5f5f5;
+            background: var(--bg);
             margin: 0;
             padding: 20px;
             font-size: 14px;
-            line-height: 1.5;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
         .invoice-container {
-            max-width: 800px;
+            max-width: 780px;
             margin: 0 auto;
-            background: var(--bg);
-            padding: 50px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            border-top: 6px solid var(--gold);
+            background: var(--bg-elevated);
+            padding: 48px;
+            border: 3px solid var(--border);
+            box-shadow: 4px 4px 0 0 var(--border);
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 50px;
-            padding-bottom: 30px;
-            border-bottom: 2px solid var(--border);
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 3px solid var(--border);
         }
 
         .brand {
             font-family: var(--font-display);
-            font-size: 2rem;
-            font-weight: 700;
+            font-size: 1.6rem;
+            font-weight: 800;
             margin: 0;
             letter-spacing: -0.5px;
-        }
-
-        .brand span {
-            color: var(--gold);
+            text-transform: uppercase;
         }
 
         .company-info {
             color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-top: 10px;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            line-height: 1.6;
+            font-weight: 500;
         }
 
         .invoice-meta {
@@ -68,28 +69,30 @@
         }
 
         .invoice-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--border);
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--border-light);
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             margin: 0 0 10px 0;
         }
 
         .meta-group {
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
         }
 
         .meta-label {
             font-weight: 600;
             color: var(--text-muted);
-            margin-right: 10px;
+            margin-right: 8px;
         }
 
         .billing-section {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 40px;
+            margin-bottom: 36px;
         }
 
         .billing-block {
@@ -97,49 +100,50 @@
         }
 
         .billing-title {
+            font-family: var(--font-display);
             font-weight: 700;
-            font-size: 1rem;
-            color: var(--gold);
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid var(--border);
+            letter-spacing: 0.08em;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--border);
+            color: var(--text-muted);
         }
 
         .billing-details {
             color: var(--text);
+            font-weight: 500;
+            font-size: 0.9rem;
+            line-height: 1.6;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 40px;
+            margin-bottom: 36px;
         }
 
         th {
             text-align: left;
-            padding: 12px 15px;
-            border-bottom: 2px solid var(--border);
+            padding: 12px 14px;
+            border-bottom: 3px solid var(--border);
             color: var(--text-muted);
+            font-family: var(--font-display);
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
+            font-size: 0.75rem;
+            letter-spacing: 0.06em;
         }
 
         td {
-            padding: 15px;
-            border-bottom: 1px solid var(--border);
+            padding: 14px;
+            border-bottom: 1px solid var(--border-light);
+            font-weight: 500;
         }
 
-        .col-qty, .col-price, .col-total {
-            text-align: right;
-        }
-
-        th.col-qty, th.col-price, th.col-total {
-            text-align: right;
-        }
+        .col-qty, .col-price, .col-total { text-align: right; }
+        th.col-qty, th.col-price, th.col-total { text-align: right; }
 
         .item-name {
             font-weight: 600;
@@ -151,12 +155,12 @@
         }
 
         .totals-table {
-            width: 350px;
+            width: 320px;
             border: none;
         }
 
         .totals-table td {
-            padding: 10px 15px;
+            padding: 8px 14px;
             border: none;
             text-align: right;
         }
@@ -164,81 +168,85 @@
         .totals-table .label {
             font-weight: 600;
             color: var(--text-muted);
+            font-size: 0.85rem;
         }
 
         .row-total td {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--gold);
-            border-top: 2px solid var(--border) !important;
-            padding-top: 15px !important;
+            font-size: 1.2rem;
+            font-weight: 800;
+            font-family: var(--font-display);
+            border-top: 3px solid var(--border) !important;
+            padding-top: 14px !important;
         }
 
         .footer {
-            margin-top: 60px;
+            margin-top: 48px;
             text-align: center;
             color: var(--text-muted);
-            font-size: 0.9rem;
-            padding-top: 20px;
-            border-top: 1px solid var(--border);
+            font-size: 0.8rem;
+            padding-top: 16px;
+            border-top: 2px solid var(--border-light);
+            font-weight: 500;
         }
 
-        .badge {
+        .inv-badge {
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 0.75rem;
+            padding: 3px 10px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
             font-weight: 700;
             text-transform: uppercase;
-            background: #eee;
+            letter-spacing: 0.06em;
+            border: 2px solid var(--border);
         }
 
-        .badge.paid { background: #e6f4ea; color: #1e8e3e; }
-        .badge.pending { background: #fef7e0; color: #b06000; }
+        .inv-badge.paid { background: #D8F3DC; color: #2D6A4F; border-color: #2D6A4F; }
+        .inv-badge.pending { background: #FEFAE0; color: #BC6C25; border-color: #BC6C25; }
 
         .btn-print {
             display: block;
-            margin: 0 auto 30px auto;
-            padding: 12px 30px;
-            background: var(--gold);
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-size: 1rem;
+            margin: 0 auto 24px auto;
+            padding: 10px 28px;
+            background: var(--text);
+            color: var(--bg);
+            border: 3px solid var(--border);
+            box-shadow: 4px 4px 0 0 var(--border);
+            font-family: var(--font-display);
+            font-size: 0.85rem;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
             cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(168, 134, 58, 0.3);
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
         }
-        
+
         .btn-print:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(168, 134, 58, 0.4);
+            transform: translate(-1px, -1px);
+            box-shadow: 5px 5px 0 0 var(--border);
+        }
+
+        .btn-print:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0 0 0 0 var(--border);
         }
 
         @media print {
-            body { 
-                background: none; 
-                padding: 0;
-            }
-            .invoice-container { 
-                box-shadow: none; 
-                padding: 0;
-                border-top: none;
-            }
-            .btn-print { 
-                display: none; 
-            }
+            body { background: none; padding: 0; }
+            .invoice-container { box-shadow: none; border: none; padding: 0; }
+            .btn-print { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <button class="btn-print" onclick="window.print()"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-right:8px;"><path d="M224,96V184a16,16,0,0,1-16,16H184v16a16,16,0,0,1-16,16H88a16,16,0,0,1-16-16V200H48a16,16,0,0,1-16-16V96a16,16,0,0,1,16-16H80V40a16,16,0,0,1,16-16h64a16,16,0,0,1,16,16V80h32A16,16,0,0,1,224,96ZM96,40V80h64V40ZM168,200H88v16h80V200Zm40-104H48v88h24V168a16,16,0,0,1,16-16h80a16,16,0,0,1,16,16v16h24V96Zm-40,88V168H88v16h80Z"></path></svg> Print Invoice</button>
+    <button class="btn-print" onclick="window.print()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:6px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+        Print Invoice
+    </button>
 
     <div class="invoice-container" id="invoice">
-        <div style="text-align: center; padding: 50px;">
-            <p>Loading invoice details...</p>
+        <div style="text-align: center; padding: 48px;">
+            <p style="color: var(--text-muted); font-weight: 500;">Loading invoice details...</p>
         </div>
     </div>
 
@@ -250,7 +258,7 @@
             const orderId = parseInt(orderIdStr);
 
             if (!orderId || isNaN(orderId)) {
-                document.getElementById('invoice').innerHTML = '<p style="text-align:center; color:red;">Invalid Order ID</p>';
+                document.getElementById('invoice').innerHTML = '<p style="text-align:center; color:var(--error); padding:48px;">Invalid Order ID</p>';
                 return;
             }
 
@@ -273,12 +281,12 @@
                 });
 
                 const isPaid = order.transaction && order.transaction.status === 'paid';
-                const statusBadge = isPaid ? '<span class="badge paid">PAID</span>' : '<span class="badge pending">UNPAID</span>';
+                const statusBadge = isPaid ? '<span class="inv-badge paid">PAID</span>' : '<span class="inv-badge pending">UNPAID</span>';
 
                 const html = `
                     <div class="header">
                         <div>
-                            <h1 class="brand">Iri <span>Collections</span></h1>
+                            <h1 class="brand">Iri Collections</h1>
                             <div class="company-info">
                                 No.86, MG Road, Manapakkam<br>
                                 Chennai, Tamil Nadu 600125<br>
@@ -290,7 +298,7 @@
                             <div class="meta-group"><span class="meta-label">Invoice / Order #</span> ${escapeHTML(order.order_number)}</div>
                             <div class="meta-group"><span class="meta-label">Date</span> ${date}</div>
                             <div class="meta-group"><span class="meta-label">Payment Status</span> ${statusBadge}</div>
-                            ${order.tracking_image ? `<div class="meta-group"><span class="meta-label">Tracking</span> <a href="${order.tracking_image}" target="_blank" style="color:var(--gold);">View Proof</a></div>` : ''}
+                            ${order.tracking_image ? `<div class="meta-group"><span class="meta-label">Tracking</span> <a href="${order.tracking_image}" target="_blank" style="font-weight:600; text-decoration:underline;">View Proof</a></div>` : ''}
                         </div>
                     </div>
 
@@ -350,7 +358,7 @@
                     <div class="footer">
                         <p style="font-weight: 600; color: var(--text);">POLICY: No returns, refunds or exchanges. All products that are sold are final.</p>
                         <p>Thank you for choosing Iri Collections. For any queries regarding this invoice, please contact support.</p>
-                        <p style="margin-top:5px; font-weight:600; color:#aaa;">This is a computer generated invoice and does not require a physical signature.</p>
+                        <p style="margin-top:4px; font-weight:500; color:#bbb;">This is a computer generated invoice and does not require a physical signature.</p>
                     </div>
                 `;
 
@@ -363,7 +371,7 @@
 
             } catch (error) {
                 console.error(error);
-                document.getElementById('invoice').innerHTML = '<div style="text-align:center; padding:50px;"><h3>Error loading invoice</h3><p>Could not fetch order data or you do not have permission.</p></div>';
+                document.getElementById('invoice').innerHTML = '<div style="text-align:center; padding:48px;"><h3 style="font-family:var(--font-display); font-weight:700;">Error loading invoice</h3><p style="color:var(--text-muted);">Could not fetch order data or you do not have permission.</p></div>';
             }
         });
     </script>

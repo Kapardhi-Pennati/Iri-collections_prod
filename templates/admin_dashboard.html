@@ -11,32 +11,38 @@
 
 {% block content %}
 <div class="admin-layout">
-    <!-- 📁 SIDEBAR -->
+    <!-- SIDEBAR -->
     <aside class="admin-sidebar">
         <div style="margin-bottom: 30px;">
-            <h2 style="font-size: 1.2rem; margin: 0; border-left: 5px solid var(--bg-accent); padding-left: 10px;">IRI ADMIN</h2>
+            <h2 style="font-size: 1.2rem; margin: 0; border-left: var(--border-width) solid var(--bg-accent); padding-left: 10px;">IRI ADMIN</h2>
         </div>
         
         <nav>
             <a href="#" onclick="showSection('overview')" class="admin-nav-item active" id="nav-overview">
-                <i class="ph ph-house-line" style="font-size: 1.2rem;"></i> OVERVIEW
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                OVERVIEW
             </a>
             <a href="#" onclick="showSection('products')" class="admin-nav-item" id="nav-products">
-                <i class="ph ph-package" style="font-size: 1.2rem;"></i> PRODUCTS
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                PRODUCTS
             </a>
             <a href="#" onclick="showSection('orders')" class="admin-nav-item" id="nav-orders">
-                <i class="ph ph-shopping-cart-simple" style="font-size: 1.2rem;"></i> ORDERS
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                ORDERS
             </a>
             <a href="#" onclick="showSection('categories')" class="admin-nav-item" id="nav-categories">
-                <i class="ph ph-tag" style="font-size: 1.2rem;"></i> CATEGORIES
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>
+                CATEGORIES
             </a>
             <a href="#" onclick="showSection('traffic')" class="admin-nav-item" id="nav-traffic">
-                <i class="ph ph-chart-line-up" style="font-size: 1.2rem;"></i> TRAFFIC
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                TRAFFIC
             </a>
             
-            <div style="margin-top: 50px; border-top: 2px solid #000; padding-top: 20px;">
-                <a href="/" class="admin-nav-item" style="font-size: 0.8rem; color: #666;">
-                    <i class="ph ph-arrow-left"></i> BACK TO STORE
+            <div style="margin-top: 50px; border-top: 2px solid var(--border-color); padding-top: 20px;">
+                <a href="/" class="admin-nav-item" style="font-size: 0.8rem; color: var(--text-muted);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                    BACK TO STORE
                 </a>
             </div>
         </nav>
@@ -46,36 +52,38 @@
     <main class="admin-main">
         <div id="section-overview">
             <h1 style="font-size: 2.5rem; margin-bottom: 40px;">DASHBOARD OVERVIEW</h1>
+            <!-- stat-lowstock placeholder for JS -->
+            <span id="stat-lowstock" style="display:none;"></span>
             
             <div class="stat-grid">
                 <div class="stat-card">
-                    <div style="font-weight: 800; font-size: 0.8rem; color: #666;">TOTAL REVENUE</div>
+                    <div style="font-weight: 800; font-size: 0.8rem; color: var(--text-muted);">TOTAL REVENUE</div>
                     <div class="stat-value" id="stat-revenue">₹0</div>
                     <div style="font-size: 0.7rem; color: var(--success); font-weight: 700;">↑ 0% FROM LAST MONTH</div>
                 </div>
                 <div class="stat-card">
-                    <div style="font-weight: 800; font-size: 0.8rem; color: #666;">TOTAL ORDERS</div>
+                    <div style="font-weight: 800; font-size: 0.8rem; color: var(--text-muted);">TOTAL ORDERS</div>
                     <div class="stat-value" id="stat-orders">0</div>
-                    <div style="font-size: 0.7rem; color: #666; font-weight: 700;">PROCESSED TODAY</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700;">PROCESSED TODAY</div>
                 </div>
                 <div class="stat-card">
-                    <div style="font-weight: 800; font-size: 0.8rem; color: #666;">PENDING ORDERS</div>
+                    <div style="font-weight: 800; font-size: 0.8rem; color: var(--text-muted);">PENDING ORDERS</div>
                     <div class="stat-value" id="stat-pending">0</div>
                     <div style="font-size: 0.7rem; color: var(--error); font-weight: 700;">REQUIRES ACTION</div>
                 </div>
                 <div class="stat-card">
-                    <div style="font-weight: 800; font-size: 0.8rem; color: #666;">ACTIVE PRODUCTS</div>
+                    <div style="font-weight: 800; font-size: 0.8rem; color: var(--text-muted);">ACTIVE PRODUCTS</div>
                     <div class="stat-value" id="stat-products">0</div>
-                    <div style="font-size: 0.7rem; color: #666; font-weight: 700;">IN LIVE CATALOG</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700;">IN LIVE CATALOG</div>
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-xl); margin-top: 40px;">
-                <div class="brutalist-card" style="padding: 30px; background: #fff;">
+                <div class="brutalist-card" style="padding: 30px; background: var(--bg-elevated);">
                     <h3 style="margin-bottom: 20px;">REVENUE (LAST 30 DAYS)</h3>
                     <canvas id="revenue-chart" height="300"></canvas>
                 </div>
-                <div class="brutalist-card" style="padding: 30px; background: #fff;">
+                <div class="brutalist-card" style="padding: 30px; background: var(--bg-elevated);">
                     <h3 style="margin-bottom: 20px;">ORDERS BY STATUS</h3>
                     <canvas id="status-chart" height="300"></canvas>
                 </div>
@@ -84,30 +92,30 @@
 
         <!-- Section: Traffic -->
         <div id="section-traffic" class="hidden">
-            <h2 style="font-family:var(--font-display); margin-bottom:var(--space-xl);">Website <span class="text-gold">Traffic</span></h2>
-            <div class="stat-cards" id="traffic-stat-cards">
-                <div class="stat-card"><div class="stat-icon">👁️</div><div class="stat-label">Total Views (30d)</div><div class="stat-value" id="traffic-total">—</div></div>
-                <div class="stat-card"><div class="stat-icon">👤</div><div class="stat-label">Unique Visitors (30d)</div><div class="stat-value" id="traffic-unique">—</div></div>
-                <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-label">Today's Views</div><div class="stat-value" id="traffic-today">—</div></div>
-                <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-label">Top Page Today</div><div class="stat-value" id="traffic-toppage" style="font-size:1rem; word-break:break-all;">—</div></div>
+            <h2 style="font-family:var(--font-display); margin-bottom:var(--space-xl);">WEBSITE TRAFFIC</h2>
+            <div class="stat-grid" id="traffic-stat-cards">
+                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOTAL VIEWS (30D)</div><div class="stat-value" id="traffic-total">—</div></div>
+                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">UNIQUE VISITORS (30D)</div><div class="stat-value" id="traffic-unique">—</div></div>
+                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TODAY'S VIEWS</div><div class="stat-value" id="traffic-today">—</div></div>
+                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOP PAGE TODAY</div><div class="stat-value" id="traffic-toppage" style="font-size:1rem; word-break:break-all;">—</div></div>
             </div>
 
-            <div class="chart-container" style="margin-bottom:var(--space-xl);">
+            <div class="brutalist-card" style="padding: 30px; background: var(--bg-elevated); margin-bottom:var(--space-xl);">
                 <h3>Daily Visitors (Last 30 Days)</h3>
                 <canvas id="traffic-chart" height="200"></canvas>
             </div>
 
-            <div class="traffic-grid">
-                <div class="chart-container">
-                    <h3>Top Pages</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl);">
+                <div class="brutalist-card" style="padding: 30px; background: var(--bg-elevated);">
+                    <h3 style="margin-bottom: 20px;">TOP PAGES</h3>
                     <div style="overflow-y:auto; max-height:320px;">
-                        <table class="top-pages-table" id="top-pages-table">
+                        <table style="width:100%; border-collapse:collapse;" id="top-pages-table">
                             <tbody></tbody>
                         </table>
                     </div>
                 </div>
-                <div class="chart-container">
-                    <h3>Device Breakdown</h3>
+                <div class="brutalist-card" style="padding: 30px; background: var(--bg-elevated);">
+                    <h3 style="margin-bottom: 20px;">DEVICE BREAKDOWN</h3>
                     <canvas id="device-chart" height="240"></canvas>
                 </div>
             </div>
@@ -116,8 +124,8 @@
         <!-- Section: Products -->
         <div id="section-products" class="hidden">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xl);">
-                <h2 style="font-family:var(--font-display);">Manage <span class="text-gold">Products</span></h2>
-                <button class="btn btn-primary" onclick="openProductModal()">+ Add Product</button>
+                <h2 style="font-family:var(--font-display);">MANAGE PRODUCTS</h2>
+                <button class="brutalist-btn" onclick="openProductModal()" style="background:var(--text-primary); color:var(--text-inverted);">+ ADD PRODUCT</button>
             </div>
             <div class="admin-table-responsive">
                 <table class="admin-table" id="products-table">
@@ -131,7 +139,7 @@
 
         <!-- Section: Orders -->
         <div id="section-orders" class="hidden">
-            <h2 style="font-family:var(--font-display); margin-bottom:var(--space-xl);">Manage <span class="text-gold">Orders</span></h2>
+            <h2 style="font-family:var(--font-display); margin-bottom:var(--space-xl);">MANAGE ORDERS</h2>
             <div class="admin-table-responsive">
                 <table class="admin-table" id="orders-table">
                     <thead>
@@ -145,8 +153,8 @@
         <!-- Section: Categories -->
         <div id="section-categories" class="hidden">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xl);">
-                <h2 style="font-family:var(--font-display);">Manage <span class="text-gold">Categories</span></h2>
-                <button class="btn btn-primary" onclick="openCategoryModal()">+ Add Category</button>
+                <h2 style="font-family:var(--font-display);">MANAGE CATEGORIES</h2>
+                <button class="brutalist-btn" onclick="openCategoryModal()" style="background:var(--text-primary); color:var(--text-inverted);">+ ADD CATEGORY</button>
             </div>
             <div id="categories-list"></div>
         </div>

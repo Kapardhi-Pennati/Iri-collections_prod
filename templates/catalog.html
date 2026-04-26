@@ -6,23 +6,23 @@
 {% block content %}
 <section style="padding: var(--space-xl) 0;">
     <div class="container">
-        <!-- 🏷️ HEADER -->
-        <div style="margin-bottom: 50px; border-bottom: var(--border-width) solid #000; padding-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px;">
-            <h1 style="font-size: 4rem; margin: 0;">SOURCED COLLECTIONS</h1>
-            <div id="results-count" style="font-weight: 800; font-size: 1rem;">COLLECTING PIECES...</div>
+        <!-- HEADER -->
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: var(--space-md);">
+            <h1>SOURCED COLLECTIONS</h1>
+            <div id="results-count" style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">COLLECTING PIECES...</div>
         </div>
 
-        <!-- 🔍 FILTERS BAR -->
-        <div style="display: grid; grid-template-columns: 1fr auto; gap: 20px; margin-bottom: 50px; align-items: start;">
+        <!-- FILTERS -->
+        <div style="display: grid; grid-template-columns: 1fr auto; gap: var(--space-md); margin-bottom: var(--space-xl); align-items: start;">
             <!-- Category Chips -->
-            <div id="category-filters" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button class="brutalist-btn category-chip active" data-category="" style="background: #000; color: #fff; box-shadow: 2px 2px 0 0 #000;">ALL</button>
+            <div id="category-filters" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="brutalist-btn category-chip active" data-category="" style="background: var(--text-primary); color: var(--text-inverted); box-shadow: 2px 2px 0 0 var(--shadow-color); padding: 6px 14px; font-size: 0.75rem;">ALL</button>
             </div>
-            
+
             <!-- Search & Sort -->
-            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <input type="text" id="search-input" class="brutalist-input" placeholder="SEARCH PIECES..." style="width: 250px; box-shadow: 3px 3px 0 0 #000;">
-                <select id="sort-select" class="brutalist-input" style="width: 200px; box-shadow: 3px 3px 0 0 #000; appearance: none; cursor: pointer;">
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <input type="text" id="search-input" class="brutalist-input" placeholder="Search pieces..." style="width: 220px; box-shadow: 2px 2px 0 0 var(--shadow-color);">
+                <select id="sort-select" class="brutalist-input" style="width: 190px; box-shadow: 2px 2px 0 0 var(--shadow-color); appearance: none; cursor: pointer;">
                     <option value="">SORT BY</option>
                     <option value="price_low">PRICE: LOW TO HIGH</option>
                     <option value="price_high">PRICE: HIGH TO LOW</option>
@@ -31,13 +31,13 @@
             </div>
         </div>
 
-        <!-- 📦 PRODUCTS GRID -->
+        <!-- PRODUCTS GRID -->
         <div class="product-grid" id="products-grid">
-            <div style="grid-column: 1/-1; text-align: center; padding: 100px; font-weight: 800; font-size: 1.5rem;">FETCHING THE DROP...</div>
+            <div style="grid-column: 1/-1; text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted);">FETCHING THE DROP...</div>
         </div>
 
-        <!-- 📑 PAGINATION -->
-        <div id="pagination" style="display: flex; gap: 15px; justify-content: center; margin-top: 50px;"></div>
+        <!-- PAGINATION -->
+        <div id="pagination" style="display: flex; gap: 12px; justify-content: center; margin-top: var(--space-xl);"></div>
     </div>
 </section>
 {% endblock %}
@@ -51,7 +51,7 @@ let currentPage = 1;
 
 async function loadProducts(page = 1) {
     const grid = document.getElementById('products-grid');
-    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 100px; font-weight: 800;">RELOADING...</div>';
+    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted);">RELOADING...</div>';
 
     let url = `/store/products/?page=${page}`;
     if (currentCategory) url += `&category=${currentCategory}`;
@@ -61,23 +61,23 @@ async function loadProducts(page = 1) {
     try {
         const data = await API.get(url);
         document.getElementById('results-count').textContent = `${data.count || 0} PIECES FOUND`;
-        
+
         if (data && data.results && data.results.length > 0) {
             grid.innerHTML = data.results.map(p => productCardHTML(p)).join('');
             initLazyLoading();
             renderPagination(data);
         } else {
             grid.innerHTML = `
-                <div class="brutalist-card" style="grid-column: 1/-1; padding: 80px; text-align: center;">
-                    <h3 style="font-size: 2rem; margin-bottom: 10px;">EMPTY VAULT.</h3>
-                    <p style="font-weight: 700;">WE COULDN'T FIND ANY PIECES MATCHING YOUR CRITERIA.</p>
-                    <button class="brutalist-btn" onclick="window.location.reload()" style="margin-top: 20px;">RESET FILTERS</button>
+                <div class="brutalist-card" style="grid-column: 1/-1; padding: 60px; text-align: center;">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 8px;">EMPTY VAULT.</h3>
+                    <p style="font-weight: 500; color: var(--text-muted);">No pieces match your current filters.</p>
+                    <button class="brutalist-btn" onclick="window.location.reload()" style="margin-top: var(--space-md);">RESET FILTERS</button>
                 </div>
             `;
             document.getElementById('pagination').innerHTML = '';
         }
     } catch (err) {
-        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 50px; font-weight: 800; color: var(--error);">SYSTEM ERROR. FAILED TO LOAD PRODUCTS.</div>';
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px; font-weight: 600; color: var(--error);">SYSTEM ERROR. FAILED TO LOAD PRODUCTS.</div>';
     }
 }
 
@@ -87,11 +87,17 @@ function renderPagination(data) {
 
     let html = '';
     if (data.previous) {
-        html += `<button class="brutalist-btn" onclick="loadProducts(${currentPage - 1}); currentPage--; scrollTo(0,0);" style="background:#fff;">← PREV</button>`;
+        html += `<button class="brutalist-btn" onclick="loadProducts(${currentPage - 1}); currentPage--; scrollTo(0,0);" style="padding: 8px 16px; font-size: 0.8rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            PREV
+        </button>`;
     }
-    html += `<span class="brutalist-card" style="padding: 10px 20px; font-weight: 800; background: var(--bg-accent);">PAGE ${currentPage}</span>`;
+    html += `<span class="brutalist-card" style="padding: 8px 18px; font-weight: 700; font-size: 0.8rem; background: var(--bg-accent);">PAGE ${currentPage}</span>`;
     if (data.next) {
-        html += `<button class="brutalist-btn" onclick="loadProducts(${currentPage + 1}); currentPage++; scrollTo(0,0);" style="background:#fff;">NEXT →</button>`;
+        html += `<button class="brutalist-btn" onclick="loadProducts(${currentPage + 1}); currentPage++; scrollTo(0,0);" style="padding: 8px 16px; font-size: 0.8rem;">
+            NEXT
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>`;
     }
     pag.innerHTML = html;
 }
@@ -108,14 +114,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const isActive = currentCategory === cat.slug;
                 const chip = document.createElement('button');
                 chip.className = 'brutalist-btn category-chip' + (isActive ? ' active' : '');
-                chip.style.background = isActive ? '#000' : '#fff';
-                chip.style.color = isActive ? '#fff' : '#000';
-                chip.style.boxShadow = '2px 2px 0 0 #000';
+                chip.style.background = isActive ? 'var(--text-primary)' : 'var(--bg-elevated)';
+                chip.style.color = isActive ? 'var(--text-inverted)' : 'var(--text-primary)';
+                chip.style.boxShadow = '2px 2px 0 0 var(--shadow-color)';
+                chip.style.padding = '6px 14px';
+                chip.style.fontSize = '0.75rem';
                 chip.dataset.category = cat.slug;
                 chip.textContent = cat.name.toUpperCase();
                 filters.appendChild(chip);
-                if (isActive) filters.querySelector('[data-category=""]').style.background = '#fff';
-                if (isActive) filters.querySelector('[data-category=""]').style.color = '#000';
+                if (isActive) {
+                    filters.querySelector('[data-category=""]').style.background = 'var(--bg-elevated)';
+                    filters.querySelector('[data-category=""]').style.color = 'var(--text-primary)';
+                }
             });
         }
     } catch {}
@@ -123,13 +133,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('category-filters').addEventListener('click', (e) => {
         if (!e.target.classList.contains('category-chip')) return;
         document.querySelectorAll('.category-chip').forEach(c => {
-            c.style.background = '#fff';
-            c.style.color = '#000';
+            c.style.background = 'var(--bg-elevated)';
+            c.style.color = 'var(--text-primary)';
             c.classList.remove('active');
         });
         e.target.classList.add('active');
-        e.target.style.background = '#000';
-        e.target.style.color = '#fff';
+        e.target.style.background = 'var(--text-primary)';
+        e.target.style.color = 'var(--text-inverted)';
         currentCategory = e.target.dataset.category;
         currentPage = 1;
         loadProducts(1);

@@ -6,50 +6,58 @@
 {% block content %}
 <section style="padding: var(--space-xl) 0;">
     <div class="container">
-        <!-- 🏷️ HEADER -->
-        <div style="margin-bottom: 50px; border-bottom: var(--border-width) solid #000; padding-bottom: 20px;">
-            <h1 style="font-size: 3.5rem; margin: 0;">GET IN TOUCH</h1>
+        <div class="page-header">
+            <h1>GET IN TOUCH</h1>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: var(--space-xl); align-items: start;">
-            <!-- ℹ️ INFO CARDS -->
-            <div style="display: flex; flex-direction: column; gap: 20px;">
-                <div class="brutalist-card" style="padding: 30px; background: #fff;">
-                    <h3 style="font-size: 1.2rem; margin-bottom: 10px;">WHATSAPP / CALL</h3>
-                    <p style="font-weight: 800; font-size: 1.5rem; color: var(--gold-light);">+91 9361151712</p>
-                    <p style="font-weight: 700; color: #666; margin-top: 5px;">MON - SAT, 9 AM - 9 PM IST</p>
+            <!-- INFO CARDS -->
+            <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+                <div class="brutalist-card" style="padding: var(--space-lg); background: var(--bg-elevated);">
+                    <div style="margin-bottom: 10px; color: var(--text-muted);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    </div>
+                    <h3 style="font-size: 0.9rem; margin-bottom: 8px;">WHATSAPP / CALL</h3>
+                    <p style="font-weight: 700; font-size: 1.2rem;">+91 9361151712</p>
+                    <p style="font-weight: 500; color: var(--text-muted); margin-top: 4px; font-size: 0.8rem;">MON – SAT, 9 AM – 9 PM IST</p>
                 </div>
-                
-                <div class="brutalist-card" style="padding: 30px; background: #fff;">
-                    <h3 style="font-size: 1.2rem; margin-bottom: 10px;">EMAIL US</h3>
-                    <p style="font-weight: 800; font-size: 1.2rem;">HELLO@IRICOLLECTIONS.COM</p>
-                    <p style="font-weight: 700; color: #666; margin-top: 5px;">REPLY WITHIN 24 HOURS</p>
+
+                <div class="brutalist-card" style="padding: var(--space-lg); background: var(--bg-elevated);">
+                    <div style="margin-bottom: 10px; color: var(--text-muted);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    </div>
+                    <h3 style="font-size: 0.9rem; margin-bottom: 8px;">EMAIL US</h3>
+                    <p style="font-weight: 700; font-size: 1rem;">HELLO@IRICOLLECTIONS.COM</p>
+                    <p style="font-weight: 500; color: var(--text-muted); margin-top: 4px; font-size: 0.8rem;">REPLY WITHIN 24 HOURS</p>
                 </div>
-                
-                <div class="brutalist-card" style="padding: 30px; background: var(--bg-accent);">
-                    <h3 style="font-size: 1.2rem; margin-bottom: 10px;">OUR ATELIER</h3>
-                    <p style="font-weight: 800; font-size: 1.2rem;">CHENNAI, TAMIL NADU</p>
-                    <p style="font-weight: 700; color: #000; margin-top: 5px;">BY APPOINTMENT ONLY</p>
+
+                <div class="brutalist-card" style="padding: var(--space-lg); background: var(--bg-accent);">
+                    <div style="margin-bottom: 10px; color: var(--text-secondary);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    </div>
+                    <h3 style="font-size: 0.9rem; margin-bottom: 8px;">OUR ATELIER</h3>
+                    <p style="font-weight: 700; font-size: 1rem;">CHENNAI, TAMIL NADU</p>
+                    <p style="font-weight: 500; color: var(--text-secondary); margin-top: 4px; font-size: 0.8rem;">BY APPOINTMENT ONLY</p>
                 </div>
             </div>
 
-            <!-- 📝 CONTACT FORM -->
-            <div class="brutalist-card" style="padding: 40px; background: #fff;">
-                <h2 style="font-size: 2rem; margin-bottom: 30px; border-bottom: 4px solid #000; padding-bottom: 10px;">SEND A MESSAGE</h2>
+            <!-- CONTACT FORM -->
+            <div class="brutalist-card" style="padding: var(--space-xl); background: var(--bg-elevated);">
+                <h2 style="font-size: 1.5rem; margin-bottom: var(--space-lg); border-bottom: var(--border-width) solid var(--border-color); padding-bottom: 10px;">SEND A MESSAGE</h2>
                 <form id="contact-form" onsubmit="handleContactSubmit(event)">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); margin-bottom: var(--space-md);">
                         <div>
-                            <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">NAME</label>
-                            <input type="text" name="name" class="brutalist-input" placeholder="YOUR NAME" required>
+                            <label class="form-label">NAME</label>
+                            <input type="text" name="name" class="brutalist-input" placeholder="Your name" required>
                         </div>
                         <div>
-                            <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">EMAIL</label>
-                            <input type="email" name="email" class="brutalist-input" placeholder="YOU@EXAMPLE.COM" required>
+                            <label class="form-label">EMAIL</label>
+                            <input type="email" name="email" class="brutalist-input" placeholder="you@example.com" required>
                         </div>
                     </div>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">TOPIC</label>
+
+                    <div style="margin-bottom: var(--space-md);">
+                        <label class="form-label">TOPIC</label>
                         <select name="subject" class="brutalist-input" required style="appearance: none;">
                             <option value="GENERAL">GENERAL INQUIRY</option>
                             <option value="ORDER">ORDER STATUS</option>
@@ -57,13 +65,16 @@
                             <option value="FEEDBACK">FEEDBACK</option>
                         </select>
                     </div>
-                    
-                    <div style="margin-bottom: 30px;">
-                        <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">MESSAGE</label>
-                        <textarea name="message" class="brutalist-input" rows="5" placeholder="HOW CAN WE HELP YOU?" required></textarea>
+
+                    <div style="margin-bottom: var(--space-lg);">
+                        <label class="form-label">MESSAGE</label>
+                        <textarea name="message" class="brutalist-input" rows="5" placeholder="How can we help you?" required></textarea>
                     </div>
-                    
-                    <button type="submit" class="brutalist-btn" style="width: 100%; background: #000; color: #fff; font-size: 1.2rem;">SEND MESSAGE</button>
+
+                    <button type="submit" class="brutalist-btn" style="width: 100%; background: var(--text-primary); color: var(--text-inverted);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                        SEND MESSAGE
+                    </button>
                 </form>
             </div>
         </div>

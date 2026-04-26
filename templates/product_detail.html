@@ -7,7 +7,7 @@
 <section style="padding: var(--space-xl) 0;">
     <div class="container">
         <div id="product-detail-content">
-            <div style="text-align: center; padding: 100px; font-weight: 800;">OPENING THE VAULT...</div>
+            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted);">OPENING THE VAULT...</div>
         </div>
     </div>
 </section>
@@ -24,10 +24,11 @@ async function loadProduct() {
         const product = await API.get(`/store/products/${slug}/`);
         if (!product || product.detail) {
             document.getElementById('product-detail-content').innerHTML = `
-                <div class="brutalist-card" style="padding: 100px; text-align: center;">
-                    <h3 style="font-size: 3rem; margin-bottom: 20px;">NOT FOUND.</h3>
-                    <p style="font-weight: 700;">THIS PIECE HAS LEFT THE COLLECTION.</p>
-                    <a href="/catalog/" class="brutalist-btn" style="margin-top: 30px;">BACK TO SHOP</a>
+                <div class="brutalist-card" style="padding: 80px; text-align: center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-md);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m15 8-6 6"/></svg>
+                    <h3 style="font-size: 2rem; margin-bottom: 8px;">NOT FOUND</h3>
+                    <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">This piece has left the collection.</p>
+                    <a href="/catalog/" class="brutalist-btn">BACK TO SHOP</a>
                 </div>`;
             return;
         }
@@ -44,66 +45,76 @@ function renderProduct(p) {
     const imgSrc = p.display_image || p.image_url || p.image || '';
 
     let stockText = `${p.stock} AVAILABLE`;
-    let stockBg = '#fff';
-    if (p.stock === 0) { stockText = 'SOLD OUT'; stockBg = '#000'; }
+    let stockBg = 'var(--bg-elevated)';
+    if (p.stock === 0) { stockText = 'SOLD OUT'; stockBg = 'var(--text-primary)'; }
     else if (p.stock <= 5) { stockText = `ONLY ${p.stock} LEFT`; stockBg = 'var(--bg-accent)'; }
 
     const isInWishlist = window.wishlistItems ? window.wishlistItems.has(p.id) : false;
-    const heartIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="${isInWishlist ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.84-8.84 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+    const heartIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${isInWishlist ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
 
     document.getElementById('product-detail-content').innerHTML = `
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items: start;">
-            <!-- 🖼️ IMAGE -->
-            <div class="brutalist-card" style="padding: 0; overflow: hidden; background: #fff;">
+            <!-- IMAGE -->
+            <div class="brutalist-card" style="padding: 0; overflow: hidden; background: var(--bg-secondary);">
                 <img src="${imgSrc}" alt="${p.name}" style="width: 100%; display: block;">
             </div>
 
-            <!-- 📝 INFO -->
-            <div class="hero-text">
-                <div style="font-weight: 800; font-size: 0.9rem; margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
-                    <span style="color: #666;">COLLECTION / ${p.category_name.toUpperCase()}</span>
-                    <span class="brutalist-card" style="padding: 2px 8px; background: var(--bg-accent); font-size: 0.7rem; box-shadow: 2px 2px 0 0 #000;">DIRECTLY SOURCED</span>
+            <!-- INFO -->
+            <div>
+                <div style="font-weight: 600; font-size: 0.8rem; margin-bottom: var(--space-sm); display: flex; gap: 8px; align-items: center; color: var(--text-muted);">
+                    <span>COLLECTION / ${p.category_name.toUpperCase()}</span>
+                    <span class="badge" style="background: var(--bg-accent);">DIRECTLY SOURCED</span>
                 </div>
-                <h1 style="font-size: 4rem; margin-bottom: 20px;">${p.name}</h1>
-                
-                <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 30px;">
-                    <div style="font-family: var(--font-display); font-weight: 800; font-size: 3rem;">${formatPrice(p.price)}</div>
-                    ${p.compare_price ? `<div style="text-decoration: line-through; font-weight: 700; color: #999;">${formatPrice(p.compare_price)}</div>` : ''}
-                    <div class="brutalist-card" style="background: ${stockBg}; color: ${p.stock === 0 ? '#fff' : '#000'}; padding: 5px 15px; font-weight: 800; font-size: 0.8rem; box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 #000;">
-                        ${stockText}
-                    </div>
+                <h1 style="font-size: clamp(2rem, 5vw, 3rem); margin-bottom: var(--space-md);">${p.name}</h1>
+
+                <div style="display: flex; gap: var(--space-md); align-items: center; margin-bottom: var(--space-lg); flex-wrap: wrap;">
+                    <div class="product-price" style="font-size: 2.2rem;">${formatPrice(p.price)}</div>
+                    ${p.compare_price ? `<div style="text-decoration: line-through; font-weight: 500; color: var(--text-muted); font-size: 1.1rem;">${formatPrice(p.compare_price)}</div>` : ''}
+                    <div class="badge" style="background: ${stockBg}; color: ${p.stock === 0 ? 'var(--text-inverted)' : 'var(--text-primary)'};"> ${stockText}</div>
                 </div>
 
-                <p style="font-size: 1.1rem; margin-bottom: 30px; padding: 20px; border-left: var(--border-width) solid #000; background: var(--bg-secondary);">
+                <div style="font-size: 0.95rem; margin-bottom: var(--space-lg); padding: var(--space-md); border-left: var(--border-width) solid var(--border-color); background: var(--bg-secondary); color: var(--text-secondary); line-height: 1.7;">
                     ${p.description}
-                </p>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; font-weight: 700;">
-                    <div class="brutalist-card" style="padding: 15px; box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 #000;">MATERIAL: ${p.material || 'N/A'}</div>
-                    <div class="brutalist-card" style="padding: 15px; box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 #000;">WEIGHT: ${p.weight || 'N/A'}</div>
                 </div>
 
-                <!-- 🛒 ACTIONS -->
-                ${p.stock > 0 ? `
-                <div style="display: flex; gap: 20px; margin-bottom: 30px;">
-                    <div style="display: flex; border: 4px solid #000; background: #fff; box-shadow: 4px 4px 0 0 #000;">
-                        <button onclick="changeQty(-1)" style="padding: 10px 20px; font-weight: 800; background: #fff; border:none; cursor:pointer;">-</button>
-                        <input type="number" id="qty-input" value="1" readonly style="width: 60px; text-align: center; border:none; border-left: 4px solid #000; border-right: 4px solid #000; font-weight: 800; font-size: 1.2rem;">
-                        <button onclick="changeQty(1)" style="padding: 10px 20px; font-weight: 800; background: #fff; border:none; cursor:pointer;">+</button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-lg);">
+                    <div class="brutalist-card" style="padding: 14px; font-weight: 600; font-size: 0.85rem;">
+                        <span style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-bottom: 2px;">MATERIAL</span>
+                        ${p.material || 'N/A'}
                     </div>
-                    <button class="brutalist-btn" onclick="addToCartDetail()" style="flex: 1; font-size: 1.2rem;">ADD TO CART</button>
-                    <button class="brutalist-btn" onclick="toggleWishlist(${p.id})" id="btn-wishlist-${p.id}" style="background: #fff; width: 60px;">${heartIcon}</button>
+                    <div class="brutalist-card" style="padding: 14px; font-weight: 600; font-size: 0.85rem;">
+                        <span style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-bottom: 2px;">WEIGHT</span>
+                        ${p.weight || 'N/A'}
+                    </div>
                 </div>
-                <button class="brutalist-btn" onclick="buyNow()" style="width: 100%; background: #000; color: #fff; font-size: 1.2rem; margin-bottom: 40px;">SECURE NOW (BUY NOW)</button>
+
+                <!-- ACTIONS -->
+                ${p.stock > 0 ? `
+                <div style="display: flex; gap: var(--space-sm); margin-bottom: var(--space-md);">
+                    <div style="display: flex; border: var(--border-width) solid var(--border-color); background: var(--bg-elevated); box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--shadow-color);">
+                        <button onclick="changeQty(-1)" style="padding: 10px 16px; font-weight: 700; background: var(--bg-elevated); border:none; cursor:pointer;">−</button>
+                        <input type="number" id="qty-input" value="1" readonly style="width: 50px; text-align: center; border:none; border-left: var(--border-width) solid var(--border-color); border-right: var(--border-width) solid var(--border-color); font-weight: 700; font-size: 1rem; background: var(--bg-elevated);">
+                        <button onclick="changeQty(1)" style="padding: 10px 16px; font-weight: 700; background: var(--bg-elevated); border:none; cursor:pointer;">+</button>
+                    </div>
+                    <button class="brutalist-btn" onclick="addToCartDetail()" style="flex: 1;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        ADD TO CART
+                    </button>
+                    <button class="brutalist-btn" onclick="toggleWishlist(${p.id})" id="btn-wishlist-${p.id}" style="width: 48px; padding: 0;">${heartIcon}</button>
+                </div>
+                <button class="brutalist-btn" onclick="buyNow()" style="width: 100%; background: var(--text-primary); color: var(--text-inverted); margin-bottom: var(--space-lg);">
+                    SECURE NOW
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </button>
                 ` : `
-                <button class="brutalist-btn" disabled style="width: 100%; background: #999; color: #fff; cursor: not-allowed; margin-bottom: 40px;">PIECE SOLD OUT</button>
+                <button class="brutalist-btn" disabled style="width: 100%; margin-bottom: var(--space-lg);">PIECE SOLD OUT</button>
                 `}
 
-                <!-- 📜 POLICY -->
-                <div class="brutalist-card" style="background: var(--bg-accent); padding: 25px;">
-                    <div style="font-weight: 800; text-decoration: underline; margin-bottom: 10px;">STRICT POLICY</div>
-                    <p style="font-weight: 700; font-size: 0.9rem; line-height: 1.4;">
-                        WE DO NOT ACCEPT RETURNS, REFUNDS, OR EXCHANGES. ALL SALES ARE FINAL. BY PURCHASING, YOU AGREE TO THESE TERMS.
+                <!-- POLICY -->
+                <div class="brutalist-card" style="background: var(--bg-accent); padding: var(--space-md);">
+                    <div style="font-weight: 700; font-size: 0.8rem; margin-bottom: 6px; letter-spacing: 0.06em;">STRICT POLICY</div>
+                    <p style="font-weight: 500; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary);">
+                        We do not accept returns, refunds, or exchanges. All sales are final. By purchasing, you agree to these terms.
                     </p>
                 </div>
             </div>

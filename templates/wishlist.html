@@ -6,14 +6,13 @@
 {% block content %}
 <section style="padding: var(--space-xl) 0;">
     <div class="container">
-        <!-- 🏷️ HEADER -->
-        <div style="margin-bottom: 50px; border-bottom: var(--border-width) solid #000; padding-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
-            <h1 style="font-size: 3.5rem; margin: 0;">THE VAULT</h1>
-            <div id="wishlist-count-hdr" style="font-weight: 800; font-size: 1rem;">COLLECTING...</div>
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <h1>SAVED PIECES</h1>
+            <div id="wishlist-count-hdr" style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">COLLECTING...</div>
         </div>
 
         <div id="wishlist-content">
-            <div style="text-align: center; padding: 100px; font-weight: 800;">OPENING YOUR VAULT...</div>
+            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted);">OPENING YOUR VAULT...</div>
         </div>
     </div>
 </section>
@@ -25,10 +24,11 @@ async function loadWishlist() {
     const container = document.getElementById('wishlist-content');
     if (!API.isLoggedIn()) {
         container.innerHTML = `
-            <div class="brutalist-card" style="padding: 100px; text-align: center;">
-                <h3 style="font-size: 2.5rem; margin-bottom: 20px;">ACCESS DENIED.</h3>
-                <p style="font-weight: 700;">PLEASE SIGN IN TO VIEW YOUR SAVED PIECES.</p>
-                <a href="/login/" class="brutalist-btn" style="margin-top: 30px;">LOGIN NOW</a>
+            <div class="brutalist-card" style="padding: 80px; text-align: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-md);"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                <h3 style="font-size: 1.8rem; margin-bottom: 8px;">ACCESS REQUIRED</h3>
+                <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">Please sign in to view saved pieces.</p>
+                <a href="/login/" class="brutalist-btn" style="background: var(--text-primary); color: var(--text-inverted);">LOGIN NOW</a>
             </div>`;
         return;
     }
@@ -36,7 +36,7 @@ async function loadWishlist() {
         const items = await API.get('/store/wishlist/');
         renderWishlist(items);
     } catch (err) {
-        container.innerHTML = `<div style="text-align:center; font-weight:800;">FAILED TO LOAD VAULT.</div>`;
+        container.innerHTML = '<div style="text-align:center; padding: 60px; font-weight:600; color: var(--error);">FAILED TO LOAD VAULT.</div>';
     }
 }
 
@@ -46,10 +46,11 @@ function renderWishlist(items) {
 
     if (!items || items.length === 0) {
         container.innerHTML = `
-            <div class="brutalist-card" style="padding: 100px; text-align: center;">
-                <h3 style="font-size: 2.5rem; margin-bottom: 20px;">VAULT IS EMPTY.</h3>
-                <p style="font-weight: 700;">BROWSE OUR PIECES AND SAVE YOUR FAVORITES.</p>
-                <a href="/catalog/" class="brutalist-btn" style="margin-top: 30px;">EXPLORE COLLECTION</a>
+            <div class="brutalist-card" style="padding: 80px; text-align: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-md);"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                <h3 style="font-size: 1.8rem; margin-bottom: 8px;">VAULT IS EMPTY</h3>
+                <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">Browse our pieces and save your favorites.</p>
+                <a href="/catalog/" class="brutalist-btn" style="background: var(--text-primary); color: var(--text-inverted);">EXPLORE COLLECTION</a>
             </div>`;
         return;
     }
