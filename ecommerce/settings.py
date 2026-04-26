@@ -99,7 +99,8 @@ WSGI_APPLICATION = "ecommerce.wsgi.application"
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Supports PostgreSQL for production, SQLite for development
-db_url = os.getenv("DATABASE_URL")
+# Vercel often provides POSTGRES_URL instead of DATABASE_URL
+db_url = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL")
 
 if db_url:
     # Ensure URL starts with postgresql:// for dj-database-url compatibility
