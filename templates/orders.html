@@ -1,16 +1,17 @@
 {% extends 'base.html' %}
 
-{% block title %}My Orders — Iri Collections{% endblock %}
+{% block title %}ORDERS | IRI COLLECTIONS{% endblock %}
 
 {% block content %}
-<section class="section">
-    <div class="container" style="max-width:900px;">
-        <div class="section-header">
-            <h1 style="font-family: var(--font-display); font-size: 2.2rem;">My <span class="text-gold">Orders</span></h1>
-            <div class="section-divider"></div>
+<section style="padding: var(--space-xl) 0;">
+    <div class="container" style="max-width: 900px;">
+        <!-- 🏷️ HEADER -->
+        <div style="margin-bottom: 50px; border-bottom: var(--border-width) solid #000; padding-bottom: 20px;">
+            <h1 style="font-size: 3.5rem; margin: 0;">PURCHASES</h1>
         </div>
+
         <div id="orders-list">
-            <div class="page-loader"><div class="spinner"></div></div>
+            <div style="text-align: center; padding: 100px; font-weight: 800;">COLLECTING HISTORY...</div>
         </div>
     </div>
 </section>
@@ -19,72 +20,59 @@
 {% block extra_js %}
 <script>
 async function loadOrders() {
-    const user = await API.bootstrapUser();
-    if (!user) {
-        window.location.href = '/login/';
-        return;
-    }
+    if (!API.isLoggedIn()) { window.location.href = '/login/'; return; }
     try {
         const data = await API.get('/store/orders/');
         const container = document.getElementById('orders-list');
         if (!data || !data.results || data.results.length === 0) {
             container.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256"><path d="M224,96V184a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V96a16,16,0,0,1,16-16h32V40a16,16,0,0,1,16-16h64a16,16,0,0,1,16,16V80h32A16,16,0,0,1,224,96ZM96,40V80h64V40ZM208,96H48v88H208V96Zm-80,40a12,12,0,1,1-12,12A12,12,0,0,1,128,136Z"></path></svg></div>
-                    <h3>No orders yet</h3>
-                    <p>Start shopping to see your orders here</p>
-                    <a href="/catalog/" class="btn btn-primary mt-2">Browse Products</a>
+                <div class="brutalist-card" style="padding: 100px; text-align: center;">
+                    <h3 style="font-size: 2.5rem; margin-bottom: 20px;">NO HISTORY.</h3>
+                    <p style="font-weight: 700;">YOUR COLLECTION JOURNEY HASN'T STARTED YET.</p>
+                    <a href="/catalog/" class="brutalist-btn" style="margin-top: 30px;">START SHOPPING</a>
                 </div>`;
             return;
         }
-        container.innerHTML = data.results.map(order => {
-            const itemsList = order.items.map(i =>
-                `<div style="display:flex; justify-content:space-between; padding:0.4rem 0; font-size:0.9rem;">
-                    <span>${escapeHTML(i.product_name)} × ${i.quantity}</span>
-                    <span>${formatPrice(i.subtotal)}</span>
-                </div>`
-            ).join('');
 
-            const date = new Date(order.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+        container.innerHTML = data.results.map(order => {
+            const date = new Date(order.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }).toUpperCase();
+            const itemsList = order.items.map(i => `
+                <div style="display:flex; justify-content:space-between; padding:8px 0; font-weight: 700; font-size: 0.9rem;">
+                    <span>${i.product_name.toUpperCase()} (x${i.quantity})</span>
+                    <span>${formatPrice(i.subtotal)}</span>
+                </div>
+            `).join('');
 
             return `
-                <div class="order-card fade-in">
-                    <div class="order-header">
+                <div class="brutalist-card" style="margin-bottom: 40px; padding: 30px; background: #fff;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; border-bottom: 4px solid #000; padding-bottom: 15px;">
                         <div>
-                            <div class="order-number">${escapeHTML(order.order_number)}</div>
-                            <div style="font-size:0.85rem; color:var(--text-muted);">${date}</div>
+                            <div style="font-weight: 800; font-size: 1.5rem; color: var(--gold-light);">${order.order_number}</div>
+                            <div style="font-weight: 800; font-size: 0.8rem; color: #666;">${date}</div>
                         </div>
-                        <span class="order-status ${order.status}">${order.status}</span>
+                        <div class="brutalist-card" style="background: #000; color: #fff; padding: 5px 15px; font-weight: 800; font-size: 0.7rem; box-shadow: 3px 3px 0 0 #000;">
+                            ${order.status.toUpperCase()}
+                        </div>
                     </div>
-                    ${itemsList}
-                    ${order.tracking_image ? `
-                    <div style="margin-top:var(--space-md);">
-                        <div style="font-size:0.85rem; font-weight:600; margin-bottom:0.5rem; color:var(--text-muted); text-transform:uppercase;">Tracking Proof</div>
-                        <img src="${order.tracking_image}" alt="Tracking" style="max-width:120px; display:block; border-radius: var(--radius-sm); border:1px solid var(--border); cursor:pointer;" onclick="window.open('${order.tracking_image}', '_blank')">
+                    
+                    <div style="margin-bottom: 25px;">
+                        ${itemsList}
                     </div>
-                    ` : ''}
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:var(--space-md); padding-top:var(--space-md); border-top:1px solid var(--border); font-weight:700;">
+
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 20px; border-top: 2px solid #000;">
                         <div>
-                            <span>Total:</span>
-                            <span style="color:var(--gold-light); margin-left:10px;">${formatPrice(order.total_amount)}</span>
-                            ${parseFloat(order.shipping_fee) > 0 ? `<div style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">(incl. ${formatPrice(order.shipping_fee)} shipping)</div>` : ''}
+                            <div style="font-weight: 800; font-size: 1.2rem;">TOTAL: ${formatPrice(order.total_amount)}</div>
+                            ${parseFloat(order.shipping_fee) > 0 ? `<div style="font-weight: 700; font-size: 0.7rem; color: #666;">INCL. ${formatPrice(order.shipping_fee)} SHIPPING</div>` : ''}
                         </div>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <a href="/invoice/${order.id}/" target="_blank" class="btn btn-sm btn-ghost" style="text-decoration:none;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M224,96V184a16,16,0,0,1-16,16H184v16a16,16,0,0,1-16,16H88a16,16,0,0,1-16-16V200H48a16,16,0,0,1-16-16V96a16,16,0,0,1,16-16H80V40a16,16,0,0,1,16-16h64a16,16,0,0,1,16,16V80h32A16,16,0,0,1,224,96ZM96,40V80h64V40ZM168,200H88v16h80V200Zm40-104H48v88h24V168a16,16,0,0,1,16-16h80a16,16,0,0,1,16,16v16h24V96Zm-40,88V168H88v16h80Z"></path></svg> Print Bill</a>
-                        </div>
+                        <a href="/invoice/${order.id}/" target="_blank" class="brutalist-btn" style="background: #fff; font-size: 0.8rem; padding: 8px 15px;">PRINT INVOICE</a>
                     </div>
-                    ${order.transaction ? `
-                    <div style="margin-top:var(--space-sm); font-size:0.8rem; color:var(--text-muted);">
-                        UTR / Reference: ${escapeHTML(order.transaction.upi_reference_id || 'Not provided')}
-                        <span style="margin-left: 10px;">Payment Status:</span> <span class="order-status ${order.transaction.status}">${order.transaction.status}</span>
-                    </div>` : ''}
-                </div>`;
+                </div>
+            `;
         }).join('');
     } catch (err) {
         console.error(err);
     }
 }
-
 document.addEventListener('DOMContentLoaded', loadOrders);
 </script>
 {% endblock %}

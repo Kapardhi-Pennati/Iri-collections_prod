@@ -1,67 +1,74 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Login — Iri Collections{% endblock %}
-{% block body_class %}auth-body{% endblock %}
-{% block meta_description %}Login to your Iri Collections account to shop exquisite jewelry.{% endblock %}
+{% block title %}LOGIN | IRI COLLECTIONS{% endblock %}
 
 {% block footer %}{% endblock %}
 
 {% block content %}
-<div class="auth-page fade-in">
-    <div class="auth-content">
-        <div class="auth-card">
-            <h1 id="form-title">Login <span class="text-gold">Account</span></h1>
-            <p class="subtitle" id="form-subtitle">Sign in to your account</p>
+<section style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: var(--space-xl) 0;">
+    <div class="container" style="max-width: 500px; width: 100%;">
+        <div class="brutalist-card" style="padding: 40px; background: #fff;">
+            <!-- 🏷️ HEADER -->
+            <div style="margin-bottom: 40px; border-bottom: var(--border-width) solid #000; padding-bottom: 15px;">
+                <h1 id="form-title" style="font-size: 2.5rem; margin: 0;">LOGIN</h1>
+                <p id="form-subtitle" style="font-weight: 700; font-size: 0.9rem; color: #666; margin-top: 5px;">SIGN IN TO YOUR VAULT</p>
+            </div>
 
+            <!-- 🔑 LOGIN FORM -->
             <form id="login-form">
-                <div class="form-group">
-                    <label for="email">Email or Username</label>
-                    <input type="text" id="email" placeholder="you@example.com or your username" required autocomplete="username">
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">EMAIL OR USERNAME</label>
+                    <input type="text" id="email" class="brutalist-input" placeholder="YOU@EXAMPLE.COM" required>
                 </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">PASSWORD</label>
+                    <input type="password" id="password" class="brutalist-input" placeholder="••••••••" required>
                 </div>
-                <div style="text-align:right; margin-bottom: 1.5rem; font-size: 0.9rem;">
-                    <a href="#" id="forgot-password-link" style="color: var(--text-muted);">Forgot Password?</a>
+                
+                <div style="text-align: right; margin-bottom: 25px;">
+                    <a href="#" id="forgot-password-link" style="font-weight: 700; font-size: 0.8rem; text-decoration: underline;">FORGOT PASSWORD?</a>
                 </div>
-                <div id="login-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
-                <button type="submit" class="btn btn-primary btn-block btn-lg" id="login-btn">Sign In</button>
+
+                <div id="login-error" class="brutalist-card" style="display:none; background: var(--error); color: #fff; padding: 10px; margin-bottom: 20px; font-weight: 800; font-size: 0.8rem; box-shadow: 2px 2px 0 0 #000;"></div>
+                
+                <button type="submit" class="brutalist-btn" id="login-btn" style="width: 100%; font-size: 1.1rem; background: #000; color: #fff;">SIGN IN</button>
             </form>
 
+            <!-- 📧 FORGOT EMAIL FORM -->
             <form id="forgot-email-form" style="display:none;">
-                <div class="form-group">
-                    <label for="reset-email">Email Address</label>
-                    <input type="email" id="reset-email" placeholder="you@example.com" required>
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">EMAIL ADDRESS</label>
+                    <input type="email" id="reset-email" class="brutalist-input" placeholder="YOU@EXAMPLE.COM" required>
                 </div>
-                <div id="forgot-email-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
-                <button type="submit" class="btn btn-primary btn-block btn-lg" id="send-reset-otp-btn">Send OTP</button>
-                <div style="text-align:center; margin-top: 1.5rem; font-size: 0.9rem;">
-                    <a href="#" id="back-to-login-link">Back to Sign In</a>
+                <div id="forgot-email-error" class="brutalist-card" style="display:none; background: var(--error); color: #fff; padding: 10px; margin-bottom: 20px; font-weight: 800; font-size: 0.8rem; box-shadow: 2px 2px 0 0 #000;"></div>
+                <button type="submit" class="brutalist-btn" id="send-reset-otp-btn" style="width: 100%; font-size: 1.1rem;">SEND OTP</button>
+                <div style="text-align:center; margin-top: 25px;">
+                    <a href="#" id="back-to-login-link" style="font-weight: 700; font-size: 0.8rem; text-decoration: underline;">BACK TO SIGN IN</a>
                 </div>
             </form>
 
-            <form id="reset-password-form" style="display:none; margin-top:1rem;">
-                <p style="font-size:0.9rem; margin-bottom:1.5rem;">Enter the 6-digit OTP sent to your email and your new password.</p>
-                <div class="form-group">
-                    <label for="reset-otp">Verification Code</label>
-                    <input type="text" id="reset-otp" placeholder="123456" required maxlength="6" pattern="\d{6}">
+            <!-- 🔢 RESET PASSWORD FORM -->
+            <form id="reset-password-form" style="display:none; margin-top:20px;">
+                <p style="font-weight: 700; font-size: 0.85rem; margin-bottom: 20px; background: var(--bg-accent); padding: 10px; border: 2px solid #000;">ENTER THE 6-DIGIT OTP SENT TO YOUR EMAIL.</p>
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">VERIFICATION CODE</label>
+                    <input type="text" id="reset-otp" class="brutalist-input" placeholder="123456" required maxlength="6" pattern="\d{6}">
                 </div>
-                <div class="form-group">
-                    <label for="new-password">New Password</label>
-                    <input type="password" id="new-password" placeholder="Min. 8 characters" required minlength="8">
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">NEW PASSWORD</label>
+                    <input type="password" id="new-password" class="brutalist-input" placeholder="MIN. 8 CHARACTERS" required minlength="8">
                 </div>
-                <div id="reset-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
-                <button type="submit" class="btn btn-primary btn-block btn-lg" id="reset-btn">Reset Password</button>
+                <div id="reset-error" class="brutalist-card" style="display:none; background: var(--error); color: #fff; padding: 10px; margin-bottom: 20px; font-weight: 800; font-size: 0.8rem; box-shadow: 2px 2px 0 0 #000;"></div>
+                <button type="submit" class="brutalist-btn" id="reset-btn" style="width: 100%; font-size: 1.1rem;">RESET PASSWORD</button>
             </form>
 
-            <div class="auth-footer" id="auth-footer" style="margin-top:2.5rem;">
-                Don't have an account? <a href="/signup/">Create one</a>
+            <div id="auth-footer" style="margin-top: 40px; text-align: center; font-weight: 700; font-size: 0.9rem; border-top: 2px solid #000; padding-top: 20px;">
+                NEW HERE? <a href="/signup/" style="text-decoration: underline;">CREATE AN ACCOUNT</a>
             </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}
 
 {% block extra_js %}
@@ -72,8 +79,8 @@ let resetOtpSessionToken = "";
 // Toggle views
 document.getElementById('forgot-password-link').addEventListener('click', (e) => {
     e.preventDefault();
-    document.getElementById('form-title').innerHTML = 'Reset <span class="text-gold">Password</span>';
-    document.getElementById('form-subtitle').textContent = 'Enter email to receive OTP';
+    document.getElementById('form-title').textContent = 'RESET ACCESS';
+    document.getElementById('form-subtitle').textContent = 'ENTER EMAIL FOR OTP';
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('auth-footer').style.display = 'none';
     document.getElementById('forgot-email-form').style.display = 'block';
@@ -81,8 +88,8 @@ document.getElementById('forgot-password-link').addEventListener('click', (e) =>
 
 document.getElementById('back-to-login-link').addEventListener('click', (e) => {
     e.preventDefault();
-    document.getElementById('form-title').innerHTML = 'Login <span class="text-gold">Account</span>';
-    document.getElementById('form-subtitle').textContent = 'Sign in to your account';
+    document.getElementById('form-title').textContent = 'LOGIN';
+    document.getElementById('form-subtitle').textContent = 'SIGN IN TO YOUR VAULT';
     document.getElementById('forgot-email-form').style.display = 'none';
     document.getElementById('reset-password-form').style.display = 'none';
     document.getElementById('login-form').style.display = 'block';
@@ -94,7 +101,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     const btn = document.getElementById('login-btn');
     const errEl = document.getElementById('login-error');
     btn.disabled = true;
-    btn.textContent = 'Signing in...';
+    btn.textContent = 'VERIFYING...';
     errEl.style.display = 'none';
 
     const identifier = document.getElementById('email').value.trim();
@@ -104,17 +111,17 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         const res = await API.post('/auth/login/', { identifier, password });
         if (res && res.ok) {
             API.setUser(res.data.user);
-            Toast.success('Welcome back!');
+            Toast.success('ACCESS GRANTED');
             setTimeout(() => {
                 window.location.href = res.data.user.role === 'admin' ? '/admin-dashboard/' : '/';
             }, 500);
             return;
         }
-        errEl.textContent = res?.data?.error || 'Invalid credentials. Please try again.';
+        errEl.textContent = (res?.data?.error || 'INVALID CREDENTIALS').toUpperCase();
         errEl.style.display = 'block';
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Sign In';
+        btn.textContent = 'SIGN IN';
     }
 });
 
@@ -123,7 +130,7 @@ document.getElementById('forgot-email-form').addEventListener('submit', async (e
     const btn = document.getElementById('send-reset-otp-btn');
     const errEl = document.getElementById('forgot-email-error');
     btn.disabled = true;
-    btn.textContent = 'Sending...';
+    btn.textContent = 'SENDING...';
     errEl.style.display = 'none';
 
     resetEmail = document.getElementById('reset-email').value;
@@ -131,17 +138,17 @@ document.getElementById('forgot-email-form').addEventListener('submit', async (e
     try {
         const res = await API.post('/auth/request-otp/', { email: resetEmail, action: 'reset' });
         if (res && res.ok) {
-            Toast.success('OTP sent to your email');
+            Toast.success('OTP DISPATCHED');
             document.getElementById('forgot-email-form').style.display = 'none';
             document.getElementById('reset-password-form').style.display = 'block';
-            document.getElementById('form-subtitle').textContent = 'Verify OTP and set new password';
+            document.getElementById('form-subtitle').textContent = 'VERIFY & RESET';
             return;
         }
-        errEl.textContent = res?.data?.error || 'Failed to send OTP. Please try again.';
+        errEl.textContent = (res?.data?.error || 'FAILED TO SEND OTP').toUpperCase();
         errEl.style.display = 'block';
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Send OTP';
+        btn.textContent = 'SEND OTP';
     }
 });
 
@@ -150,24 +157,16 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
     const btn = document.getElementById('reset-btn');
     const errEl = document.getElementById('reset-error');
     btn.disabled = true;
-    btn.textContent = 'Resetting...';
+    btn.textContent = 'RESETTING...';
     errEl.style.display = 'none';
 
     const otp_code = document.getElementById('reset-otp').value.trim();
     const new_password = document.getElementById('new-password').value;
 
-    if (!/^\d{6}$/.test(otp_code)) {
-        errEl.textContent = 'Enter a valid 6-digit OTP.';
-        errEl.style.display = 'block';
-        btn.disabled = false;
-        btn.textContent = 'Reset Password';
-        return;
-    }
-
     try {
         const verifyRes = await API.post('/auth/verify-otp/', { email: resetEmail, otp_code });
         if (!verifyRes || !verifyRes.ok) {
-            errEl.textContent = verifyRes?.data?.error || 'Invalid OTP. Try again.';
+            errEl.textContent = (verifyRes?.data?.error || 'INVALID OTP').toUpperCase();
             errEl.style.display = 'block';
             return;
         }
@@ -180,16 +179,16 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
         });
 
         if (resetRes && resetRes.ok) {
-            Toast.success('Password reset successfully. You can now log in.');
+            Toast.success('PASSWORD UPDATED');
             document.getElementById('back-to-login-link').click();
             return;
         }
 
-        errEl.textContent = resetRes?.data?.error || 'Failed to reset password.';
+        errEl.textContent = (resetRes?.data?.error || 'RESET FAILED').toUpperCase();
         errEl.style.display = 'block';
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Reset Password';
+        btn.textContent = 'RESET PASSWORD';
     }
 });
 </script>

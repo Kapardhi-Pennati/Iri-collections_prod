@@ -1,20 +1,17 @@
 {% extends 'base.html' %}
 
-{% block title %}Your Cart — Iri Collections{% endblock %}
+{% block title %}CART | IRI COLLECTIONS{% endblock %}
 
 {% block content %}
-<section class="section">
+<section style="padding: var(--space-xl) 0;">
     <div class="container">
-        <div class="section-header">
-            <h1 style="font-family: var(--font-display); font-size: 2.2rem;">Shopping <span
-                    class="text-gold">Cart</span></h1>
-            <div class="section-divider"></div>
+        <!-- 🛒 HEADER -->
+        <div style="margin-bottom: 50px; border-bottom: var(--border-width) solid #000; padding-bottom: 20px;">
+            <h1 style="font-size: 3.5rem; margin: 0;">SHOPPING BAG</h1>
         </div>
 
         <div id="cart-content">
-            <div class="page-loader">
-                <div class="spinner"></div>
-            </div>
+            <div style="text-align: center; padding: 100px; font-weight: 800;">OPENING YOUR BAG...</div>
         </div>
     </div>
 </section>
@@ -29,16 +26,12 @@ function cartContainer() {
     return document.getElementById('cart-content');
 }
 
-function cloneCartState(state) {
-    return state ? JSON.parse(JSON.stringify(state)) : null;
-}
-
 function renderLoginRequired() {
     cartContainer().innerHTML = `
-        <div class="empty-state">
-            <div class="empty-state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256"><path d="M216,48H56a16,16,0,0,0-16,16V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V64A16,16,0,0,0,216,48ZM216,192H56V64H216V192Zm-8-120a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H208A8,8,0,0,1,216,72Zm0,32a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H208A8,8,0,0,1,216,104Zm0,32a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H208A8,8,0,0,1,216,136Zm0,32a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H208A8,8,0,0,1,216,168Z"></path></svg></div>
-            <h3>Your cart is waiting</h3>
-            <p>Please <a href="/login/">sign in</a> to view your cart</p>
+        <div class="brutalist-card" style="padding: 100px; text-align: center;">
+            <h3 style="font-size: 2.5rem; margin-bottom: 20px;">ACCESS DENIED.</h3>
+            <p style="font-weight: 700;">PLEASE SIGN IN TO VIEW YOUR BAG.</p>
+            <a href="/login/" class="brutalist-btn" style="margin-top: 30px;">LOGIN NOW</a>
         </div>
     `;
 }
@@ -47,90 +40,70 @@ function renderCart(cart) {
     cartState = cart;
     if (!cart || !cart.items || cart.items.length === 0) {
         cartContainer().innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256"><path d="M222.14,105.85l-17.6,96.81A15.94,15.94,0,0,1,188.87,216H73.5a15.94,15.94,0,0,1-15.67-13.34L35.2,80H24a8,8,0,0,1,0-16H40a8,8,0,0,1,7.84,6.43L52.51,96H232a8,8,0,0,1,7.84,9.57Zm-161.47,94.15H188.87l14.54-80H55.13ZM96,232a16,16,0,1,0,16,16A16,16,0,0,0,96,232Zm80,0a16,16,0,1,0,16,16A16,16,0,0,0,176,232Z"></path></svg></div>
-                <h3>Your cart is empty</h3>
-                <p>Discover our beautiful jewelry collection and find something special.</p>
-                <a href="/catalog/" class="btn btn-primary mt-2"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path></svg> Start Shopping</a>
+            <div class="brutalist-card" style="padding: 100px; text-align: center;">
+                <h3 style="font-size: 2.5rem; margin-bottom: 20px;">BAG IS EMPTY.</h3>
+                <p style="font-weight: 700;">YOUR VAULT IS CURRENTLY EMPTY. FIND YOUR NEXT PIECE.</p>
+                <a href="/catalog/" class="brutalist-btn" style="margin-top: 30px;">START SHOPPING</a>
             </div>
         `;
         return;
     }
 
     const itemsHTML = cart.items.map((item) => {
-        const product = item.product_detail;
-        const image = product.display_image || product.image_url || product.image || '';
+        const p = item.product_detail;
+        const image = p.display_image || p.image_url || p.image || '';
         const outOfStock = item.is_out_of_stock;
-        const opacity = outOfStock ? '0.5' : '1';
-        const priceDisplay = outOfStock
-            ? '<span style="color:red;font-weight:bold;">Out of Stock</span>'
-            : formatPrice(product.price);
-        const subtotalDisplay = outOfStock
-            ? '<span style="color:var(--text-muted);">---</span>'
-            : formatPrice(item.subtotal);
-        const controlsDisabled = cartMutationInFlight ? 'disabled' : '';
-        const qtyControl = outOfStock
-            ? '<span style="color:var(--text-muted); font-size:0.8rem;">Remove to continue</span>'
-            : `<div class="quantity-control" style="margin-bottom:0;">
-                    <button ${controlsDisabled} onclick="updateCartItem(${item.id}, ${item.quantity - 1})"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128Z"></path></svg></button>
-                    <input type="number" value="${item.quantity}" min="0" max="${product.stock}" readonly style="width:50px;">
-                    <button ${controlsDisabled} onclick="updateCartItem(${item.id}, ${item.quantity + 1})"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"></path></svg></button>
-               </div>`;
-
+        
         return `
-            <div class="cart-item fade-in" data-item-id="${item.id}" style="opacity:${opacity};">
-                <div class="cart-item-image">
-                    <a href="/product/${product.slug}/"><img src="${image}" alt="${escapeHTML(product.name)}"></a>
+            <div class="brutalist-card" style="display: grid; grid-template-columns: 120px 1fr auto; gap: 20px; padding: 15px; margin-bottom: 20px; opacity: ${outOfStock ? '0.5' : '1'};">
+                <div style="border: 2px solid #000; overflow: hidden; background: #fff;">
+                    <img src="${image}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
-                <div class="cart-item-info" style="flex:1;">
-                    <a href="/product/${product.slug}/" style="color:var(--text-primary);"><div class="cart-item-name">${escapeHTML(product.name)}</div></a>
-                    <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">${escapeHTML(product.material || '')}</div>
-                    <div class="cart-item-price">${priceDisplay}</div>
-                    <div style="display:flex; align-items:center; gap:var(--space-md); margin-top:0.75rem;">
-                        ${qtyControl}
-                        <span class="cart-item-remove" onclick="removeCartItem(${item.id})"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path></svg> Remove</span>
+                <div>
+                    <h3 style="font-size: 1.2rem; margin-bottom: 5px;">${p.name.toUpperCase()}</h3>
+                    <div style="font-weight: 700; font-size: 0.8rem; color: #666; margin-bottom: 10px;">MATERIAL: ${p.material || 'N/A'}</div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="display: flex; border: 2px solid #000; background: #fff;">
+                            <button onclick="updateCartItem(${item.id}, ${item.quantity - 1})" style="padding: 5px 10px; font-weight: 800; border:none; background:#fff; cursor:pointer;">-</button>
+                            <span style="padding: 5px 15px; border-left: 2px solid #000; border-right: 2px solid #000; font-weight: 800;">${item.quantity}</span>
+                            <button onclick="updateCartItem(${item.id}, ${item.quantity + 1})" style="padding: 5px 10px; font-weight: 800; border:none; background:#fff; cursor:pointer;">+</button>
+                        </div>
+                        <button onclick="removeCartItem(${item.id})" style="font-weight: 800; text-decoration: underline; background:none; border:none; cursor:pointer; font-size: 0.8rem;">REMOVE</button>
                     </div>
                 </div>
-                <div style="text-align:right; min-width:100px;">
-                    <div style="font-weight:700; color:var(--gold-light); font-size:1.1rem;">${subtotalDisplay}</div>
+                <div style="text-align: right;">
+                    <div style="font-family: var(--font-display); font-weight: 800; font-size: 1.5rem;">${formatPrice(item.subtotal)}</div>
                 </div>
             </div>
         `;
     }).join('');
 
     cartContainer().innerHTML = `
-        <div class="cart-layout">
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: var(--space-xl); align-items: start;">
             <div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-lg);">
-                    <span style="color:var(--text-secondary);">${cart.item_count} item${cart.item_count !== 1 ? 's' : ''} in your cart</span>
-                    <button class="btn btn-ghost btn-sm" ${cartMutationInFlight ? 'disabled' : ''} onclick="clearCart()">Clear All</button>
-                </div>
                 ${itemsHTML}
+                <button class="brutalist-btn" onclick="clearCart()" style="background: #fff; box-shadow: 2px 2px 0 0 #000; font-size: 0.8rem;">CLEAR ALL PIECES</button>
             </div>
-            <div class="cart-summary">
-                <div class="cart-summary-card card-glass">
-                    <h3 style="font-family:var(--font-display); margin-bottom:var(--space-lg);">Order Summary</h3>
-                    <div class="cart-summary-row">
-                        <span>Subtotal</span>
-                        <span>${formatPrice(cart.total)}</span>
-                    </div>
-                    <div class="cart-summary-row">
-                        <span>Shipping</span>
-                        <span style="color:var(--text-muted); font-size: 0.9rem;">Calculated at checkout</span>
-                    </div>
-                    <div class="cart-summary-row total" style="margin-top: var(--space-md); border-top: 1px solid var(--border-color); padding-top: var(--space-md);">
-                        <span>Total (Excl. Shipping)</span>
-                        <span>${formatPrice(cart.total)}</span>
-                    </div>
-                    <a href="/checkout/" class="btn btn-primary btn-block btn-lg mt-2">
-                        Checkout Now <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-left:4px;"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L204.69,128,138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"></path></svg>
-                    </a>
-                    <div style="margin-top: 1rem; padding: 10px; background: rgba(184, 142, 47, 0.1); border-radius: 4px; font-size: 0.8rem; color: var(--gold-light); text-align: center;">
-                        <strong>Policy:</strong> No returns, refunds or exchanges.
-                    </div>
-                    <a href="/catalog/" class="btn btn-ghost btn-block btn-sm mt-1" style="text-transform:none;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path></svg> Continue Shopping
-                    </a>
+            
+            <div class="brutalist-card" style="padding: 30px; position: sticky; top: 150px;">
+                <h2 style="font-size: 2rem; margin-bottom: 30px; border-bottom: 4px solid #000; padding-bottom: 10px;">SUMMARY</h2>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 15px;">
+                    <span>SUBTOTAL</span>
+                    <span>${formatPrice(cart.total)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 15px;">
+                    <span>SHIPPING</span>
+                    <span style="color: #666;">CALCULATED AT CHECKOUT</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 1.8rem; font-weight: 800; margin-top: 30px; padding-top: 20px; border-top: 4px solid #000;">
+                    <span>TOTAL</span>
+                    <span>${formatPrice(cart.total)}</span>
+                </div>
+                
+                <a href="/checkout/" class="brutalist-btn" style="width: 100%; background: #000; color: #fff; margin-top: 30px; font-size: 1.2rem; text-align: center;">PROCEED TO CHECKOUT</a>
+                
+                <div class="brutalist-card" style="background: var(--bg-accent); padding: 15px; margin-top: 30px; font-weight: 800; font-size: 0.8rem; text-align: center;">
+                    REMINDER: NO RETURNS. NO REFUNDS. ALL SALES FINAL.
                 </div>
             </div>
         </div>
@@ -138,89 +111,37 @@ function renderCart(cart) {
 }
 
 async function loadCart() {
-    const user = await API.bootstrapUser();
-    if (!user) {
-        renderLoginRequired();
-        return;
-    }
-
+    if (!API.isLoggedIn()) { renderLoginRequired(); return; }
     try {
-        const controller = createRequestController();
-        const cart = await API.get('/store/cart/', { signal: controller.signal });
-        renderCart(cart);
+        const data = await API.get('/store/cart/');
+        renderCart(data);
     } catch {
-        RouteRuntime.renderPageError(cartContainer(), 'We could not load your cart right now.');
-    }
-}
-
-async function runCartMutation(optimisticMutator, requestFactory, successMessage) {
-    if (!cartState || cartMutationInFlight) return;
-    const snapshot = cloneCartState(cartState);
-    cartMutationInFlight = true;
-
-    if (optimisticMutator) {
-        optimisticMutator(cartState);
-        renderCart(cartState);
-    }
-
-    try {
-        const response = await requestFactory();
-        if (!response.ok) {
-            throw new Error(response.data?.error || 'Cart update failed.');
-        }
-        renderCart(response.data);
-        updateCartCount();
-        if (successMessage) Toast.success(successMessage);
-    } catch (error) {
-        renderCart(snapshot);
-        Toast.error(error.message || 'Cart update failed.');
-    } finally {
-        cartMutationInFlight = false;
-        renderCart(cartState);
+        cartContainer().innerHTML = '<div style="text-align: center; padding: 50px; font-weight: 800;">ERROR LOADING BAG.</div>';
     }
 }
 
 async function updateCartItem(itemId, newQty) {
-    await runCartMutation(
-        (cart) => {
-            const item = cart.items.find((entry) => entry.id === itemId);
-            if (!item) return;
-            if (newQty <= 0) {
-                cart.items = cart.items.filter((entry) => entry.id !== itemId);
-            } else {
-                item.quantity = newQty;
-                item.subtotal = item.product_detail.price * newQty;
-            }
-            cart.item_count = cart.items.reduce((sum, entry) => sum + entry.quantity, 0);
-            cart.total = cart.items.reduce((sum, entry) => sum + Number(entry.subtotal || 0), 0);
-        },
-        () => API.patch('/store/cart/', { item_id: itemId, quantity: newQty }),
-        null,
-    );
+    if (cartMutationInFlight) return;
+    cartMutationInFlight = true;
+    try {
+        const res = await API.patch('/store/cart/', { item_id: itemId, quantity: newQty });
+        if (res.ok) { renderCart(res.data); updateCartCount(); }
+    } finally { cartMutationInFlight = false; }
 }
 
 async function removeCartItem(itemId) {
-    await runCartMutation(
-        (cart) => {
-            cart.items = cart.items.filter((entry) => entry.id !== itemId);
-            cart.item_count = cart.items.reduce((sum, entry) => sum + entry.quantity, 0);
-            cart.total = cart.items.reduce((sum, entry) => sum + Number(entry.subtotal || 0), 0);
-        },
-        () => API.delete(`/store/cart/?item_id=${itemId}`),
-        'Item removed',
-    );
+    if (cartMutationInFlight) return;
+    cartMutationInFlight = true;
+    try {
+        const res = await API.delete(`/store/cart/?item_id=${itemId}`);
+        if (res.ok) { renderCart(res.data); updateCartCount(); Toast.success('PIECE REMOVED'); }
+    } finally { cartMutationInFlight = false; }
 }
 
 async function clearCart() {
-    await runCartMutation(
-        (cart) => {
-            cart.items = [];
-            cart.item_count = 0;
-            cart.total = 0;
-        },
-        () => API.delete('/store/cart/'),
-        'Cart cleared',
-    );
+    if (!confirm('CLEAR ALL PIECES?')) return;
+    const res = await API.delete('/store/cart/');
+    if (res.ok) { renderCart(res.data); updateCartCount(); Toast.success('BAG CLEARED'); }
 }
 
 document.addEventListener('DOMContentLoaded', loadCart);

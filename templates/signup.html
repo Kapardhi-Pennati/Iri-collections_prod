@@ -1,60 +1,65 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Create Account — Iri Collections{% endblock %}
-{% block body_class %}auth-body{% endblock %}
-{% block meta_description %}Join Iri Collections — create your account and discover exquisite jewelry.{% endblock %}
+{% block title %}SIGN UP | IRI COLLECTIONS{% endblock %}
 
 {% block footer %}{% endblock %}
 
 {% block content %}
-<div class="auth-page fade-in">
-    <div class="auth-content">
-        <div class="auth-card">
-            <h1>Join <span class="text-gold">Iri Collections</span></h1>
-            <p class="subtitle">Create your account to start shopping</p>
+<section style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: var(--space-xl) 0;">
+    <div class="container" style="max-width: 550px; width: 100%;">
+        <div class="brutalist-card" style="padding: 40px; background: #fff;">
+            <!-- 🏷️ HEADER -->
+            <div style="margin-bottom: 40px; border-bottom: var(--border-width) solid #000; padding-bottom: 15px;">
+                <h1 id="form-title" style="font-size: 2.5rem; margin: 0;">JOIN US</h1>
+                <p style="font-weight: 700; font-size: 0.9rem; color: #666; margin-top: 5px;">CREATE YOUR PRIVATE VAULT</p>
+            </div>
 
+            <!-- 📝 SIGNUP FORM -->
             <form id="signup-form">
-                <div class="form-group">
-                    <label for="full_name">Full Name</label>
-                    <input type="text" id="full_name" placeholder="Your full name" required>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">FULL NAME</label>
+                    <input type="text" id="full_name" class="brutalist-input" placeholder="YOUR NAME" required>
                 </div>
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" placeholder="you@example.com" required autocomplete="email">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">EMAIL ADDRESS</label>
+                    <input type="email" id="email" class="brutalist-input" placeholder="YOU@EXAMPLE.COM" required>
                 </div>
-                <div class="form-group">
-                    <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" placeholder="+91 9876543210">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">PHONE (OPTIONAL)</label>
+                    <input type="tel" id="phone" class="brutalist-input" placeholder="+91 00000 00000">
                 </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Min. 8 characters" required minlength="8">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">PASSWORD</label>
+                    <input type="password" id="password" class="brutalist-input" placeholder="MIN. 8 CHARACTERS" required minlength="8">
                 </div>
-                <div class="form-group">
-                    <label for="password2">Confirm Password</label>
-                    <input type="password" id="password2" placeholder="Repeat password" required>
+                <div style="margin-bottom: 30px;">
+                    <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">CONFIRM PASSWORD</label>
+                    <input type="password" id="password2" class="brutalist-input" placeholder="REPEAT PASSWORD" required>
                 </div>
-                <div id="signup-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
-                <button type="submit" class="btn btn-primary btn-block btn-lg" id="send-otp-btn">Send Verification OTP</button>
+
+                <div id="signup-error" class="brutalist-card" style="display:none; background: var(--error); color: #fff; padding: 10px; margin-bottom: 20px; font-weight: 800; font-size: 0.8rem; box-shadow: 2px 2px 0 0 #000;"></div>
+                
+                <button type="submit" class="brutalist-btn" id="send-otp-btn" style="width: 100%; font-size: 1.1rem; background: var(--bg-accent);">SEND VERIFICATION OTP</button>
             </form>
 
-            <form id="otp-form" style="display:none; margin-top:1rem;">
-                <p>We've sent a 6-digit code to your email. Enter it below to complete registration.</p>
-                <div class="form-group">
-                    <label for="otp_code">Verification Code</label>
-                    <input type="text" id="otp_code" placeholder="123456" required maxlength="6" pattern="\d{6}">
+            <!-- 🔢 OTP FORM -->
+            <form id="otp-form" style="display:none; margin-top:20px;">
+                <p style="font-weight: 700; font-size: 0.85rem; margin-bottom: 20px; background: #000; color:#fff; padding: 10px; border: 2px solid #000;">WE'VE SENT A 6-DIGIT CODE TO YOUR EMAIL. VERIFY IT BELOW.</p>
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">VERIFICATION CODE</label>
+                    <input type="text" id="otp_code" class="brutalist-input" placeholder="123456" required maxlength="6" pattern="\d{6}">
                 </div>
-                <div id="otp-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
-                <button type="submit" class="btn btn-primary btn-block btn-lg" id="signup-btn">Verify & Create Account</button>
+                <div id="otp-error" class="brutalist-card" style="display:none; background: var(--error); color: #fff; padding: 10px; margin-bottom: 20px; font-weight: 800; font-size: 0.8rem; box-shadow: 2px 2px 0 0 #000;"></div>
+                <button type="submit" class="brutalist-btn" id="signup-btn" style="width: 100%; font-size: 1.1rem; background: #000; color:#fff;">VERIFY & CREATE ACCOUNT</button>
             </form>
 
-            <div class="auth-footer" style="margin-top:2rem;">
-                Already have an account? <a href="/login/">Sign in</a>
+            <div style="margin-top: 40px; text-align: center; font-weight: 700; font-size: 0.9rem; border-top: 2px solid #000; padding-top: 20px;">
+                ALREADY ENROLLED? <a href="/login/" style="text-decoration: underline;">SIGN IN</a>
             </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}
 
 {% block extra_js %}
@@ -72,29 +77,29 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
     const password2 = document.getElementById('password2').value;
 
     if (password !== password2) {
-        errEl.textContent = 'Passwords do not match.';
+        errEl.textContent = 'PASSWORDS DO NOT MATCH';
         errEl.style.display = 'block';
         return;
     }
 
     btn.disabled = true;
-    btn.textContent = 'Sending OTP...';
+    btn.textContent = 'SENDING OTP...';
     errEl.style.display = 'none';
 
     try {
         const res = await API.post('/auth/request-otp/', { email: email, password: password, action: 'signup' });
         if (res && res.ok) {
             userEmail = email;
-            Toast.success('OTP sent to your email');
+            Toast.success('OTP DISPATCHED');
             document.getElementById('signup-form').style.display = 'none';
             document.getElementById('otp-form').style.display = 'block';
             return;
         }
-        errEl.textContent = res?.data?.error || 'Failed to send OTP. Please try again.';
+        errEl.textContent = (res?.data?.error || 'FAILED TO SEND OTP').toUpperCase();
         errEl.style.display = 'block';
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Send Verification OTP';
+        btn.textContent = 'SEND VERIFICATION OTP';
     }
 });
 
@@ -103,23 +108,15 @@ document.getElementById('otp-form').addEventListener('submit', async (e) => {
     const btn = document.getElementById('signup-btn');
     const errEl = document.getElementById('otp-error');
     btn.disabled = true;
-    btn.textContent = 'Creating account...';
+    btn.textContent = 'VERIFYING...';
     errEl.style.display = 'none';
 
     const otp_code = document.getElementById('otp_code').value;
 
-    if (!/^\d{6}$/.test(otp_code)) {
-        errEl.textContent = 'Enter a valid 6-digit OTP.';
-        errEl.style.display = 'block';
-        btn.disabled = false;
-        btn.textContent = 'Verify & Create Account';
-        return;
-    }
-
     try {
         const verifyRes = await API.post('/auth/verify-otp/', { email: userEmail, otp_code });
         if (!verifyRes || !verifyRes.ok) {
-            errEl.textContent = verifyRes?.data?.error || 'Invalid OTP. Try again.';
+            errEl.textContent = (verifyRes?.data?.error || 'INVALID OTP').toUpperCase();
             errEl.style.display = 'block';
             return;
         }
@@ -138,24 +135,16 @@ document.getElementById('otp-form').addEventListener('submit', async (e) => {
         const res = await API.post('/auth/register/', data);
         if (res && res.ok) {
             API.setUser(res.data.user);
-            Toast.success('Account created successfully');
+            Toast.success('VAULT CREATED');
             setTimeout(() => window.location.href = '/', 500);
             return;
         }
 
-        const errors = res?.data;
-        let msg = 'Registration failed. ';
-        if (errors) {
-            for (const [key, val] of Object.entries(errors)) {
-                if (typeof val === 'string') msg += val;
-                else if (Array.isArray(val)) msg += val.join(' ');
-            }
-        }
-        errEl.textContent = msg;
+        errEl.textContent = 'REGISTRATION FAILED';
         errEl.style.display = 'block';
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Verify & Create Account';
+        btn.textContent = 'VERIFY & CREATE ACCOUNT';
     }
 });
 </script>

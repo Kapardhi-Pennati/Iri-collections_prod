@@ -1,18 +1,21 @@
 {% extends 'base.html' %}
-{% block title %}About Us | Iri Collections{% endblock %}
+{% block title %}ABOUT | IRI COLLECTIONS{% endblock %}
 {% block content %}
-<main class="container section fade-in">
-    <div class="section-header">
-        <h2>Our Story</h2>
-        <div class="section-divider"></div>
+<section style="padding: var(--space-xl) 0;">
+    <div class="container" style="max-width: 900px;">
+        <div style="margin-bottom: 50px; border-bottom: var(--border-width) solid #000; padding-bottom: 20px;">
+            <h1 style="font-size: 3.5rem; margin: 0;">OUR STORY</h1>
+        </div>
+        
+        <div class="brutalist-card" style="padding: 40px; background: #fff; line-height: 1.6; font-weight: 700;">
+            <p style="margin-bottom: 20px; font-size: 1.2rem;">IRI COLLECTIONS WAS FOUNDED WITH A SINGLE MISSION: TO BRING HIGH-IMPACT JEWELRY TO EVERYONE AT REVOLUTIONARY PRICES.</p>
+            
+            <p style="margin-bottom: 20px;">EVERY PIECE IN OUR COLLECTION IS METICULOUSLY HANDPICKED. WE BELIEVE THAT JEWELRY IS MORE THAN JUST AN ACCESSORY—IT IS AN EXPRESSION OF INDIVIDUALITY AND A CELEBRATION OF LIFE'S MOST PRECIOUS MOMENTS.</p>
+            
+            <p style="padding: 20px; background: var(--bg-accent); border: 4px solid #000; box-shadow: 4px 4px 0 0 #000;">
+                FROM BOLD STATEMENT PIECES TO DAILY ESSENTIALS, OUR CURATION IS BUILT FOR THOSE WHO COMMAND ATTENTION.
+            </p>
+        </div>
     </div>
-    <div style="max-width: 800px; margin: 0 auto; line-height: 1.8;">
-        <p>Iri Collections was founded with a single mission: to bring jewelry for everyone at a affordable prices.</p>
-        <p class="mt-1">Every piece in our collection is meticulously handpicked by me. I believe that jewelry is more
-            than just an accessory—it is an expression of individuality and a celebration of life's most precious
-            moments.</p>
-        <p class="mt-1">From minimalist daily wear to most exquisite statement pieces, I'm sure you'll find something
-            you love.</p>
-    </div>
-</main>
+</section>
 {% endblock %}
