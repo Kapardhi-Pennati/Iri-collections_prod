@@ -134,10 +134,23 @@ class UploadPaymentProofView(APIView):
         if order.status != "pending":
             return Response({"error": f"Order is already {order.status}."}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            _ensure_order_reservations(order, request.user)
-        except ValueError as exc:
-            return Response({"error": str(exc)}, status=status.HTTP_409_CONFLICT)
+        # ✅ ATOMIC STOCK SETTLEMENT: Deduct stock from Product model now.
+        # This replaces the temporary reservation system for this order.
+        order_items = list(OrderItem.objects.filter(order=order).select_related("product"))
+        for item in order_items:
+            if item.product:
+                # Use select_for_update to prevent race conditions
+                product = Product.objects.select_for_update().get(pk=item.product.pk)
+                if product.stock < item.quantity:
+                    return Response(
+                        {"error": f"Insufficient stock for {product.name}."},
+                        status=status.HTTP_409_CONFLICT
+                    )
+                product.stock -= item.quantity
+                product.save(update_fields=["stock"])
+
+        # Release all reservations for this order now that stock is officially deducted.
+        StockReservation.objects.filter(order=order).delete()
 
         txn = Transaction.objects.select_for_update().filter(order=order).first()
         
@@ -158,12 +171,12 @@ class UploadPaymentProofView(APIView):
         audit_log(
             action="PAYMENT_PROOF_UPLOADED",
             user_id=request.user.id,
-            details={"order_id": str(order.id), "order_number": order.order_number, "stock_deducted": "false"},
+            details={"order_id": str(order.id), "order_number": order.order_number, "stock_deducted": "true"},
             severity="INFO",
             ip_address=get_client_ip(request),
         )
 
-        return Response({"message": "Proof uploaded. Awaiting admin verification.", "order_number": order.order_number, "status": "pending_verification"})
+        return Response({"message": "Proof uploaded and stock secured. Awaiting admin verification.", "order_number": order.order_number, "status": "pending_verification"})
 
 
 class ApprovePaymentView(APIView):
@@ -181,14 +194,8 @@ class ApprovePaymentView(APIView):
         if txn.status == "paid":
             return Response({"message": "Payment already approved.", "status": "paid"})
 
-        # Deduct stock at approval time and release the temporary reservations.
-        order_items = list(OrderItem.objects.filter(order=order).select_related("product"))
-        for item in order_items:
-            if item.product:
-                item.product.stock -= item.quantity
-                item.product.save(update_fields=["stock"])
-        StockReservation.objects.filter(order=order).delete()
-
+        # ✅ Stock was already deducted at the UploadPaymentProof step.
+        # We just confirm the payment here.
         txn.status = "paid"
         txn.save(update_fields=["status"])
 
@@ -214,8 +221,13 @@ class RejectPaymentView(APIView):
         if txn.status == "rejected":
             return Response({"message": "Payment already rejected.", "status": "rejected"})
 
-        # Rejection releases any held reservations.
-        StockReservation.objects.filter(order=order).delete()
+        # ✅ RESTORE STOCK: Since stock was deducted at upload, we must add it back on rejection.
+        order_items = list(OrderItem.objects.filter(order=order).select_related("product"))
+        for item in order_items:
+            if item.product:
+                product = Product.objects.select_for_update().get(pk=item.product.pk)
+                product.stock += item.quantity
+                product.save(update_fields=["stock"])
 
         txn.status = "rejected"
         txn.save(update_fields=["status"])
@@ -223,8 +235,9 @@ class RejectPaymentView(APIView):
         order.status = "cancelled"
         order.save(update_fields=["status"])
 
-        audit_log(action="PAYMENT_REJECTED", user_id=request.user.id, details={"order_number": order.order_number, "stock_restored": "false"}, severity="WARNING")
-        return Response({"message": "Payment rejected.", "order_number": order.order_number, "status": "rejected"})
+        audit_log(action="PAYMENT_REJECTED", user_id=request.user.id, details={"order_number": order.order_number, "stock_restored": "true"}, severity="WARNING")
+        return Response({"message": "Payment rejected and stock restored.", "order_number": order.order_number, "status": "rejected"})
+
 
 
 

@@ -991,11 +991,14 @@ class AdminOrderStatusView(APIView):
 
             if new_status == "cancelled" and order.status != "cancelled":
                 txn = getattr(order, "transaction", None)
+                # ✅ RESTORE STOCK: If proof was uploaded, stock was already deducted.
+                # If no txn exists, stock was never deducted (only reserved).
                 if txn and txn.status != "rejected":
                     for item in order.items.all().select_related("product"):
                         if item.product:
-                            item.product.stock += item.quantity
-                            item.product.save(update_fields=["stock"])
+                            product = Product.objects.select_for_update().get(pk=item.product.pk)
+                            product.stock += item.quantity
+                            product.save(update_fields=["stock"])
                     txn.status = "rejected"
                     txn.save(update_fields=["status"])
             

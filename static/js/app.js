@@ -39,11 +39,13 @@ const RouteRuntime = {
         const container = typeof target === 'string' ? document.querySelector(target) : target;
         if (!container) return;
         container.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256"><path d="M236.8,188.09,214.35,60.35a15.9,15.9,0,0,0-15.68-13.15H57.33a15.9,15.9,0,0,0-15.68,13.15L19.2,188.09a16,16,0,0,0,15.68,18.71h186.24A16,16,0,0,0,236.8,188.09ZM211.51,64,231.1,175.2H24.9L44.49,64H198.67ZM128,112a40,40,0,0,1-40,40,8,8,0,0,1,0-16,24,24,0,0,0,24-24,8,8,0,0,1,16,0Z"></path></svg></div>
-                <h3>Something went wrong</h3>
-                <p>${escapeHTML(message)}</p>
-                <button class="btn btn-primary mt-2" type="button" onclick="window.location.reload()">${escapeHTML(retryLabel)}</button>
+            <div class="brutalist-card" style="padding: 60px; text-align: center; background: var(--error-bg); color: var(--error);">
+                <div style="margin-bottom: var(--space-md);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                </div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 8px;">SYSTEM ERROR</h3>
+                <p style="font-weight: 500; margin-bottom: var(--space-md); opacity: 0.8;">${escapeHTML(message)}</p>
+                <button class="brutalist-btn" style="background: var(--error); color: var(--text-inverted); border-color: var(--error);" type="button" onclick="window.location.reload()">${escapeHTML(retryLabel)}</button>
             </div>
         `;
     },

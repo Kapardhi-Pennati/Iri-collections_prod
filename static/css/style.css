@@ -1024,3 +1024,91 @@ img { display: block; max-width: 100%; }
         display: none;
     }
 }
+/* ─── Modals ─────────────────────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(2px);
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal {
+    background: var(--bg-elevated);
+    border: var(--border-width) solid var(--border-color);
+    box-shadow: 12px 12px 0px 0px var(--shadow-color);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    padding: var(--space-xl);
+    position: relative;
+    overflow-y: auto;
+    transform: translateY(20px);
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-overlay.active .modal {
+    transform: translateY(0);
+}
+
+.modal h2 {
+    font-size: 1.8rem;
+    margin-bottom: var(--space-md);
+    border-bottom: var(--border-width) solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+    border-top: var(--border-width) solid var(--border-color);
+    padding-top: var(--space-md);
+}
+
+.form-group {
+    margin-bottom: var(--space-md);
+}
+
+.form-group label {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    background: var(--bg-elevated);
+    border: var(--border-width) solid var(--border-color);
+    outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    background: var(--bg-secondary);
+}

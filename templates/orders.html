@@ -14,10 +14,42 @@
         </div>
     </div>
 </section>
+
+<!-- Payment Proof Modal -->
+<div class="modal-overlay" id="proof-modal">
+    <div class="modal">
+        <h2 style="margin-bottom: var(--space-md);">COMPLETE PAYMENT</h2>
+        <form id="proof-form">
+            <input type="hidden" id="proof-order-id">
+            <div style="margin-bottom: var(--space-md);">
+                <label class="form-label" style="font-size: 0.75rem;">UPI TRANSACTION ID (UTR)</label>
+                <input type="text" id="proof-utr" class="brutalist-input" placeholder="12-digit number" required style="font-family: monospace;">
+            </div>
+            <div style="margin-bottom: var(--space-lg);">
+                <label class="form-label" style="font-size: 0.75rem;">UPLOAD SCREENSHOT</label>
+                <input type="file" id="proof-screenshot" class="brutalist-input" accept="image/*" required>
+            </div>
+            <div class="modal-actions" style="display: flex; gap: var(--space-md);">
+                <button type="button" class="btn btn-ghost" onclick="closeModal()" style="flex: 1;">CANCEL</button>
+                <button type="submit" class="btn btn-primary" id="proof-submit-btn" style="flex: 2;">SUBMIT PROOF</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+function openModal(orderId) {
+    document.getElementById('proof-order-id').value = orderId;
+    document.getElementById('proof-form').reset();
+    document.getElementById('proof-modal').classList.add('active');
+}
+
+function closeModal() {
+    document.getElementById('proof-modal').classList.remove('active');
+}
+
 async function loadOrders() {
     if (!API.isLoggedIn()) { window.location.href = '/login/'; return; }
     try {
@@ -43,6 +75,8 @@ async function loadOrders() {
                 </div>
             `).join('');
 
+            const showUploadBtn = order.status === 'pending';
+
             return `
                 <div class="brutalist-card" style="margin-bottom: var(--space-lg); padding: var(--space-lg); background: var(--bg-elevated);">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md); border-bottom: var(--border-width) solid var(--border-color); padding-bottom: 12px;">
@@ -64,9 +98,12 @@ async function loadOrders() {
                             <div style="font-weight: 700; font-size: 1.1rem;">TOTAL: ${formatPrice(order.total_amount)}</div>
                             ${parseFloat(order.shipping_fee) > 0 ? `<div style="font-weight: 500; font-size: 0.7rem; color: var(--text-muted);">INCL. ${formatPrice(order.shipping_fee)} SHIPPING</div>` : ''}
                         </div>
-                        <a href="/invoice/${order.id}/" target="_blank" class="brutalist-btn" title="Print Invoice" style="font-size: 0.75rem; padding: 6px 14px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        </a>
+                        <div style="display: flex; gap: var(--space-sm);">
+                            ${showUploadBtn ? `<button class="brutalist-btn" onclick="openModal(${order.id})" style="font-size: 0.75rem; padding: 6px 14px; background: var(--text-primary); color: var(--text-inverted);">UPLOAD PROOF</button>` : ''}
+                            <a href="/invoice/${order.id}/" target="_blank" class="brutalist-btn" title="Print Invoice" style="font-size: 0.75rem; padding: 6px 14px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            </a>
+                        </div>
                     </div>
                 </div>
             `;
@@ -75,6 +112,44 @@ async function loadOrders() {
         console.error(err);
     }
 }
+
+document.getElementById('proof-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('proof-submit-btn');
+    const orderId = document.getElementById('proof-order-id').value;
+    const utr = document.getElementById('proof-utr').value.trim();
+    const file = document.getElementById('proof-screenshot').files[0];
+
+    btn.disabled = true;
+    btn.textContent = 'UPLOADING...';
+
+    try {
+        const formData = new FormData();
+        formData.append('order_id', orderId);
+        formData.append('upi_reference_id', utr);
+        if (file) formData.append('payment_screenshot', file);
+
+        const res = await API.request('/payments/upload-proof/', {
+            method: 'POST',
+            body: formData,
+            headers: {}
+        });
+
+        if (res.ok) {
+            Toast.success('PROOF UPLOADED. AWAITING VERIFICATION.');
+            closeModal();
+            loadOrders();
+        } else {
+            Toast.error(res.data?.error || 'FAILED TO UPLOAD PROOF');
+        }
+    } catch (err) {
+        Toast.error('SYSTEM ERROR');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'SUBMIT PROOF';
+    }
+});
+
 document.addEventListener('DOMContentLoaded', loadOrders);
 </script>
 {% endblock %}
