@@ -237,7 +237,7 @@ class RejectPaymentView(APIView):
 
 class GenerateUPIQRView(APIView):
     permission_classes = [IsCustomerUser]
-    throttle_classes = [PaymentThrottle]
+    throttle_classes = []
 
     def get(self, request) -> HttpResponse:
         amount = request.query_params.get("amount", "0")

@@ -104,7 +104,7 @@ class AtomicRateThrottle(BaseThrottle):
 
 class OTPThrottle(AtomicRateThrottle):
     scope = "otp"
-    rate = "3/hour"
+    rate = "5/hour"
 
     def get_cache_key(self, request, view) -> Optional[str]:
         from core.security import get_client_ip
@@ -130,7 +130,7 @@ class LoginThrottle(AtomicRateThrottle):
 
 class CheckoutThrottle(AtomicRateThrottle):
     scope = "checkout"
-    rate = "5/10m"
+    rate = "15/10m"
 
     def get_cache_key(self, request, view) -> Optional[str]:
         user = getattr(request, "user", None)
@@ -141,7 +141,7 @@ class CheckoutThrottle(AtomicRateThrottle):
 
 class PaymentThrottle(CheckoutThrottle):
     scope = "payment"
-    rate = "6/10m"
+    rate = "20/10m"
 
 
 class AdminMutationThrottle(AtomicRateThrottle):
