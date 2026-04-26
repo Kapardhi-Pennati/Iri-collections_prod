@@ -103,10 +103,18 @@ WSGI_APPLICATION = "ecommerce.wsgi.application"
 db_url = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL")
 
 if db_url:
-    # Ensure URL starts with postgresql:// for dj-database-url compatibility
+    # 1. Ensure URL starts with postgresql:// for dj-database-url compatibility
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
-        
+    
+    # 2. Fix Supabase "supa" parameter error (psycopg2 doesn't like &supa=base-pooler.x)
+    if "supa=" in db_url:
+        import re
+        # Remove &supa=... or ?supa=...
+        db_url = re.sub(r'[&?]?supa=[^&]+', '', db_url)
+        # Ensure we don't leave a trailing ? or & if it was at the end
+        db_url = db_url.rstrip('?&')
+
     DATABASES = {
         "default": dj_database_url.parse(
             db_url,
