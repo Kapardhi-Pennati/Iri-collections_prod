@@ -254,7 +254,9 @@
                 return;
             }
 
-            if (!API.isLoggedIn()) {
+            // Wait for user session to be verified
+            const user = await API.bootstrapUser();
+            if (!user) {
                 window.location.href = '/login/?next=' + window.location.pathname;
                 return;
             }

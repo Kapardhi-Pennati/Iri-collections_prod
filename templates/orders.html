@@ -19,7 +19,8 @@
 {% block extra_js %}
 <script>
 async function loadOrders() {
-    if (!API.isLoggedIn()) {
+    const user = await API.bootstrapUser();
+    if (!user) {
         window.location.href = '/login/';
         return;
     }

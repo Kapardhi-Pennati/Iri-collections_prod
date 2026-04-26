@@ -279,8 +279,9 @@ let statusChart = null;
 let allCategories = [];
 
 // ─── Auth guard ─────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-    if (!API.isLoggedIn() || !API.isAdmin()) {
+document.addEventListener('DOMContentLoaded', async () => {
+    const user = await API.bootstrapUser();
+    if (!user || !API.isAdmin()) {
         Toast.error('Access denied. Admin only.');
         setTimeout(() => window.location.href = '/', 1000);
         return;
