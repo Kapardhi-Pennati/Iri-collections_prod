@@ -97,23 +97,14 @@
                     <button class="brutalist-btn" onclick="copyUpiUrl()" style="font-size: 0.8rem; padding: 5px 15px; background: #fff;">COPY UPI URL</button>
                 </div>
 
-                <form id="payment-proof-form" style="margin-top: 50px; text-align: left;">
-                    <h3 style="font-weight: 800; margin-bottom: 20px;">SUBMIT PROOF</h3>
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">TRANSACTION ID / UTR</label>
-                        <input type="text" id="payment-utr" class="brutalist-input" required placeholder="ENTER 12 DIGIT ID">
-                    </div>
-                    <div style="margin-bottom: 30px;">
-                        <label style="display: block; font-weight: 800; font-size: 0.8rem; margin-bottom: 8px;">SCREENSHOT (OPTIONAL)</label>
-                        <input type="file" id="payment-screenshot" class="brutalist-input" style="padding: 10px;">
-                    </div>
+                <div class="brutalist-card" style="background: var(--bg-accent); padding: 15px; margin: 30px auto 30px; max-width: 500px; font-weight: 800; font-size: 0.8rem; text-align: center;">
+                    NO REFUNDS. NO RETURNS. ALL SALES FINAL.
+                </div>
 
-                    <div class="brutalist-card" style="background: var(--bg-accent); padding: 15px; margin-bottom: 30px; font-weight: 800; font-size: 0.8rem; text-align: center;">
-                        NO REFUNDS. NO RETURNS. ALL SALES FINAL.
-                    </div>
-
-                    <button type="submit" class="brutalist-btn" id="submit-proof-btn" style="width: 100%; background: #000; color: #fff;">SUBMIT FOR VERIFICATION</button>
-                </form>
+                <div style="display: flex; gap: 20px; max-width: 500px; margin: 0 auto;">
+                    <button type="button" class="brutalist-btn" id="cancel-order-btn" onclick="cancelOrder()" style="flex: 0.5; background: #fff; color: #000;">CANCEL ORDER</button>
+                    <button type="button" class="brutalist-btn" id="confirm-paid-btn" onclick="confirmPayment()" style="flex: 1; background: #000; color: #fff; font-size: 1.1rem;">I HAVE PAID</button>
+                </div>
             </div>
 
             <!-- 🎉 STEP 4: DONE -->
@@ -284,26 +275,44 @@ function copyUpiUrl() {
     navigator.clipboard.writeText(url).then(() => Toast.success('URL COPIED'));
 }
 
-document.getElementById('payment-proof-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (pageBusy) return;
+async function confirmPayment() {
+    if (pageBusy || !createdOrder) return;
     pageBusy = true;
-    const btn = document.getElementById('submit-proof-btn');
-    btn.textContent = 'UPLOADING...';
-    
-    const formData = new FormData();
-    formData.append('order_id', createdOrder.id);
-    formData.append('upi_reference_id', document.getElementById('payment-utr').value);
-    const file = document.getElementById('payment-screenshot').files[0];
-    if (file) formData.append('payment_screenshot', file);
-    
+    const btn = document.getElementById('confirm-paid-btn');
+    btn.textContent = 'PROCESSING...';
+
     try {
-        const res = await API.post('/payments/upload-proof/', formData);
+        const res = await API.post('/store/orders/confirm-payment/', {
+            order_id: createdOrder.id,
+        });
         if (res.ok) {
             document.getElementById('confirmation-details').innerHTML = `<div class="brutalist-card" style="padding:20px; font-weight:800;">ORDER: ${createdOrder.order_number}<br>TOTAL: ${formatPrice(createdOrder.total_amount)}</div>`;
             goToStep(4);
+        } else {
+            Toast.error(res.data?.error || 'FAILED TO CONFIRM PAYMENT');
         }
-    } finally { pageBusy = false; btn.textContent = 'SUBMIT FOR VERIFICATION'; }
-});
+    } finally { pageBusy = false; btn.textContent = 'I HAVE PAID'; }
+}
+
+async function cancelOrder() {
+    if (pageBusy || !createdOrder) return;
+    if (!confirm('CANCEL THIS ORDER? ITEMS WILL BE RETURNED TO YOUR CART.')) return;
+    pageBusy = true;
+    const btn = document.getElementById('cancel-order-btn');
+    btn.textContent = 'CANCELLING...';
+
+    try {
+        const res = await API.post('/store/orders/cancel/', {
+            order_id: createdOrder.id,
+        });
+        if (res.ok) {
+            Toast.success('ORDER CANCELLED. ITEMS RESTORED TO YOUR CART.');
+            updateCartCount();
+            setTimeout(() => { window.location.href = '/cart/'; }, 1000);
+        } else {
+            Toast.error(res.data?.error || 'FAILED TO CANCEL ORDER');
+        }
+    } finally { pageBusy = false; btn.textContent = 'CANCEL ORDER'; }
+}
 </script>
 {% endblock %}

@@ -28,7 +28,7 @@ from core.throttling import (
     PincodeVerifyThrottle,
 )
 
-from .models import Category, Product, Cart, CartItem, Order, OrderItem, Wishlist, StockReservation
+from .models import Category, Product, Cart, CartItem, Order, OrderItem, Wishlist, StockReservation, Transaction
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
@@ -500,14 +500,198 @@ class OrderCreateView(APIView):
             status=status.HTTP_201_CREATED,
         )
 
+class OrderConfirmPaymentView(APIView):
+    """
+    "I have paid" action — mark an existing pending order as awaiting
+    admin verification WITHOUT requiring screenshot/UTR proof.
+
+    Creates (or updates) a Transaction row with status='pending_verification'.
+    Stock is NOT deducted here; deduction remains the admin-approval step.
+    """
+    permission_classes = [IsCustomerRole]
+    throttle_classes = [CheckoutThrottle]
+
+    @transaction.atomic
+    def post(self, request):
+        order_id = request.data.get("order_id")
+        if not order_id:
+            return Response(
+                {"error": "order_id is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            order_id = int(order_id)
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "Invalid order_id."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            order = (
+                Order.objects.select_for_update()
+                .get(id=order_id, user=request.user)
+            )
+        except Order.DoesNotExist:
+            return Response(
+                {"error": "Order not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if order.status != "pending":
+            return Response(
+                {"error": f"Order is already {order.status}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Extend stock reservations for 24 h while admin verifies
+        expires_at = timezone.now() + timedelta(hours=24)
+        StockReservation.objects.filter(order=order).update(expires_at=expires_at)
+
+        txn, created = Transaction.objects.get_or_create(
+            order=order,
+            defaults={
+                "amount": order.total_amount,
+                "status": "pending_verification",
+            },
+        )
+        if not created and txn.status != "pending_verification":
+            txn.status = "pending_verification"
+            txn.save(update_fields=["status"])
+
+        audit_log(
+            action="PAYMENT_CONFIRMED_BY_CUSTOMER",
+            user_id=request.user.id,
+            details={
+                "order_id": str(order.id),
+                "order_number": order.order_number,
+            },
+            severity="INFO",
+        )
+
+        return Response({
+            "message": "Payment noted. Awaiting admin verification.",
+            "order_number": order.order_number,
+            "status": "pending_verification",
+        })
+
+
+class OrderCancelView(APIView):
+    """
+    Cancel a pending order and restore its items back to the user's cart.
+
+    Security:
+        - Only the owning customer can cancel
+        - Only orders in 'pending' status can be cancelled
+        - Entire operation is atomic
+        - Stock reservations are released
+        - Cart items are re-created (quantities merged if item already in cart)
+    """
+    permission_classes = [IsCustomerRole]
+
+    @transaction.atomic
+    def post(self, request):
+        order_id = request.data.get("order_id")
+        if not order_id:
+            return Response(
+                {"error": "order_id is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            order_id = int(order_id)
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "Invalid order_id."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            order = (
+                Order.objects.select_for_update()
+                .prefetch_related("items__product")
+                .get(id=order_id, user=request.user)
+            )
+        except Order.DoesNotExist:
+            return Response(
+                {"error": "Order not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if order.status != "pending":
+            return Response(
+                {"error": f"Only pending orders can be cancelled. Current status: {order.status}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Restore items to cart
+        cart = _get_or_create_cart(request.user)
+        cart = Cart.objects.select_for_update().get(pk=cart.pk)
+
+        for order_item in order.items.all():
+            if not order_item.product or not order_item.product.is_active:
+                continue
+
+            existing = (
+                CartItem.objects.select_for_update()
+                .filter(cart=cart, product=order_item.product)
+                .first()
+            )
+            if existing:
+                existing.quantity += order_item.quantity
+                existing.save(update_fields=["quantity"])
+            else:
+                CartItem.objects.create(
+                    cart=cart,
+                    product=order_item.product,
+                    quantity=order_item.quantity,
+                )
+
+            # Convert order reservation back to cart reservation
+            reservation = (
+                StockReservation.objects.select_for_update()
+                .filter(order=order, product=order_item.product)
+                .first()
+            )
+            if reservation:
+                reservation.order = None
+                reservation.expires_at = timezone.now() + timedelta(minutes=30)
+                reservation.save(update_fields=["order", "expires_at"])
+
+        # Release any remaining order reservations
+        StockReservation.objects.filter(order=order).delete()
+
+        # Delete associated transaction if any
+        Transaction.objects.filter(order=order).delete()
+
+        # Cancel and delete the order
+        order_number = order.order_number
+        order.status = "cancelled"
+        order.save(update_fields=["status"])
+        order.items.all().delete()
+        order.delete()
+
+        audit_log(
+            action="ORDER_CANCELLED_BY_CUSTOMER",
+            user_id=request.user.id,
+            details={"order_number": order_number, "items_restored_to_cart": True},
+            severity="INFO",
+        )
+
+        return Response(
+            CartSerializer(_cart_queryset().get(pk=cart.pk)).data,
+            status=status.HTTP_200_OK,
+        )
+
 
 def _calculate_shipping_fee(address: str, state: str = "") -> int:
     """
     Calculate shipping fee based on Indian state.
 
     Business rule:
-      - Tamil Nadu: ₹50
-      - Any other state in India: ₹80
+      - Tamil Nadu: 50
+      - Any other state in India: 80
     """
     normalized_state = " ".join(str(state or "").lower().split())
 

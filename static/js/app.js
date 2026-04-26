@@ -412,11 +412,70 @@ function productCardHTML(product) {
     `;
 }
 
+// ─── Guest Cart (localStorage for anonymous users) ──────────────────────
+const GuestCart = {
+    key: 'iri_guest_cart',
+
+    get() {
+        return safeJsonParse(localStorage.getItem(this.key), []);
+    },
+
+    save(items) {
+        localStorage.setItem(this.key, JSON.stringify(items));
+    },
+
+    add(productId, quantity = 1) {
+        const items = this.get();
+        const existing = items.find(i => i.product_id === productId);
+        if (existing) {
+            existing.quantity += quantity;
+        } else {
+            items.push({ product_id: productId, quantity });
+        }
+        this.save(items);
+    },
+
+    clear() {
+        localStorage.removeItem(this.key);
+    },
+
+    isEmpty() {
+        return this.get().length === 0;
+    },
+};
+
+/**
+ * Merge guest cart into the authenticated user's server-side cart.
+ * Duplicate products are handled gracefully by the CartView.post endpoint
+ * which adds quantities to existing cart items.
+ */
+async function mergeGuestCart() {
+    const items = GuestCart.get();
+    if (!items.length) return;
+
+    for (const item of items) {
+        try {
+            await API.post('/store/cart/', {
+                product_id: item.product_id,
+                quantity: item.quantity,
+            });
+        } catch (err) {
+            // Silently skip items that fail (e.g., out of stock, inactive).
+            // The user's authenticated cart will still contain whatever succeeded.
+            console.warn('Failed to merge guest cart item:', item, err);
+        }
+    }
+
+    GuestCart.clear();
+    updateCartCount();
+}
+
 async function addToCart(productId, quantity = 1) {
     const user = await API.bootstrapUser();
     if (!user) {
-        Toast.info('Please login to add items to cart');
-        setTimeout(() => { window.location.href = '/login/'; }, 1000);
+        // Store in guest cart for merge after login
+        GuestCart.add(productId, quantity);
+        Toast.success('Added to cart — sign in to checkout');
         return;
     }
 
