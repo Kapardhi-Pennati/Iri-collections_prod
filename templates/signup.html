@@ -8,11 +8,11 @@
 {% block content %}
 <section style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: var(--space-xl) 0;">
     <div class="container" style="max-width: 520px; width: 100%;">
-        <div class="util-card" style="padding: var(--space-xl); background: var(--white);">
+        <div class="util-card util-card--static" style="padding: var(--space-xl); background: var(--white);">
             <!-- HEADER -->
             <div class="page-header" style="margin-bottom: var(--space-lg);">
                 <h1 id="form-title" style="font-size: 2rem;">JOIN US</h1>
-                <p>CREATE YOUR PRIVATE VAULT</p>
+                <p style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">CREATE YOUR PRIVATE VAULT</p>
             </div>
 
             <!-- SIGNUP FORM -->
@@ -38,21 +38,21 @@
                     <input type="password" id="password2" class="brutalist-input" placeholder="Repeat password" required>
                 </div>
 
-                <div id="signup-error" class="util-card" style="display:none; background: var(--error-bg); color: var(--error); padding: 12px; margin-bottom: var(--space-md); font-weight: 600; font-size: 0.8rem; border-left: 6px solid var(--error);"></div>
+                <div id="signup-error" style="display:none; background: var(--error-bg); color: var(--error); padding: 12px; margin-bottom: var(--space-md); font-weight: 600; font-size: 0.8rem; border-left: 6px solid var(--error); border: var(--border-width) solid var(--error);"></div>
 
                 <button type="submit" class="btn-brutalist btn-primary" id="send-otp-btn" style="width: 100%;">SEND VERIFICATION OTP</button>
             </form>
 
             <!-- OTP FORM -->
             <form id="otp-form" style="display:none; margin-top: var(--space-md);">
-                <div class="util-card" style="background: var(--gray-100); padding: 12px; margin-bottom: var(--space-md); font-weight: 600; font-size: 0.8rem;">
+                <div class="util-card util-card--static" style="background: var(--gray-100); padding: 12px; margin-bottom: var(--space-md); font-weight: 600; font-size: 0.8rem; box-shadow: none;">
                     WE'VE SENT A 6-DIGIT CODE TO YOUR EMAIL. VERIFY IT BELOW.
                 </div>
                 <div style="margin-bottom: var(--space-md);">
                     <label class="form-label">VERIFICATION CODE</label>
                     <input type="text" id="otp_code" class="brutalist-input" placeholder="123456" required maxlength="6" pattern="\d{6}">
                 </div>
-                <div id="otp-error" class="util-card" style="display:none; background: var(--error-bg); color: var(--error); padding: 12px; margin-bottom: var(--space-md); font-weight: 600; font-size: 0.8rem; border-left: 6px solid var(--error);"></div>
+                <div id="otp-error" style="display:none; background: var(--error-bg); color: var(--error); padding: 12px; margin-bottom: var(--space-md); font-weight: 600; font-size: 0.8rem; border-left: 6px solid var(--error); border: var(--border-width) solid var(--error);"></div>
                 <button type="submit" class="btn-brutalist btn-primary" id="signup-btn" style="width: 100%;">VERIFY & CREATE ACCOUNT</button>
             </form>
 

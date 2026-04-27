@@ -295,28 +295,28 @@ async function updateNavbar() {
     const user = await API.bootstrapUser();
     if (user) {
         authLinks.classList.add('hidden');
-        authLinks.style.display = 'none'; // Force hide
+        authLinks.style.display = 'none';
         if (userMenu) {
             userMenu.classList.remove('hidden');
-            userMenu.style.display = 'block'; // Force show
+            userMenu.style.display = '';
             const nameEl = userMenu.querySelector('.user-name-trigger');
             if (nameEl) {
                 const firstName = user.full_name ? user.full_name.split(' ')[0] : (user.username || 'Account');
-                nameEl.innerHTML = `${escapeHTML(firstName)} <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-left:4px;"><path d="m6 9 6 6 6-6"/></svg>`;
+                nameEl.innerHTML = `${escapeHTML(firstName)} <svg class="icon-svg" style="width:14px;height:14px;margin-left:4px;"><path d="m6 9 6 6 6-6"/></svg>`;
             }
         }
         if (adminLink && API.isAdmin()) {
             adminLink.classList.remove('hidden');
-            adminLink.style.display = 'block';
+            adminLink.style.display = '';
         }
         if (wishlistLink) {
             wishlistLink.classList.remove('hidden');
-            wishlistLink.style.display = 'block';
+            wishlistLink.style.display = '';
         }
         updateCartCount();
     } else {
         authLinks.classList.remove('hidden');
-        authLinks.style.display = 'block';
+        authLinks.style.display = '';
         if (userMenu) {
             userMenu.classList.add('hidden');
             userMenu.style.display = 'none';
@@ -332,12 +332,14 @@ async function updateNavbar() {
         if (cartCount) cartCount.textContent = '0';
     }
 
+    // Highlight active nav link (flat structure, no li wrappers)
     const currentPath = window.location.pathname;
-    document.querySelectorAll('.nav-links a').forEach((link) => {
-        if (link.getAttribute('href') === currentPath) {
-            link.parentElement.classList.add('active');
+    document.querySelectorAll('.nav-links > a.nav-link').forEach((link) => {
+        const href = link.getAttribute('href');
+        if (href === currentPath || (href !== '/' && currentPath.startsWith(href))) {
+            link.classList.add('active');
         } else {
-            link.parentElement.classList.remove('active');
+            link.classList.remove('active');
         }
     });
 }

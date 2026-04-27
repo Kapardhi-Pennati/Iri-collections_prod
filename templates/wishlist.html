@@ -8,11 +8,11 @@
     <div class="container">
         <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
             <h1>SAVED PIECES</h1>
-            <div id="wishlist-count-hdr" style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">COLLECTING...</div>
+            <div id="wishlist-count-hdr" style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-mono);">COLLECTING...</div>
         </div>
 
         <div id="wishlist-content">
-            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted);">OPENING YOUR VAULT...</div>
+            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted); font-family: var(--font-mono);">OPENING YOUR VAULT...</div>
         </div>
     </div>
 </section>
@@ -24,7 +24,7 @@ async function loadWishlist() {
     const container = document.getElementById('wishlist-content');
     if (!API.isLoggedIn()) {
         container.innerHTML = `
-            <div class="util-card" style="padding: 80px; text-align: center;">
+            <div class="util-card util-card--static" style="padding: 80px; text-align: center;">
                 <svg class="icon-svg" style="width: 40px; height: 40px; margin-bottom: var(--space-md);"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
                 <h3 style="font-size: 1.8rem; margin-bottom: 8px;">ACCESS REQUIRED</h3>
                 <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">Please sign in to view saved pieces.</p>
@@ -46,7 +46,7 @@ function renderWishlist(items) {
 
     if (!items || items.length === 0) {
         container.innerHTML = `
-            <div class="util-card" style="padding: 80px; text-align: center;">
+            <div class="util-card util-card--static" style="padding: 80px; text-align: center;">
                 <svg class="icon-svg" style="width: 40px; height: 40px; margin-bottom: var(--space-md);"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
                 <h3 style="font-size: 1.8rem; margin-bottom: 8px;">VAULT IS EMPTY</h3>
                 <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">Browse our pieces and save your favorites.</p>

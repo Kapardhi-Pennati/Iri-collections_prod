@@ -9,22 +9,18 @@
     <div class="container">
         <div class="hero-grid">
             <div class="hero-content">
-                <div class="brutalist-badge" style="background: var(--black); color: var(--white);">DIRECT WHOLESALE DROPS</div>
+                <div class="brutalist-badge" style="background: var(--black); color: var(--white); margin-bottom: var(--space-md);">DIRECT WHOLESALE DROPS</div>
                 <h1>THE VAULT IS OPEN.</h1>
                 <p>
                     Curated jewelry and timepieces at genuine wholesale pricing. Direct manufacturing sources. No
                     markups. No compromises.
                 </p>
                 <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                    <a href="/catalog/" class="btn-brutalist btn-primary">
-                        EXPLORE DROPS
-                    </a>
+                    <a href="/catalog/" class="btn-brutalist btn-primary">EXPLORE DROPS</a>
                     <a href="/about/" class="btn-brutalist">OUR MISSION</a>
                 </div>
             </div>
-            <div class="hero-image">
-                <!-- Background is set via CSS -->
-            </div>
+            <div class="hero-image"></div>
         </div>
     </div>
 </section>
@@ -74,7 +70,7 @@
 <!-- POLICY NOTICE -->
 <section style="padding: var(--space-xl) 0;">
     <div class="container">
-        <div class="util-card" style="padding: var(--space-xl); background: var(--gray-100); text-align: center;">
+        <div class="util-card util-card--static" style="padding: var(--space-xl); background: var(--gray-100); text-align: center;">
             <h2 style="font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: var(--space-sm);">WHOLESALE REALITY.</h2>
             <p
                 style="font-weight: 500; font-size: 0.95rem; max-width: 640px; margin: 0 auto var(--space-md); color: var(--text-secondary); line-height: 1.7;">
@@ -82,9 +78,9 @@
                 exchanges. Every piece is inspected before sourcing.
             </p>
             <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                <span class="badge" style="background: var(--bg-elevated);">NO REFUNDS</span>
-                <span class="badge" style="background: var(--bg-elevated);">NO RETURNS</span>
-                <span class="badge" style="background: var(--bg-elevated);">NO EXCHANGES</span>
+                <span class="badge" style="background: var(--black); color: var(--white);">NO REFUNDS</span>
+                <span class="badge" style="background: var(--black); color: var(--white);">NO RETURNS</span>
+                <span class="badge" style="background: var(--black); color: var(--white);">NO EXCHANGES</span>
             </div>
         </div>
     </div>
@@ -119,20 +115,20 @@
             const catGrid = document.getElementById('categories-grid');
             if (cats && cats.length > 0) {
                 const categoryIcons = {
-                    'Necklaces': '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
-                    'Earrings': '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/></svg>',
-                    'Bracelets': '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
-                    'Rings': '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/></svg>',
-                    'Anklets': '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+                    'Necklaces': '<svg class="icon-svg" style="width:28px;height:28px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
+                    'Earrings': '<svg class="icon-svg" style="width:28px;height:28px;"><path d="M6 3h12l4 6-10 13L2 9Z"/></svg>',
+                    'Bracelets': '<svg class="icon-svg" style="width:28px;height:28px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+                    'Rings': '<svg class="icon-svg" style="width:28px;height:28px;"><path d="M6 3h12l4 6-10 13L2 9Z"/></svg>',
+                    'Anklets': '<svg class="icon-svg" style="width:28px;height:28px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
                 };
-                const defaultIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>';
+                const defaultIcon = '<svg class="icon-svg" style="width:28px;height:28px;"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>';
                 catGrid.innerHTML = cats.map(cat => `
-                <a href="/catalog/?category=${cat.slug}" class="util-card" style="padding: var(--space-lg); text-align: center;">
+                <a href="/catalog/?category=${cat.slug}" class="util-card" style="padding: var(--space-lg); text-align: center; text-decoration: none;">
                     <div style="margin-bottom: var(--space-sm); color: var(--text-secondary);">
                         ${categoryIcons[cat.name] || defaultIcon}
                     </div>
                     <h3 style="font-size: 0.9rem; margin-bottom: 8px;">${cat.name}</h3>
-                    <div class="badge" style="background: var(--text-primary); color: var(--text-inverted);">${cat.product_count} PIECES</div>
+                    <div class="badge" style="background: var(--black); color: var(--white);">${cat.product_count} PIECES</div>
                 </a>
             `).join('');
             }

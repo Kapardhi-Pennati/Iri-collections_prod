@@ -10,7 +10,7 @@
         </div>
 
         <div id="orders-list">
-            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted);">COLLECTING HISTORY...</div>
+            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted); font-family: var(--font-mono);">COLLECTING HISTORY...</div>
         </div>
     </div>
 </section>
@@ -26,7 +26,7 @@ async function loadOrders() {
         const container = document.getElementById('orders-list');
         if (!data || !data.results || data.results.length === 0) {
             container.innerHTML = `
-            <div class="util-card" style="padding: 80px; text-align: center;">
+            <div class="util-card util-card--static" style="padding: 80px; text-align: center;">
                 <svg class="icon-svg" style="width: 40px; height: 40px; color: var(--text-muted); margin-bottom: var(--space-md);"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
                     <h3 style="font-size: 1.8rem; margin-bottom: 8px;">NO HISTORY</h3>
                     <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">Your collection journey hasn't started yet.</p>
@@ -45,13 +45,13 @@ async function loadOrders() {
             `).join('');
 
             return `
-                <div class="util-card" style="margin-bottom: var(--space-lg); padding: var(--space-lg); background: var(--gray-100);">
+                <div class="util-card util-card--static" style="margin-bottom: var(--space-lg); padding: var(--space-lg); background: var(--gray-100);">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md); border-bottom: var(--border-width) solid var(--border-color); padding-bottom: 12px;">
                         <div>
                             <div style="font-weight: 700; font-size: 1.2rem;">${order.order_number}</div>
                             <div style="font-weight: 500; font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">${date}</div>
                         </div>
-                        <div class="badge" style="background: var(--text-primary); color: var(--text-inverted);">
+                        <div class="badge" style="background: var(--black); color: var(--white);">
                             ${order.status.toUpperCase()}
                         </div>
                     </div>

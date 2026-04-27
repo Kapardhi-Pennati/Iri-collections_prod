@@ -8,11 +8,11 @@
 {% block content %}
 <section style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: var(--space-xl) 0;">
     <div class="container" style="max-width: 480px; width: 100%;">
-        <div class="util-card" style="padding: var(--space-xl); background: var(--white);">
+        <div class="util-card util-card--static" style="padding: var(--space-xl); background: var(--white);">
             <!-- HEADER -->
             <div class="page-header" style="margin-bottom: var(--space-lg);">
                 <h1 id="form-title" style="font-size: 2rem;">LOGIN</h1>
-                <p id="form-subtitle">SIGN IN TO YOUR VAULT</p>
+                <p id="form-subtitle" style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">SIGN IN TO YOUR VAULT</p>
             </div>
 
             <!-- LOGIN FORM -->
@@ -30,7 +30,7 @@
                     <a href="#" id="forgot-password-link" style="font-weight: 600; font-size: 0.8rem; text-decoration: underline; color: var(--text-muted);">FORGOT PASSWORD?</a>
                 </div>
 
-                <div id="login-error" class="util-card" style="display:none; background: var(--error-bg); color: var(--error); padding: 12px; margin-bottom: var(--space-md); font-weight: 600; font-size: 0.8rem; border-left: 6px solid var(--error);"></div>
+                <div id="login-error" style="display:none; background: var(--error-bg); color: var(--error); padding: 12px; margin-bottom: var(--space-md); font-weight: 600; font-size: 0.8rem; border-left: 6px solid var(--error); border: var(--border-width) solid var(--error);"></div>
 
                 <button type="submit" class="btn-brutalist btn-primary" id="login-btn" style="width: 100%;">SIGN IN</button>
             </form>
@@ -41,7 +41,7 @@
                     <label class="form-label">EMAIL ADDRESS</label>
                     <input type="email" id="reset-email" class="brutalist-input" placeholder="you@example.com" required>
                 </div>
-                <div id="forgot-email-error" class="util-card" style="display:none; background: var(--error-bg); color: var(--error); padding: 12px; margin-bottom: var(--space-md); font-weight: 600; font-size: 0.8rem; border-left: 6px solid var(--error);"></div>
+                <div id="forgot-email-error" style="display:none; background: var(--error-bg); color: var(--error); padding: 12px; margin-bottom: var(--space-md); font-weight: 600; font-size: 0.8rem; border-left: 6px solid var(--error); border: var(--border-width) solid var(--error);"></div>
                 <button type="submit" class="btn-brutalist btn-primary" id="send-reset-otp-btn" style="width: 100%;">SEND OTP</button>
                 <div style="text-align:center; margin-top: var(--space-md);">
                     <a href="#" id="back-to-login-link" style="font-weight: 600; font-size: 0.8rem; text-decoration: underline; color: var(--text-muted);">BACK TO SIGN IN</a>
@@ -50,7 +50,7 @@
 
             <!-- RESET PASSWORD FORM -->
             <form id="reset-password-form" style="display:none; margin-top: var(--space-md);">
-                <div class="util-card" style="background: var(--gray-100); padding: 12px; margin-bottom: var(--space-md); font-weight: 600; font-size: 0.8rem;">
+                <div class="util-card util-card--static" style="background: var(--gray-100); padding: 12px; margin-bottom: var(--space-md); font-weight: 600; font-size: 0.8rem; box-shadow: none;">
                     ENTER THE 6-DIGIT OTP SENT TO YOUR EMAIL.
                 </div>
                 <div style="margin-bottom: var(--space-md);">
@@ -61,7 +61,7 @@
                     <label class="form-label">NEW PASSWORD</label>
                     <input type="password" id="new-password" class="brutalist-input" placeholder="Min. 8 characters" required minlength="8">
                 </div>
-                <div id="reset-error" class="util-card" style="display:none; background: var(--error-bg); color: var(--error); padding: 12px; margin-bottom: var(--space-md); font-weight: 600; font-size: 0.8rem; border-left: 6px solid var(--error);"></div>
+                <div id="reset-error" style="display:none; background: var(--error-bg); color: var(--error); padding: 12px; margin-bottom: var(--space-md); font-weight: 600; font-size: 0.8rem; border-left: 6px solid var(--error); border: var(--border-width) solid var(--error);"></div>
                 <button type="submit" class="btn-brutalist btn-primary" id="reset-btn" style="width: 100%;">RESET PASSWORD</button>
             </form>
 

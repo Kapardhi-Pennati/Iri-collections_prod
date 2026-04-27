@@ -9,39 +9,72 @@
     <meta name="description"
         content="{% block meta_description %}Iri Collections — Wholesale Sourcing Partner for high-quality artificial jewelry, timepieces, and jewelry-making components. Wholesale pricing with YouTube-trusted transparency.{% endblock %}">
     <title>{% block title %}IRI COLLECTIONS{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_head %}{% endblock %}
 </head>
 
 <body>
     <!-- BRUTALIST NAVIGATION -->
-    <nav class="navbar">
+    <nav class="navbar" id="navbar">
         <div class="navbar-top">
             <a href="/" class="navbar-brand brand-text">IRI COLLECTIONS</a>
-            <div class="nav-links">
+
+            <!-- Mobile Toggle -->
+            <button class="nav-toggle" id="nav-toggle" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+
+            <div class="nav-links" id="nav-links">
                 <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
                 <a href="/catalog/" class="nav-link {% if 'catalog' in request.path %}active{% endif %}">Shop</a>
 
-                <a href="/cart/" class="nav-link" aria-label="Cart">
-                    <div style="position: relative; display: flex; align-items: center;">
-                        <svg class="icon-svg">
-                            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                            <path d="M3 6h18" />
-                            <path d="M16 10a4 4 0 0 1-8 0" />
-                        </svg>
-                        <span id="cart-count"
-                            style="position: absolute; top: -8px; right: -8px; background: var(--black); color: var(--white); font-size: 10px; padding: 2px 4px; font-weight: 900;">0</span>
-                    </div>
+                <!-- Cart Icon -->
+                <a href="/cart/" class="nav-link nav-icon-link" aria-label="Cart">
+                    <svg class="icon-svg">
+                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                        <path d="M3 6h18" />
+                        <path d="M16 10a4 4 0 0 1-8 0" />
+                    </svg>
+                    <span id="cart-count" class="cart-badge">0</span>
                 </a>
+
+                <!-- Wishlist Icon (visible when logged in) -->
+                <a href="/wishlist/" class="nav-link nav-icon-link hidden" id="wishlist-link" aria-label="Wishlist">
+                    <svg class="icon-svg">
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                    </svg>
+                    <span id="wishlist-count" class="cart-badge">0</span>
+                </a>
+
+                <!-- Auth Links (visible when logged out) -->
+                <div id="auth-links">
+                    <a href="/login/" class="btn-brutalist" style="padding: 0.5rem 1rem; font-size: 0.75rem;">Login</a>
+                </div>
+
+                <!-- User Menu (visible when logged in) -->
+                <div id="user-menu" class="hidden">
+                    <a href="/orders/" class="nav-link"><span class="user-name-trigger">Account</span></a>
+                </div>
+
+                <!-- Admin Link (visible for admins) -->
+                <a href="/admin-dashboard/" class="nav-link hidden" id="admin-link">Admin</a>
             </div>
         </div>
-        <!-- INTEGRATED MARQUEE -->
+
+        <!-- Integrated Marquee -->
         <div class="marquee-bar">
             <div class="marquee-content">
-                <span>· NO RETURNS · NO REFUNDS · NO EXCHANGES · NO RETURNS · NO REFUNDS · NO EXCHANGES · NO RETURNS · NO REFUNDS · NO EXCHANGES · NO RETURNS · NO REFUNDS · NO EXCHANGES ·</span>
+                <span>· NO RETURNS · NO REFUNDS · NO EXCHANGES · NO PRODUCT GUARANTEES · NO WARRANTIES · NO RETURNS · NO REFUNDS · NO EXCHANGES · NO PRODUCT GUARANTEES · NO WARRANTIES ·</span>
+                <span>· NO RETURNS · NO REFUNDS · NO EXCHANGES · NO PRODUCT GUARANTEES · NO WARRANTIES · NO RETURNS · NO REFUNDS · NO EXCHANGES · NO PRODUCT GUARANTEES · NO WARRANTIES ·</span>
             </div>
         </div>
     </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="menu-overlay" id="menu-overlay"></div>
 
     <!-- TOASTS -->
     <div class="toast-container" id="toast-container"></div>
@@ -57,30 +90,31 @@
         <div class="container">
             <div class="grid-2">
                 <div>
-                    <h2 class="brand-text" style="margin-bottom: 1rem;">IRI COLLECTIONS</h2>
-                    <p style="color: var(--text-secondary); max-width: 400px; font-size: 0.9rem;">
+                    <h2 class="brand-text" style="margin-bottom: 1rem; font-size: 1.5rem;">IRI COLLECTIONS</h2>
+                    <p style="color: var(--text-secondary); max-width: 400px; font-size: 0.9rem; line-height: 1.7;">
                         Direct wholesale sourcing for premium artificial jewelry and timepieces. Professional
                         engineering standards for global jewelry logistics.
                     </p>
                 </div>
                 <div style="display: flex; gap: var(--space-xl); justify-content: flex-end;">
                     <div>
-                        <h4 style="margin-bottom: 1rem;">Legal</h4>
-                        <ul style="list-style: none; font-size: 0.85rem; line-height: 2;">
+                        <h4 style="margin-bottom: 1rem; font-size: 0.85rem;">Legal</h4>
+                        <ul style="list-style: none; font-size: 0.85rem; line-height: 2.2;">
                             <li><a href="/policy/" class="nav-link">Terms</a></li>
-                            <li><a href="/returns/" class="nav-link">Returns</a></li>
+                            <li><a href="/shipping/" class="nav-link">Shipping</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 style="margin-bottom: 1rem;">Connect</h4>
-                        <ul style="list-style: none; font-size: 0.85rem; line-height: 2;">
-                            <li><a href="/contact/" class="nav-link">WhatsApp</a></li>
+                        <h4 style="margin-bottom: 1rem; font-size: 0.85rem;">Connect</h4>
+                        <ul style="list-style: none; font-size: 0.85rem; line-height: 2.2;">
+                            <li><a href="/contact/" class="nav-link">Contact</a></li>
+                            <li><a href="/about/" class="nav-link">About</a></li>
                         </ul>
                     </div>
                 </div>
             </div>
             <div
-                style="margin-top: var(--space-xl); padding-top: var(--space-md); border-top: 1px solid var(--gray-200); font-family: var(--font-mono); font-size: 0.7rem; color: var(--gray-400); text-align: center;">
+                style="margin-top: var(--space-xl); padding-top: var(--space-md); border-top: 1px solid var(--gray-200); font-family: var(--font-mono); font-size: 0.7rem; color: var(--gray-400); text-align: center; letter-spacing: 0.06em;">
                 &copy; 2026 IRI COLLECTIONS. ALL SALES FINAL.
             </div>
         </div>

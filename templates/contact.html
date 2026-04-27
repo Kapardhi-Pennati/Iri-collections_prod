@@ -31,7 +31,7 @@
                     <p style="font-weight: 500; color: var(--text-muted); margin-top: 4px; font-size: 0.8rem;">REPLY WITHIN 24 HOURS</p>
                 </div>
 
-                <div class="util-card" style="padding: var(--space-lg); background: var(--gray-100);">
+                <div class="util-card util-card--static" style="padding: var(--space-lg); background: var(--gray-100);">
                     <div style="margin-bottom: 10px; color: var(--text-secondary);">
                         <svg class="icon-svg"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                     </div>
@@ -42,7 +42,7 @@
             </div>
 
             <!-- CONTACT FORM -->
-            <div class="util-card" style="padding: var(--space-xl); background: var(--white);">
+            <div class="util-card util-card--static" style="padding: var(--space-xl); background: var(--white);">
                 <h2 style="font-size: 1.5rem; margin-bottom: var(--space-lg); border-bottom: var(--border-width) solid var(--border-color); padding-bottom: 10px;">SEND A MESSAGE</h2>
                 <form id="contact-form" onsubmit="handleContactSubmit(event)">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); margin-bottom: var(--space-md);">
@@ -58,7 +58,7 @@
 
                     <div style="margin-bottom: var(--space-md);">
                         <label class="form-label">TOPIC</label>
-                        <select name="subject" class="brutalist-input" required style="appearance: none;">
+                        <select name="subject" class="brutalist-input" required>
                             <option value="GENERAL">GENERAL INQUIRY</option>
                             <option value="ORDER">ORDER STATUS</option>
                             <option value="CUSTOM">CUSTOM PIECE</option>
