@@ -14,18 +14,10 @@
 </head>
 
 <body>
-    <!-- MARQUEE -->
-    <div class="marquee-bar">
-        <div class="marquee-content">
-            · NO RETURNS · NO REFUNDS · NO EXCHANGES · NO RETURNS · NO REFUNDS · NO EXCHANGES
-        </div>
-    </div>
-
     <!-- BRUTALIST NAVIGATION -->
     <nav class="navbar">
         <div class="navbar-top">
             <a href="/" class="navbar-brand brand-text">IRI COLLECTIONS</a>
-
             <div class="nav-links">
                 <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
                 <a href="/catalog/" class="nav-link {% if 'catalog' in request.path %}active{% endif %}">Shop</a>
@@ -41,23 +33,12 @@
                             style="position: absolute; top: -8px; right: -8px; background: var(--black); color: var(--white); font-size: 10px; padding: 2px 4px; font-weight: 900;">0</span>
                     </div>
                 </a>
-
-                <div id="auth-links">
-                    <a href="/login/" class="btn-brutalist" style="padding: 0.5rem 1rem;">Login</a>
-                </div>
-
-                <div id="user-menu" class="hidden">
-                    <a href="/orders/" class="nav-link">Account</a>
-                </div>
             </div>
         </div>
-
+        <!-- INTEGRATED MARQUEE -->
         <div class="marquee-bar">
             <div class="marquee-content">
-                <span>WHOLESALE REALITY · NO RETURNS · NO REFUNDS · NO EXCHANGES · GLOBAL SOURCING · WHOLESALE REALITY ·
-                    NO RETURNS · NO REFUNDS · NO EXCHANGES · GLOBAL SOURCING</span>
-                <span>WHOLESALE REALITY · NO RETURNS · NO REFUNDS · NO EXCHANGES · GLOBAL SOURCING · WHOLESALE REALITY ·
-                    NO RETURNS · NO REFUNDS · NO EXCHANGES · GLOBAL SOURCING</span>
+                <span>· NO RETURNS · NO REFUNDS · NO EXCHANGES · NO RETURNS · NO REFUNDS · NO EXCHANGES · NO RETURNS · NO REFUNDS · NO EXCHANGES · NO RETURNS · NO REFUNDS · NO EXCHANGES ·</span>
             </div>
         </div>
     </nav>
