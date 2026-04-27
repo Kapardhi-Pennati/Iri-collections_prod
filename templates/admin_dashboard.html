@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Admin Dashboard — Iri Collections{% endblock %}
+{% block title %}ADMIN DASHBOARD | IRI COLLECTIONS{% endblock %}
 
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -14,7 +14,7 @@
     <!-- SIDEBAR -->
     <aside class="admin-sidebar">
         <div style="margin-bottom: 30px;">
-            <h2 style="font-size: 1.2rem; margin: 0; border-left: var(--border-width) solid var(--bg-accent); padding-left: 10px;">IRI ADMIN</h2>
+            <h2 style="font-size: 1.2rem; margin: 0; border-left: var(--border-width) solid var(--black); padding-left: 10px;">IRI ADMIN</h2>
         </div>
         
         <nav>
@@ -97,7 +97,7 @@
 
         <!-- Section: Traffic -->
         <div id="section-traffic" class="hidden">
-            <h2 style="font-family:var(--font-display); margin-bottom:var(--space-xl);">WEBSITE TRAFFIC</h2>
+            <h2 style="margin-bottom:var(--space-xl);">WEBSITE TRAFFIC</h2>
             <div class="stat-grid" id="traffic-stat-cards">
                 <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOTAL VIEWS (30D)</div><div class="stat-value" id="traffic-total">—</div></div>
                 <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">UNIQUE VISITORS (30D)</div><div class="stat-value" id="traffic-unique">—</div></div>
@@ -129,7 +129,7 @@
         <!-- Section: Products -->
         <div id="section-products" class="hidden">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xl);">
-                <h2 style="font-family:var(--font-display);">MANAGE PRODUCTS</h2>
+                <h2>MANAGE PRODUCTS</h2>
                 <button class="btn-brutalist btn-primary" onclick="openProductModal()" style="">+ ADD PRODUCT</button>
             </div>
             <div class="admin-table-responsive">
@@ -144,7 +144,7 @@
 
         <!-- Section: Orders -->
         <div id="section-orders" class="hidden">
-            <h2 style="font-family:var(--font-display); margin-bottom:var(--space-xl);">MANAGE ORDERS</h2>
+            <h2 style="margin-bottom:var(--space-xl);">MANAGE ORDERS</h2>
             <div class="admin-table-responsive">
                 <table class="admin-table" id="orders-table">
                     <thead>
@@ -158,7 +158,7 @@
         <!-- Section: Categories -->
         <div id="section-categories" class="hidden">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xl);">
-                <h2 style="font-family:var(--font-display);">MANAGE CATEGORIES</h2>
+                <h2>MANAGE CATEGORIES</h2>
                 <button class="btn-brutalist btn-primary" onclick="openCategoryModal()" style="">+ ADD CATEGORY</button>
             </div>
             <div id="categories-list"></div>
@@ -188,7 +188,7 @@
             </div>
             <div id="pf-image-preview" style="margin-bottom: var(--space-md); display: none;">
                 <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Preview</label>
-                <img src="" alt="Preview" style="max-width: 100px; max-height: 100px; border-radius: var(--radius-sm); object-fit: cover; border: 1px solid var(--border);">
+                <img src="" alt="Preview" style="max-width: 100px; max-height: 100px; object-fit: cover; border: var(--border-width) solid var(--black);">
             </div>
             <div class="form-grid">
                 <div class="form-group"><label>Material</label><input type="text" id="pf-material"></div>
@@ -340,20 +340,20 @@ async function loadOverview() {
                 datasets: [{
                     label: 'Revenue (₹)',
                     data: revenues.length ? revenues : [0],
-                    borderColor: '#c9a84c',
-                    backgroundColor: 'rgba(201, 168, 76, 0.1)',
+                    borderColor: '#000000',
+                    backgroundColor: 'rgba(0, 0, 0, 0.06)',
                     fill: true,
                     tension: 0.4,
                     pointRadius: 4,
-                    pointBackgroundColor: '#c9a84c',
+                    pointBackgroundColor: '#000000',
                 }]
             },
             options: {
                 responsive: true,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b6660' } },
-                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b6660', callback: v => '₹' + v.toLocaleString() } }
+                    x: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#525252' } },
+                    y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#525252', callback: v => '₹' + v.toLocaleString() } }
                 }
             }
         });
@@ -362,7 +362,7 @@ async function loadOverview() {
         const ctx2 = document.getElementById('status-chart').getContext('2d');
         const statusLabels = data.status_breakdown.map(s => s.status);
         const statusCounts = data.status_breakdown.map(s => s.count);
-        const statusColors = { pending: '#fbbf24', confirmed: '#60a5fa', shipped: '#c9a84c', cancelled: '#f87171' };
+        const statusColors = { pending: '#F59E0B', confirmed: '#3B82F6', shipped: '#22C55E', cancelled: '#EF4444' };
 
         if (statusChart) statusChart.destroy();
         statusChart = new Chart(ctx2, {
@@ -371,14 +371,14 @@ async function loadOverview() {
                 labels: statusLabels.length ? statusLabels : ['No orders'],
                 datasets: [{
                     data: statusCounts.length ? statusCounts : [1],
-                    backgroundColor: statusLabels.length ? statusLabels.map(s => statusColors[s] || '#6b6660') : ['#1c1c28'],
+                    backgroundColor: statusLabels.length ? statusLabels.map(s => statusColors[s] || '#A3A3A3') : ['#E5E5E5'],
                     borderWidth: 0,
                 }]
             },
             options: {
                 responsive: true,
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: '#a09b8f', padding: 15, font: { size: 12 } } }
+                    legend: { position: 'bottom', labels: { color: '#525252', padding: 15, font: { size: 12 } } }
                 },
                 cutout: '65%',
             }
@@ -388,14 +388,14 @@ async function loadOverview() {
         const topList = document.getElementById('top-products-list');
         if (topList && data.top_products.length > 0) {
             topList.innerHTML = data.top_products.map((p, i) => `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; ${i < data.top_products.length - 1 ? 'border-bottom:1px solid var(--border);' : ''}">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; ${i < data.top_products.length - 1 ? 'border-bottom:1px solid var(--gray-200);' : ''}">
                     <div style="display:flex; align-items:center; gap:var(--space-md);">
-                        <span style="color:var(--gold); font-weight:700; width:24px;">#${i+1}</span>
+                        <span style="color:var(--black); font-weight:700; width:24px;">#${i+1}</span>
                         <span>${escapeHTML(p.product_name)}</span>
                     </div>
                     <div style="display:flex; gap:var(--space-xl); color:var(--text-secondary); font-size:0.9rem;">
                         <span>${p.total_sold} sold</span>
-                        <span style="color:var(--gold-light); font-weight:600;">${formatPrice(p.total_revenue)}</span>
+                        <span style="font-weight:700;">${formatPrice(p.total_revenue)}</span>
                     </div>
                 </div>
             `).join('');
@@ -436,12 +436,12 @@ async function loadTrafficData() {
                     {
                         label: 'Page Views',
                         data: data.daily_views.map(d => d.views),
-                        borderColor: '#c9a84c',
-                        backgroundColor: 'rgba(201,168,76,0.12)',
+                        borderColor: '#000000',
+                        backgroundColor: 'rgba(0,0,0,0.06)',
                         fill: true,
                         tension: 0.4,
                         pointRadius: 3,
-                        pointBackgroundColor: '#c9a84c',
+                        pointBackgroundColor: '#000000',
                     },
                     {
                         label: 'Unique Visitors',
@@ -457,7 +457,7 @@ async function loadTrafficData() {
             },
             options: {
                 responsive: true,
-                plugins: { legend: { position: 'top', labels: { color: '#6b6660', font: { size: 12 } } } },
+                plugins: { legend: { position: 'top', labels: { color: '#525252', font: { size: 12 } } } },
                 scales: {
                     x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#999' } },
                     y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#999' }, beginAtZero: true }
@@ -486,14 +486,14 @@ async function loadTrafficData() {
                 labels: ['Desktop', 'Mobile', 'Tablet'],
                 datasets: [{
                     data: [desktop, mobile, tablet],
-                    backgroundColor: ['#c9a84c', '#60a5fa', '#4ade80'],
+                    backgroundColor: ['#262626', '#A3A3A3', '#E5E5E5'],
                     borderWidth: 0,
                 }]
             },
             options: {
                 responsive: true,
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: '#6b6660', padding: 16, font: { size: 12 } } }
+                    legend: { position: 'bottom', labels: { color: '#525252', padding: 16, font: { size: 12 } } }
                 },
                 cutout: '65%',
             }
@@ -514,7 +514,7 @@ async function loadAdminProducts() {
             <tr>
                 <td>
                     <div style="display:flex; align-items:center; gap:var(--space-md);">
-                        <img src="${p.display_image || p.image_url || ''}" alt="" style="width:40px; height:40px; border-radius:var(--radius-sm); object-fit:cover; background:var(--bg-elevated);">
+                        <img src="${p.display_image || p.image_url || ''}" alt="" style="width:40px; height:40px; object-fit:cover; background:var(--gray-100); border:1px solid var(--gray-200);">
                         <div>
                             <div style="font-weight:600;">${escapeHTML(p.name)}</div>
                             <div style="font-size:0.8rem; color:var(--text-muted);">${escapeHTML(p.material || '')}</div>
@@ -522,7 +522,7 @@ async function loadAdminProducts() {
                     </div>
                 </td>
                 <td>${escapeHTML(p.category_name || '')}</td>
-                <td style="color:var(--gold-light); font-weight:600;">${formatPrice(p.price)}</td>
+                <td style="font-weight:700;">${formatPrice(p.price)}</td>
                 <td><span class="stock-badge ${p.stock === 0 ? 'out-of-stock' : p.stock <= 5 ? 'low-stock' : 'in-stock'}" style="font-size:0.8rem;">${p.stock}</span></td>
                 <td>${p.is_active ? '<span style="color:var(--success);">Active</span>' : '<span style="color:var(--text-muted);">Inactive</span>'}</td>
                 <td>
@@ -688,7 +688,7 @@ async function loadAdminOrders() {
             const date = new Date(o.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
             return `
                 <tr>
-                    <td><span style="font-weight:600; color:var(--gold-light);">${escapeHTML(o.order_number)}</span></td>
+                    <td><span style="font-weight:700;">${escapeHTML(o.order_number)}</span></td>
                     <td>${escapeHTML(o.shipping_address?.split(',')[0] || '—')}</td>
                     <td style="font-weight:600;">${formatPrice(o.total_amount)}</td>
                     <td><span class="order-status ${o.status}">${o.status}</span></td>
