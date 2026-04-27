@@ -112,12 +112,10 @@ if db_url:
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
     
-    # 2. Fix Supabase "supa" parameter error (psycopg2 doesn't like &supa=base-pooler.x)
+    # 2. Fix Supabase "supa" parameter error
     if "supa=" in db_url:
         import re
-        # Remove &supa=... or ?supa=...
         db_url = re.sub(r'[&?]?supa=[^&]+', '', db_url)
-        # Ensure we don't leave a trailing ? or & if it was at the end
         db_url = db_url.rstrip('?&')
 
     DATABASES = {
@@ -126,6 +124,22 @@ if db_url:
             conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", "600")),
             ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true",
         )
+    }
+elif os.getenv("DB_NAME"):
+    # Use individual variables from .env
+    DATABASES = {
+        "default": {
+            "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.mysql"),
+            "NAME": os.getenv("DB_NAME"),
+            "USER": os.getenv("DB_USER"),
+            "PASSWORD": os.getenv("DB_PASSWORD"),
+            "HOST": os.getenv("DB_HOST", "localhost"),
+            "PORT": os.getenv("DB_PORT", "3306"),
+            "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "600")),
+            "OPTIONS": {
+                "charset": "utf8mb4",
+            }
+        }
     }
 else:
     DATABASES = {
