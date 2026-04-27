@@ -69,6 +69,7 @@ const API = {
     base: '/api',
     userCacheKey: 'iri_user',
     bootstrapPromise: null,
+    sessionValidated: false,
 
     getCsrfToken() {
         const meta = document.querySelector('meta[name="csrf-token"]');
@@ -83,10 +84,12 @@ const API = {
         if (!user) {
             sessionStorage.removeItem(this.userCacheKey);
             this.isBootstrapped = false;
+            this.sessionValidated = false;
             return;
         }
         sessionStorage.setItem(this.userCacheKey, JSON.stringify(user));
         this.isBootstrapped = true;
+        this.sessionValidated = true;
     },
 
     clearSession() {
@@ -96,6 +99,7 @@ const API = {
         localStorage.removeItem('user');
         localStorage.removeItem('iri_guest_cart');
         this.isBootstrapped = false;
+        this.sessionValidated = false;
     },
 
     isLoggedIn() {
@@ -202,17 +206,12 @@ const API = {
 
     isBootstrapped: false,
 
-    async bootstrapUser() {
-        if (this.isBootstrapped) return this.getUser();
+    async bootstrapUser(options = {}) {
+        const forceRefresh = !!options.forceRefresh;
+        if (this.isBootstrapped && this.sessionValidated && !forceRefresh) return this.getUser();
         if (this.bootstrapPromise) return this.bootstrapPromise;
 
         this.bootstrapPromise = (async () => {
-            const cachedUser = this.getUser();
-            if (cachedUser) {
-                this.isBootstrapped = true;
-                return cachedUser;
-            }
-
             try {
                 const controller = createRequestController();
                 const user = await this.get('/auth/profile/', {
@@ -221,8 +220,15 @@ const API = {
                 });
                 this.setUser(user);
                 this.isBootstrapped = true;
+                this.sessionValidated = true;
                 return user;
             } catch {
+                const cachedUser = this.getUser();
+                if (cachedUser && !forceRefresh) {
+                    this.isBootstrapped = true;
+                    this.sessionValidated = true;
+                    return cachedUser;
+                }
                 this.clearSession();
                 this.isBootstrapped = true; // Mark as done even if it failed
                 return null;

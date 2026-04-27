@@ -50,24 +50,24 @@
                 </a>
 
                 <!-- Auth Links (visible when logged out) -->
-                <div id="auth-links">
-                    <a href="/login/" class="btn-brutalist" style="padding: 0.5rem 1rem; font-size: 0.75rem;">Login</a>
+                <div id="auth-links" class="nav-actions">
+                    <a href="/login/" class="btn-brutalist nav-action-btn">Login</a>
                 </div>
 
                 <!-- User Menu (visible when logged in) -->
-                <div id="user-menu" class="hidden">
-                    <button type="button" id="user-menu-toggle" class="nav-link" style="display:flex; align-items:center; gap:4px; background:none; border:none; cursor:pointer;">
+                <div id="user-menu" class="hidden nav-actions nav-user-menu">
+                    <button type="button" id="user-menu-toggle" class="nav-link nav-user-trigger">
                         <span class="user-name-trigger">Account</span>
-                        <svg class="icon-svg" style="width:14px;height:14px;"><path d="m6 9 6 6 6-6" /></svg>
+                        <svg class="icon-svg nav-user-caret"><path d="m6 9 6 6 6-6" /></svg>
                     </button>
-                    <div id="user-menu-dropdown" class="hidden" style="position:absolute; right:0; top:calc(100% + 8px); min-width:180px; border:var(--border-width) solid var(--border-color); background:var(--bg-elevated); box-shadow:6px 6px 0 0 var(--shadow-color); padding:var(--space-sm); z-index:90; display:flex; flex-direction:column; gap:8px;">
-                        <a href="/orders/" class="btn-brutalist" style="text-align:center; width:100%;">ORDERS</a>
-                        <button type="button" class="btn-brutalist" onclick="logout()" style="width:100%; background:var(--error-bg); color:var(--error); border-color:var(--error);">LOGOUT</button>
+                    <div id="user-menu-dropdown" class="hidden nav-user-dropdown">
+                        <a href="/orders/" class="btn-brutalist nav-dropdown-btn">ORDERS</a>
+                        <button type="button" class="btn-brutalist nav-dropdown-btn nav-danger-btn" onclick="logout()">LOGOUT</button>
                     </div>
                 </div>
 
                 <!-- Admin Link (visible for admins) -->
-                <a href="/admin-dashboard/" class="nav-link hidden" id="admin-link" style="font-weight: 800; color: var(--bg-accent);">ADMIN</a>
+                <a href="/admin-dashboard/" class="nav-link nav-admin-link hidden" id="admin-link">ADMIN</a>
             </div>
         </div>
 

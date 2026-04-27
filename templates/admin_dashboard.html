@@ -280,7 +280,7 @@ let allCategories = [];
 
 // ─── Auth guard ─────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-    const user = await API.bootstrapUser();
+    const user = await API.bootstrapUser({ forceRefresh: true });
     if (!user || !API.isAdmin()) {
         Toast.error('Access denied. Admin only.');
         setTimeout(() => window.location.href = '/', 1000);

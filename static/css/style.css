@@ -343,6 +343,71 @@ input[type="checkbox"]:focus-visible {
     list-style: none;
 }
 
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+}
+
+.nav-action-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.7rem;
+    min-height: 40px;
+}
+
+.nav-user-menu {
+    position: relative;
+}
+
+.nav-user-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+.nav-user-caret {
+    width: 14px;
+    height: 14px;
+}
+
+.nav-user-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 180px;
+    border: var(--border-width) solid var(--border-color);
+    background: var(--bg-elevated);
+    box-shadow: 6px 6px 0 0 var(--shadow-color);
+    padding: var(--space-sm);
+    z-index: 90;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nav-dropdown-btn {
+    width: 100%;
+    text-align: center;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.72rem;
+}
+
+.nav-danger-btn {
+    background: var(--error-bg);
+    color: var(--error);
+    border-color: var(--error);
+}
+
+.nav-admin-link {
+    font-weight: 800;
+    color: var(--black);
+}
+
 .nav-link {
     font-family: var(--font-sans);
     font-weight: 700;
@@ -779,6 +844,29 @@ input[type="checkbox"]:focus-visible {
         transition: right 0.25s ease;
         gap: var(--space-md);
         align-items: flex-start;
+    }
+
+    .nav-links > * {
+        width: 100%;
+    }
+
+    .nav-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .nav-user-trigger {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .nav-user-dropdown {
+        position: static;
+        min-width: 0;
+        box-shadow: none;
+        padding: 0;
+        border: none;
     }
 
     .nav-links.open {
