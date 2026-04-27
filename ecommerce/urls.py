@@ -5,6 +5,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
+from core.views import admin_dashboard_view
 
 # ─── Page Views ─────────────────────────────────────────────────
 urlpatterns = [
@@ -57,7 +58,7 @@ urlpatterns = [
     path("about/", TemplateView.as_view(template_name="about.html"), name="about-page"),
     path(
         "admin-dashboard/",
-        TemplateView.as_view(template_name="admin_dashboard.html"),
+        admin_dashboard_view,
         name="admin-dashboard",
     ),
 ]

@@ -694,28 +694,40 @@ class OrderCancelView(APIView):
 
     @transaction.atomic
     def post(self, request):
-        order_id = request.data.get("order_id")
-        if not order_id:
-            return Response(
-                {"error": "order_id is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        raw_order_id = request.data.get("order_id") or request.data.get("id")
+        order_number = str(request.data.get("order_number", "")).strip()
 
-        try:
-            order_id = int(order_id)
-        except (TypeError, ValueError):
-            return Response(
-                {"error": "Invalid order_id."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        order = None
 
-        try:
+        if raw_order_id not in (None, ""):
+            try:
+                order_id = int(raw_order_id)
+            except (TypeError, ValueError):
+                return Response(
+                    {"error": "Invalid order_id."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             order = (
                 Order.objects.select_for_update()
                 .prefetch_related("items__product")
-                .get(id=order_id, user=request.user)
+                .filter(id=order_id, user=request.user)
+                .first()
             )
-        except Order.DoesNotExist:
+        elif order_number:
+            order = (
+                Order.objects.select_for_update()
+                .prefetch_related("items__product")
+                .filter(order_number=order_number, user=request.user)
+                .first()
+            )
+        else:
+            return Response(
+                {"error": "order_id or order_number is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not order:
             return Response(
                 {"error": "Order not found."},
                 status=status.HTTP_404_NOT_FOUND,
@@ -1060,29 +1072,17 @@ class AdminOrderStatusView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            if new_status in {"confirmed", "shipped"}:
-                txn = getattr(order, "transaction", None)
-                if not txn or txn.status != "paid":
-                    return Response(
-                        {
-                            "error": (
-                                "Order cannot be moved to fulfillment without an approved payment. "
-                                "Please approve the payment proof first."
-                            )
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
             if new_status == "cancelled" and order.status != "cancelled":
                 txn = getattr(order, "transaction", None)
-                # ✅ RESTORE STOCK: If proof was uploaded, stock was already deducted.
-                # If no txn exists, stock was never deducted (only reserved).
-                if txn and txn.status != "rejected":
+                # Restore stock only for legacy flow where screenshot upload deducted stock.
+                if txn and txn.status != "rejected" and txn.payment_screenshot:
                     for item in order.items.all().select_related("product"):
                         if item.product:
                             product = Product.objects.select_for_update().get(pk=item.product.pk)
                             product.stock += item.quantity
                             product.save(update_fields=["stock"])
+
+                if txn and txn.status != "rejected":
                     txn.status = "rejected"
                     txn.save(update_fields=["status"])
             

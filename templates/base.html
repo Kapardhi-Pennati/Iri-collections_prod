@@ -56,11 +56,18 @@
 
                 <!-- User Menu (visible when logged in) -->
                 <div id="user-menu" class="hidden">
-                    <a href="/orders/" class="nav-link"><span class="user-name-trigger">Account</span></a>
+                    <button type="button" id="user-menu-toggle" class="nav-link" style="display:flex; align-items:center; gap:4px; background:none; border:none; cursor:pointer;">
+                        <span class="user-name-trigger">Account</span>
+                        <svg class="icon-svg" style="width:14px;height:14px;"><path d="m6 9 6 6 6-6" /></svg>
+                    </button>
+                    <div id="user-menu-dropdown" class="hidden" style="position:absolute; right:0; top:calc(100% + 8px); min-width:180px; border:var(--border-width) solid var(--border-color); background:var(--bg-elevated); box-shadow:6px 6px 0 0 var(--shadow-color); padding:var(--space-sm); z-index:90; display:flex; flex-direction:column; gap:8px;">
+                        <a href="/orders/" class="btn-brutalist" style="text-align:center; width:100%;">ORDERS</a>
+                        <button type="button" class="btn-brutalist" onclick="logout()" style="width:100%; background:var(--error-bg); color:var(--error); border-color:var(--error);">LOGOUT</button>
+                    </div>
                 </div>
 
                 <!-- Admin Link (visible for admins) -->
-                <a href="/admin/" class="nav-link hidden" id="admin-link" style="font-weight: 800; color: var(--bg-accent);">ADMIN</a>
+                <a href="/admin-dashboard/" class="nav-link hidden" id="admin-link" style="font-weight: 800; color: var(--bg-accent);">ADMIN</a>
             </div>
         </div>
 

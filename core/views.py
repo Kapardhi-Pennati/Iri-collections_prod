@@ -1,6 +1,16 @@
 from django.http import JsonResponse, HttpResponse
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render
 from django.utils.html import escape
 from core.security import audit_log, get_client_ip
+
+
+@login_required(login_url="/login/")
+def admin_dashboard_view(request):
+    user = request.user
+    if not (user.is_superuser or getattr(user, "role", None) == "admin"):
+        return redirect("home")
+    return render(request, "admin_dashboard.html")
 
 def csrf_failure(request, reason=""):
     """

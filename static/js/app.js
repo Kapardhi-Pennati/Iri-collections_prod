@@ -302,7 +302,7 @@ async function updateNavbar() {
             const nameEl = userMenu.querySelector('.user-name-trigger');
             if (nameEl) {
                 const firstName = user.full_name ? user.full_name.split(' ')[0] : (user.username || 'Account');
-                nameEl.innerHTML = `${escapeHTML(firstName)} <svg class="icon-svg" style="width:14px;height:14px;margin-left:4px;"><path d="m6 9 6 6 6-6"/></svg>`;
+                nameEl.textContent = firstName;
             }
         }
         if (adminLink && API.isAdmin()) {
@@ -571,8 +571,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const toggle = document.getElementById('nav-toggle');
     const links = document.getElementById('nav-links');
     const overlay = document.getElementById('menu-overlay');
-    const userTrigger = document.querySelector('.user-name-trigger');
     const userMenu = document.getElementById('user-menu');
+    const userMenuToggle = document.getElementById('user-menu-toggle');
+    const userMenuDropdown = document.getElementById('user-menu-dropdown');
 
     const handleScroll = () => {
         if (!navbar) return;
@@ -601,18 +602,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         overlay.addEventListener('click', toggleMenu);
 
-        if (userTrigger && userMenu) {
-            userTrigger.addEventListener('click', (event) => {
-                if (window.innerWidth <= 768) {
-                    event.preventDefault();
-                    userMenu.classList.toggle('active');
+        if (userMenu && userMenuToggle && userMenuDropdown) {
+            userMenu.style.position = 'relative';
+
+            userMenuToggle.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                userMenuDropdown.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!userMenu.contains(event.target)) {
+                    userMenuDropdown.classList.add('hidden');
                 }
+            });
+
+            userMenuDropdown.querySelectorAll('a, button').forEach((item) => {
+                item.addEventListener('click', () => {
+                    userMenuDropdown.classList.add('hidden');
+                });
             });
         }
 
         links.querySelectorAll('a').forEach((link) => {
             link.addEventListener('click', () => {
-                if (link.classList.contains('user-name-trigger')) return;
                 if (links.classList.contains('open')) toggleMenu();
             });
         });

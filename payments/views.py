@@ -5,6 +5,7 @@ Manual UPI payment flow with atomic stock settlement.
 import io
 import logging
 import qrcode
+from urllib.parse import urlencode
 
 from datetime import timedelta
 from django.conf import settings
@@ -255,11 +256,19 @@ class GenerateUPIQRView(APIView):
         except ValueError:
             amount = "0.00"
 
-        upi_id = getattr(settings, "UPI_ID", "")
-        upi_name = getattr(settings, "UPI_DISPLAY_NAME", "")
-        note = request.query_params.get("note", "Payment")
+        upi_id = str(getattr(settings, "UPI_ID", "")).strip()
+        upi_name = str(getattr(settings, "UPI_DISPLAY_NAME", "")).strip()
+        note = str(request.query_params.get("note", "Payment")).strip()[:80] or "Payment"
 
-        upi_uri = f"upi://pay?pa={upi_id}&pn={upi_name}&am={amount}&cu=INR&tn={note}"
+        upi_uri = "upi://pay?" + urlencode(
+            {
+                "pa": upi_id,
+                "pn": upi_name,
+                "am": amount,
+                "cu": "INR",
+                "tn": note,
+            }
+        )
 
         qr = qrcode.QRCode(
             version=1,

@@ -276,16 +276,18 @@ async function proceedToPayment() {
         if (res.ok) {
             createdOrder = res.data;
             document.getElementById('payment-amount-display').textContent = formatPrice(createdOrder.total_amount);
-            updatePaymentQRCode(createdOrder.total_amount, createdOrder.order_number);
+            updatePaymentQRCode(createdOrder.total_amount, createdOrder.id);
             updateCartCount();
             goToStep(3);
         }
     } finally { pageBusy = false; btn.textContent = 'INITIATE SETTLEMENT'; }
 }
 
-function updatePaymentQRCode(amt, orderNum = '') {
+function updatePaymentQRCode(amt, orderId = '') {
     const qrImg = document.querySelector('#step-3 img');
-    qrImg.src = `/api/payments/qr-code/?amount=${amt}&note=ORDER-${orderNum}`;
+    const amount = Number(amt || 0).toFixed(2);
+    const note = orderId ? `ORDER-ID-${orderId}` : 'PAYMENT';
+    qrImg.src = `/api/payments/qr-code/?amount=${encodeURIComponent(amount)}&note=${encodeURIComponent(note)}`;
 }
 
 async function confirmPaid() {
@@ -324,6 +326,8 @@ async function cancelOrder() {
     try {
         const res = await API.post('/store/orders/cancel/', {
             order_id: createdOrder.id,
+            id: createdOrder.id,
+            order_number: createdOrder.order_number,
         });
         if (res.ok) {
             Toast.success('ORDER CANCELLED. ITEMS RESTORED TO YOUR CART.');
@@ -332,6 +336,9 @@ async function cancelOrder() {
         } else {
             Toast.error(res.data?.error || 'FAILED TO CANCEL ORDER');
         }
+    } catch (err) {
+        console.error(err);
+        Toast.error('AN ERROR OCCURRED WHILE CANCELLING THE ORDER');
     } finally { pageBusy = false; btn.textContent = 'CANCEL'; }
 }
 </script>
