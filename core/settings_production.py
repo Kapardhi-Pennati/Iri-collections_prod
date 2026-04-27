@@ -5,6 +5,7 @@ All security standards enforced (OWASP Top 10, Django Best Practices)
 
 import os
 import logging
+import base64
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -34,6 +35,11 @@ if DEBUG:
     logger.warning("⚠️  DEBUG MODE ENABLED - Never use in production!")
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+
+PII_ENCRYPTION_KEY = os.getenv("PII_ENCRYPTION_KEY", "")
+if not PII_ENCRYPTION_KEY:
+    logger.warning("PII_ENCRYPTION_KEY missing; deriving fallback from SECRET_KEY. Configure explicit key in environment.")
+    PII_ENCRYPTION_KEY = base64.urlsafe_b64encode(SECRET_KEY.encode("utf-8")[:32].ljust(32, b"0")).decode("utf-8")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -121,6 +127,10 @@ else:
         }
     }
 
+DATABASES["default"].setdefault("CONN_HEALTH_CHECKS", True)
+if os.getenv("DB_USE_POOLER", "false").lower() in ("1", "true", "yes"):
+    DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
+
 # ─────────────────────────────────────────────────────────────────────────────
 # AUTHENTICATION & USER MODEL
 # ─────────────────────────────────────────────────────────────────────────────
@@ -149,7 +159,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ✅ Session security
-SESSION_ENGINE = "django.contrib.sessions.backends.db"  # Secure backend
+SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
+SESSION_CACHE_ALIAS = "default"
 SESSION_COOKIE_AGE = 3600  # 1 hour
 SESSION_COOKIE_SECURE = True  # HTTPS only in production
 SESSION_COOKIE_HTTPONLY = True  # ✅ Prevent JS access (XSS protection)

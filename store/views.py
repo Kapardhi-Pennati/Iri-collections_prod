@@ -7,6 +7,7 @@ import logging
 import urllib.request
 import urllib.error
 import json
+import hashlib
 from datetime import timedelta
 
 from rest_framework import generics, status, viewsets
@@ -16,20 +17,23 @@ from rest_framework.views import APIView
 from django.db import transaction
 from django.db.models import Sum, Count, F, Q
 from django.db.models.functions import TruncDate
+from django.core.cache import cache
 from django.utils import timezone
 from django.utils.html import escape
 
-from core.security import audit_log
+from core.security import audit_log, generate_secure_otp
 from core.permissions import IsAdminUser, IsCustomerUser
 from core.validators import InputValidator
 from core.throttling import (
     AdminMutationThrottle,
     CheckoutThrottle,
+    CheckoutOTPVerifyThrottle,
     PincodeVerifyThrottle,
 )
 
 from .models import Category, Product, Cart, CartItem, Order, OrderItem, Wishlist, StockReservation, Transaction
 from accounts.models import Address
+from core.encryption import pii_hash
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
@@ -40,6 +44,27 @@ from .serializers import (
 )
 
 logger = logging.getLogger(__name__)
+
+PRODUCT_CACHE_TTL_SECONDS = 120
+
+
+def _catalog_cache_version() -> int:
+    return int(cache.get("catalog:version", 1) or 1)
+
+
+def _bump_catalog_cache_version() -> None:
+    try:
+        cache.incr("catalog:version")
+    except Exception:
+        cache.set("catalog:version", _catalog_cache_version() + 1, None)
+
+
+def _checkout_otp_key(user_id: int) -> str:
+    return f"checkout:otp:code:{user_id}"
+
+
+def _checkout_otp_verified_key(user_id: int) -> str:
+    return f"checkout:otp:verified:{user_id}"
 
 # ─── Permission helpers ────────────────────────────────────────
 class IsAdminRole(IsAdminUser):
@@ -202,12 +227,86 @@ class ProductListView(generics.ListAPIView):
             qs = qs.order_by("-created_at")
         return qs
 
+    def list(self, request, *args, **kwargs):
+        raw_query = request.META.get("QUERY_STRING", "")
+        fingerprint = hashlib.md5(raw_query.encode("utf-8")).hexdigest()
+        cache_key = f"catalog:list:v{_catalog_cache_version()}:{fingerprint}"
+        cached_payload = cache.get(cache_key)
+        if cached_payload is not None:
+            return Response(cached_payload)
+
+        response = super().list(request, *args, **kwargs)
+        if response.status_code == status.HTTP_200_OK:
+            cache.set(cache_key, response.data, PRODUCT_CACHE_TTL_SECONDS)
+        return response
+
 
 class ProductDetailView(generics.RetrieveAPIView):
     queryset = Product.objects.filter(is_active=True).select_related("category")
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]
     lookup_field = "slug"
+
+    def retrieve(self, request, *args, **kwargs):
+        slug = kwargs.get(self.lookup_field, "")
+        cache_key = f"catalog:detail:v{_catalog_cache_version()}:{slug}"
+        cached_payload = cache.get(cache_key)
+        if cached_payload is not None:
+            return Response(cached_payload)
+
+        response = super().retrieve(request, *args, **kwargs)
+        if response.status_code == status.HTTP_200_OK:
+            cache.set(cache_key, response.data, PRODUCT_CACHE_TTL_SECONDS)
+        return response
+
+
+def _finalize_paid_order(order: Order) -> tuple[bool, str]:
+    """
+    Atomically settle inventory and convert reservation to finalized inventory use.
+    """
+    now = timezone.now()
+    order_items = list(OrderItem.objects.filter(order=order).select_related("product"))
+    product_ids = [item.product_id for item in order_items if item.product_id]
+    product_map = {
+        product.id: product
+        for product in Product.objects.select_for_update().filter(id__in=product_ids)
+    }
+
+    for item in order_items:
+        if not item.product_id:
+            continue
+
+        product = product_map.get(item.product_id)
+        if not product:
+            return False, f"Product for {item.product_name} no longer exists."
+
+        reservation = (
+            StockReservation.objects.select_for_update()
+            .filter(order=order, product=product)
+            .first()
+        )
+
+        if not reservation or reservation.expires_at <= now:
+            return False, f"Reservation expired for {product.name}."
+
+        if reservation.quantity < item.quantity:
+            return False, f"Reservation mismatch for {product.name}."
+
+        if product.stock < item.quantity:
+            return False, f"Insufficient stock for {product.name}."
+
+    for item in order_items:
+        if not item.product_id:
+            continue
+        product = product_map[item.product_id]
+        product.stock -= item.quantity
+        product.save(update_fields=["stock"])
+
+    StockReservation.objects.filter(order=order).delete()
+    order.status = "confirmed"
+    order.save(update_fields=["status"])
+    order.finalize_order_number()
+    return True, "ok"
 
 
 # ─── Cart ──────────────────────────────────────────────────────
@@ -403,6 +502,100 @@ class CartView(APIView):
         return Response(CartSerializer(_cart_queryset().get(pk=cart.pk)).data)
 
 
+class CheckoutOTPRequestView(APIView):
+    permission_classes = [IsCustomerRole]
+    throttle_classes = [CheckoutThrottle]
+
+    def post(self, request):
+        if getattr(request.user, "is_guest", False):
+            raw_email = str(request.data.get("email", "")).strip()
+            ok, normalized_email = InputValidator.validate_email(raw_email)
+            if not ok:
+                return Response(
+                    {"error": "Valid email is required for guest checkout."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if (
+                request.user.email != normalized_email
+                and request.user.__class__.objects.filter(email=normalized_email).exclude(id=request.user.id).exists()
+            ):
+                return Response(
+                    {"error": "Email already in use. Login or use another email."},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+            raw_phone = str(request.data.get("phone", "")).strip()
+            if raw_phone:
+                phone_ok, normalized_phone = InputValidator.validate_phone(raw_phone)
+                if not phone_ok:
+                    return Response(
+                        {"error": "Enter a valid phone number."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                request.user.phone = normalized_phone
+
+            request.user.email = normalized_email
+            request.user.full_name = (
+                escape(str(request.data.get("full_name", "")).strip())[:150]
+                or request.user.full_name
+            )
+            request.user.save(update_fields=["email", "full_name", "phone"])
+
+        otp_code = generate_secure_otp(length=6)
+        cache.set(_checkout_otp_key(request.user.id), otp_code, timeout=300)
+        cache.delete(_checkout_otp_verified_key(request.user.id))
+
+        from core.tasks import task_send_otp_email
+        from core.services.email_service import send_otp_email
+
+        sent = False
+        try:
+            task_send_otp_email.delay(request.user.email, otp_code)
+            sent = True
+        except Exception:
+            sent = bool(send_otp_email(request.user.email, otp_code))
+
+        if not sent:
+            return Response(
+                {"error": "Failed to dispatch OTP."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response({"message": "Checkout OTP sent to your email."})
+
+
+class CheckoutOTPVerifyView(APIView):
+    permission_classes = [IsCustomerRole]
+    throttle_classes = [CheckoutOTPVerifyThrottle]
+
+    @transaction.atomic
+    def post(self, request):
+        otp_code = str(request.data.get("otp_code", "")).strip()
+        if not otp_code:
+            return Response(
+                {"error": "otp_code is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        expected_code = cache.get(_checkout_otp_key(request.user.id))
+        if not expected_code:
+            StockReservation.objects.filter(user=request.user, order__isnull=True).delete()
+            return Response(
+                {"error": "OTP session expired. Cart reservations were released."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if otp_code != str(expected_code):
+            return Response(
+                {"error": "Invalid OTP code."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        cache.delete(_checkout_otp_key(request.user.id))
+        cache.set(_checkout_otp_verified_key(request.user.id), True, timeout=900)
+        return Response({"message": "Checkout OTP verified."})
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # ORDER CREATION (Secure)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -423,6 +616,12 @@ class OrderCreateView(APIView):
     
     @transaction.atomic
     def post(self, request):
+        if not cache.get(_checkout_otp_verified_key(request.user.id)):
+            return Response(
+                {"error": "Checkout OTP verification is required before reserving stock."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         serializer = OrderCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -523,14 +722,24 @@ class OrderCreateView(APIView):
             if street and city and state and pincode:
                 phone = serializer.validated_data.get("phone", "")
                 name = serializer.validated_data.get("recipient_name", "").strip() or "Shipping"
-                address, created = Address.objects.get_or_create(
+                address = Address.objects.filter(
                     user=request.user,
-                    street=street,
                     city=city,
                     state=state,
-                    pincode=pincode,
-                    defaults={"name": name[:150], "phone": phone},
-                )
+                    street_hash=pii_hash(street),
+                    pincode_hash=pii_hash(pincode),
+                ).first()
+                created = address is None
+                if created:
+                    address = Address.objects.create(
+                        user=request.user,
+                        street=street,
+                        city=city,
+                        state=state,
+                        pincode=pincode,
+                        name=name[:150],
+                        phone=phone,
+                    )
                 if not created:
                     updated_fields = []
                     if phone and address.phone != phone:
@@ -579,13 +788,15 @@ class OrderCreateView(APIView):
                 )
 
         cart.items.all().delete()
+        cache.delete(_checkout_otp_verified_key(request.user.id))
 
         audit_log(
             action="ORDER_CREATED",
             user_id=request.user.id,
             details={
                 "order_id": order.id,
-                "order_number": order.order_number,
+                "order_number": order.order_number or "pending",
+                "checkout_reference": str(order.checkout_reference),
                 "total": float(order.total_amount),
                 "items_count": len(order_items_data),
                 "note": "Inventory reserved atomically; hard stock deduction deferred to payment approval",
@@ -647,10 +858,6 @@ class OrderConfirmPaymentView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Extend stock reservations while the order proceeds to fulfillment.
-        expires_at = timezone.now() + timedelta(hours=24)
-        StockReservation.objects.filter(order=order).update(expires_at=expires_at)
-
         txn, created = Transaction.objects.get_or_create(
             order=order,
             defaults={
@@ -661,6 +868,17 @@ class OrderConfirmPaymentView(APIView):
         if not created and txn.status != "paid":
             txn.status = "paid"
             txn.save(update_fields=["status"])
+
+        finalized, message = _finalize_paid_order(order)
+        if not finalized:
+            txn.status = "rejected"
+            txn.admin_notes = message
+            txn.save(update_fields=["status", "admin_notes"])
+            StockReservation.objects.filter(order=order).delete()
+            return Response(
+                {"error": message},
+                status=status.HTTP_409_CONFLICT,
+            )
 
         audit_log(
             action="PAYMENT_CONFIRMED_BY_CUSTOMER",
@@ -1001,6 +1219,18 @@ class AdminProductViewSet(viewsets.ModelViewSet):
             return ProductSerializer
         return ProductAdminSerializer
 
+    def perform_create(self, serializer):
+        serializer.save()
+        _bump_catalog_cache_version()
+
+    def perform_update(self, serializer):
+        serializer.save()
+        _bump_catalog_cache_version()
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        _bump_catalog_cache_version()
+
 
 class AdminCategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.annotate(
@@ -1061,6 +1291,14 @@ class AdminOrderStatusView(APIView):
             if new_status == order.status:
                 return Response(OrderSerializer(order).data)
 
+            if new_status == "confirmed":
+                txn = getattr(order, "transaction", None)
+                if not txn or txn.status != "paid":
+                    return Response(
+                        {"error": "Paid transaction required before confirmation."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
             allowed_next = self._allowed_transitions.get(order.status, set())
             if new_status not in allowed_next:
                 return Response(
@@ -1112,25 +1350,46 @@ class AdminOrderTrackingUploadView(APIView):
     permission_classes = [IsAdminRole]
     throttle_classes = [AdminMutationThrottle]
 
+    @transaction.atomic
     def post(self, request, pk):
         try:
-            order = Order.objects.get(pk=pk)
+            order = Order.objects.select_for_update().get(pk=pk)
+            old_status = order.status
             image = request.FILES.get("tracking_image")
-            if not image:
-                return Response({"error": "tracking_image is required."}, status=status.HTTP_400_BAD_REQUEST)
-            if image.content_type not in {"image/jpeg", "image/png", "image/webp"}:
+            tracking_id = str(request.data.get("tracking_id", "")).strip()[:120]
+
+            if not tracking_id and not image:
                 return Response(
-                    {"error": "Only JPEG, PNG, and WebP tracking images are allowed."},
+                    {"error": "tracking_id or tracking_image is required."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            if image.size > 5 * 1024 * 1024:
-                return Response(
-                    {"error": "Tracking image must be 5 MB or smaller."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            order.tracking_image = image
+
+            if image:
+                if image.content_type not in {"image/jpeg", "image/png", "image/webp"}:
+                    return Response(
+                        {"error": "Only JPEG, PNG, and WebP tracking images are allowed."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if image.size > 5 * 1024 * 1024:
+                    return Response(
+                        {"error": "Tracking image must be 5 MB or smaller."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                order.tracking_image = image
+
+            if tracking_id:
+                order.tracking_id = tracking_id
+
+            if order.status == "confirmed":
+                order.status = "shipped"
+
             order.save()
-            return Response({"message": "Tracking image uploaded."})
+
+            if tracking_id and old_status == "shipped" and order.status == "shipped":
+                from core.tasks import task_send_order_status_email
+                task_send_order_status_email.delay(order.id, "confirmed", "shipped")
+
+            return Response({"message": "Tracking updated.", "tracking_id": order.tracking_id})
         except Order.DoesNotExist:
             return Response({"error": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
 

@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
 from django.utils import timezone
+from core.encryption import EncryptedCharField, EncryptedTextField
 
 
 class StockReservationQuerySet(models.QuerySet):
@@ -181,7 +182,20 @@ class Order(models.Model):
         ("shipped", "Shipped"),
         ("cancelled", "Cancelled"),
     )
-    order_number = models.CharField(max_length=20, unique=True, editable=False)
+    order_number = models.CharField(
+        max_length=20,
+        unique=True,
+        editable=False,
+        null=True,
+        blank=True,
+    )
+    checkout_reference = models.CharField(
+        max_length=36,
+        unique=True,
+        editable=False,
+        db_index=True,
+        default=uuid.uuid4,
+    )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders"
     )
@@ -190,10 +204,11 @@ class Order(models.Model):
     status = models.CharField(
         max_length=12, choices=STATUS_CHOICES, default="pending", db_index=True
     )
-    shipping_address = models.TextField()
-    phone = models.CharField(max_length=15, blank=True)
+    shipping_address = EncryptedTextField()
+    phone = EncryptedCharField(blank=True)
     notes = models.TextField(blank=True)
     tracking_image = models.ImageField(upload_to="tracking/", blank=True, null=True)
+    tracking_id = models.CharField(max_length=120, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -205,13 +220,17 @@ class Order(models.Model):
                 check=models.Q(total_amount__gte=0), name="order_total_positive"
             )
         ]
+        indexes = [
+            models.Index(fields=["user", "status"]),
+            models.Index(fields=["status", "created_at"]),
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._original_status = self.status
 
     def save(self, *args, **kwargs):
-        if not self.order_number:
+        if self.status in {"confirmed", "shipped"} and not self.order_number:
             self.order_number = f"IRI-{uuid.uuid4().hex[:8].upper()}"
 
         super().save(*args, **kwargs)
@@ -224,6 +243,12 @@ class Order(models.Model):
         # dispatches the task with .delay() so SMTP never blocks the request.
 
     def __str__(self):
+        return self.order_number or f"PENDING-{str(self.checkout_reference)[:8].upper()}"
+
+    def finalize_order_number(self) -> str:
+        if not self.order_number:
+            self.order_number = f"IRI-{uuid.uuid4().hex[:8].upper()}"
+            self.save(update_fields=["order_number"])
         return self.order_number
 
 
@@ -236,6 +261,9 @@ class OrderItem(models.Model):
 
     class Meta:
         db_table = "order_items"
+        indexes = [
+            models.Index(fields=["product", "order"]),
+        ]
         constraints = [
             models.CheckConstraint(
                 check=models.Q(quantity__gt=0), name="orderitem_quantity_positive"
@@ -341,6 +369,10 @@ class StockReservation(models.Model):
 
     class Meta:
         db_table = "stock_reservations"
+        indexes = [
+            models.Index(fields=["product", "expires_at"]),
+            models.Index(fields=["user", "order"]),
+        ]
         constraints = [
             models.CheckConstraint(
                 check=models.Q(quantity__gt=0),

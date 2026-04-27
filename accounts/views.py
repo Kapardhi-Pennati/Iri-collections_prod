@@ -19,6 +19,7 @@ Refactoring changes from original:
 """
 
 import logging
+import uuid
 from typing import Optional, Tuple
 
 from django.conf import settings
@@ -718,6 +719,20 @@ class LogoutView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request) -> Response:
+        user = request.user if getattr(request, "user", None) and request.user.is_authenticated else None
+
+        # Guest sessions should never retain server-side checkout holds after logout.
+        if user and getattr(user, "is_guest", False):
+            try:
+                from store.models import Cart, StockReservation
+
+                cart = Cart.objects.filter(user=user).first()
+                if cart:
+                    cart.items.all().delete()
+                StockReservation.objects.filter(user=user).delete()
+            except Exception:
+                logger.exception("Failed to clear guest checkout residue during logout.")
+
         refresh_cookie_name = settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"]
         refresh_token = request.COOKIES.get(refresh_cookie_name)
 
@@ -727,9 +742,129 @@ class LogoutView(APIView):
             except TokenError:
                 pass
 
+        if hasattr(request, "session"):
+            request.session.flush()
+
         response = Response({"message": "Logged out."}, status=status.HTTP_200_OK)
         _clear_auth_cookies(response)
         return response
+
+
+class GuestSessionView(APIView):
+    permission_classes = [AllowAny]
+
+    @transaction.atomic
+    def post(self, request) -> Response:
+        if request.user and request.user.is_authenticated:
+            return Response(
+                {
+                    "message": "Session already authenticated.",
+                    "user": UserSerializer(request.user).data,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        suffix = uuid.uuid4().hex[:12]
+        guest_email = f"guest-{suffix}@checkout.local"
+        guest_username = f"guest_{suffix}"
+        guest_password = uuid.uuid4().hex
+
+        guest_user = User.objects.create_user(
+            email=guest_email,
+            username=guest_username,
+            password=guest_password,
+            full_name="Guest Checkout",
+            role="customer",
+            is_guest=True,
+        )
+
+        audit_log(
+            action="GUEST_SESSION_CREATED",
+            user_id=guest_user.id,
+            details={"email": guest_user.email},
+            severity="INFO",
+        )
+
+        return _build_authenticated_response(
+            guest_user,
+            message="Guest checkout session created.",
+            status_code=status.HTTP_201_CREATED,
+        )
+
+
+class ConvertGuestAccountView(APIView):
+    permission_classes = [IsAdminOrCustomerUser]
+
+    @transaction.atomic
+    def post(self, request) -> Response:
+        user = request.user
+        if not getattr(user, "is_guest", False):
+            return Response(
+                {"error": "Only guest sessions can be converted."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ok, email, err = _require_valid_email(request.data.get("email", ""))
+        if not ok:
+            return err
+
+        password = str(request.data.get("password", "")).strip()
+        password2 = str(request.data.get("password2", "")).strip()
+        full_name = escape(str(request.data.get("full_name", "")).strip())[:150]
+        phone = str(request.data.get("phone", "")).strip()
+
+        if not password:
+            return Response(
+                {"error": "Password is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if password != password2:
+            return Response(
+                {"error": "Passwords do not match."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        pwd_valid, pwd_error = InputValidator.validate_password(password)
+        if not pwd_valid:
+            return Response(
+                {"error": pwd_error},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if User.objects.filter(email=email).exclude(id=user.id).exists():
+            return Response(
+                {"error": "This email is already in use."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        if phone:
+            phone_ok, normalized_phone = InputValidator.validate_phone(phone)
+            if not phone_ok:
+                return Response(
+                    {"error": "Enter a valid phone number."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            user.phone = normalized_phone
+
+        user.email = email
+        user.username = email.split("@")[0]
+        user.full_name = full_name or user.full_name or "Customer"
+        user.is_guest = False
+        user.set_password(password)
+        user.save(update_fields=["email", "username", "full_name", "phone", "is_guest", "password"])
+
+        audit_log(
+            action="GUEST_SESSION_CONVERTED",
+            user_id=user.id,
+            details={"email": user.email},
+            severity="INFO",
+        )
+
+        return _build_authenticated_response(
+            user,
+            message="Account created successfully.",
+            status_code=status.HTTP_200_OK,
+        )
 
 
 # ─────────────────────────────────────────────────────────────────────────────

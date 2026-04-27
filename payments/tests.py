@@ -68,6 +68,13 @@ class UpiProofPaymentFlowTests(TestCase):
         )
 
     def test_customer_can_upload_payment_proof(self):
+        StockReservation.objects.create(
+            user=self.user,
+            product=self.product,
+            order=self.order,
+            quantity=2,
+            expires_at=timezone.now() + timedelta(hours=1),
+        )
         self.client.force_authenticate(user=self.user)
 
         response = self.client.post(

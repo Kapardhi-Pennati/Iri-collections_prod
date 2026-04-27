@@ -149,6 +149,17 @@ class PaymentThrottle(CheckoutThrottle):
     rate = "20/10m"
 
 
+class CheckoutOTPVerifyThrottle(AtomicRateThrottle):
+    scope = "checkout_otp_verify"
+    rate = "7/10m"
+
+    def get_cache_key(self, request, view) -> Optional[str]:
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return None
+        return str(user.id)
+
+
 class AdminMutationThrottle(AtomicRateThrottle):
     scope = "admin_mutation"
     rate = "60/min"

@@ -250,13 +250,17 @@
 <!-- Tracking Modal -->
 <div class="modal-overlay" id="tracking-modal">
     <div class="modal">
-        <h2>Upload Tracking Image</h2>
+        <h2>Update Tracking</h2>
         <form id="tracking-form">
             <input type="hidden" id="tracking-order-id">
-            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">Upload tracking slip for shipping proof.</p>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">Save tracking ID and optional slip image.</p>
+            <div class="form-group">
+                <label>Tracking ID</label>
+                <input type="text" id="track-id-input" placeholder="AWB / Courier ID" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false">
+            </div>
             <div class="form-group">
                 <label>Tracking Slip Image</label>
-                <input type="file" id="track-image-file" accept="image/*" required>
+                <input type="file" id="track-image-file" accept="image/*">
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-ghost" onclick="closeModal('tracking-modal')">Cancel</button>
@@ -757,8 +761,18 @@ document.getElementById('tracking-form').addEventListener('submit', async (e) =>
     
     const orderId = document.getElementById('tracking-order-id').value;
     const file = document.getElementById('track-image-file').files[0];
+    const trackingId = document.getElementById('track-id-input').value.trim();
+
+    if (!file && !trackingId) {
+        Toast.error('Provide tracking ID or image.');
+        btn.disabled = false;
+        btn.textContent = 'Upload';
+        return;
+    }
+
     const formData = new FormData();
-    formData.append('tracking_image', file);
+    if (file) formData.append('tracking_image', file);
+    if (trackingId) formData.append('tracking_id', trackingId);
 
     const res = await API.request(`/store/admin/orders/${orderId}/tracking/`, {
         method: 'POST',

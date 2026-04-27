@@ -90,10 +90,11 @@ const API = {
     },
 
     clearSession() {
-        sessionStorage.removeItem(this.userCacheKey);
+        sessionStorage.clear();
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
+        localStorage.removeItem('iri_guest_cart');
         this.isBootstrapped = false;
     },
 
@@ -266,6 +267,11 @@ const Toast = {
 };
 
 function initLazyLoading() {
+    document.querySelectorAll('img:not([loading])').forEach((img) => {
+        img.setAttribute('loading', 'lazy');
+        img.setAttribute('decoding', 'async');
+    });
+
     const images = document.querySelectorAll('img[data-src]');
     if (!images.length) return;
 
@@ -363,6 +369,7 @@ async function updateCartCount() {
 
 async function logout() {
     try {
+        RouteRuntime.abortAll();
         await API.post('/auth/logout/', {});
     } catch {
         // Clearing the local session is still safe even if the network fails.
@@ -483,11 +490,16 @@ async function addToCart(productId, quantity = 1) {
         return;
     }
 
+    const badge = document.getElementById('cart-count');
+    const previousCount = Number.parseInt(badge?.textContent || '0', 10) || 0;
+    if (badge) badge.textContent = String(previousCount + quantity);
+
     const response = await API.post('/store/cart/', { product_id: productId, quantity });
     if (response.ok) {
         Toast.success('Added to cart');
         updateCartCount();
     } else {
+        if (badge) badge.textContent = String(previousCount);
         Toast.error(response.data?.error || 'Failed to add to cart');
     }
 }

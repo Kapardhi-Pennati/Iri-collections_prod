@@ -33,6 +33,10 @@
                 </div>
 
                 <form id="shipping-form">
+                    <div style="margin-bottom: var(--space-md);">
+                        <label class="form-label">EMAIL ADDRESS</label>
+                        <input type="email" id="ship-email" class="brutalist-input" placeholder="you@example.com" required>
+                    </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); margin-bottom: var(--space-md);">
                         <div>
                             <label class="form-label">FULL NAME</label>
@@ -119,6 +123,11 @@
                 <h2 style="font-size: 2rem; margin-bottom: 8px;">ALLOCATION COMPLETE</h2>
                 <p style="font-family: var(--font-mono); font-weight: 600; font-size: 0.9rem; color: var(--gray-800); margin-bottom: var(--space-lg);">PAYMENT STATUS MARKED AS PAID.</p>
                 <div id="confirmation-details" style="margin-bottom: var(--space-lg);"></div>
+                <div id="guest-convert-wrap" class="hidden" style="margin-bottom: var(--space-lg);">
+                    <button type="button" class="btn-brutalist" onclick="convertGuestCheckoutAccount()" style="width: 100%;">
+                        CREATE ACCOUNT WITH THIS INFO
+                    </button>
+                </div>
                 <div style="display: flex; gap: var(--space-md); justify-content: center;">
                     <a href="/orders/" class="btn-brutalist btn-primary">VIEW ORDERS</a>
                     <a href="/catalog/" class="btn-brutalist">RETURN TO VAULT</a>
@@ -140,6 +149,10 @@ let checkoutShippingState = '';
 let shippingQuoteTimer = null;
 let pageBusy = false;
 let shippingQuote = { fee: 80, state: '', pincode: '', verified: false, error: '' };
+let checkoutOtpVerified = false;
+let checkoutOtpRequested = false;
+let currentUser = null;
+let isGuestSession = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
     bindShippingListeners();
@@ -147,19 +160,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadCheckoutCart() {
-    const user = await API.bootstrapUser();
-    if (!user) { window.location.href = '/login/'; return; }
+    let user = await API.bootstrapUser();
+    if (!user) {
+        const guestRes = await API.post('/auth/guest-session/', {});
+        if (!guestRes.ok) {
+            Toast.error(guestRes.data?.error || 'FAILED TO START GUEST CHECKOUT');
+            window.location.href = '/login/';
+            return;
+        }
+        API.setUser(guestRes.data.user);
+        await mergeGuestCart();
+        user = guestRes.data.user;
+    }
+
+    currentUser = user;
+    isGuestSession = !!user?.is_guest;
+
     try {
         cartData = await API.get('/store/cart/');
         if (!cartData || !cartData.items?.length) {
             document.getElementById('checkout-content').innerHTML = '<div class="util-card util-card--static" style="padding:80px; text-align:center;"><h3 style="margin-bottom:8px;">BAG IS EMPTY</h3><a href="/catalog/" class="btn-brutalist btn-primary" style="margin-top:var(--space-md);">SHOP NOW</a></div>';
             return;
         }
+        document.getElementById('ship-email').value = user.email || '';
         document.getElementById('ship-name').value = user.full_name || '';
         document.getElementById('ship-phone').value = user.phone || '';
 
+        if (isGuestSession) {
+            document.getElementById('save-address').checked = false;
+        }
+
         const addresses = await API.get('/auth/addresses/');
-        if (addresses?.length) {
+        if (!isGuestSession && addresses?.length) {
             window.userAddresses = addresses;
             const select = document.getElementById('saved-address-select');
             document.getElementById('saved-addresses-container').style.display = 'block';
@@ -234,6 +266,9 @@ document.getElementById('shipping-form').addEventListener('submit', async (e) =>
     e.preventDefault();
     if (!shippingQuote.verified) { Toast.error('VERIFY PINCODE FIRST'); return; }
 
+    const otpOk = await ensureCheckoutOtp();
+    if (!otpOk) return;
+
     const items = cartData.items.map(item => `
         <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:2px solid var(--border-color);">
             <div style="font-weight:700; font-size:0.9rem;">${item.product_detail.name.toUpperCase()} (x${item.quantity})</div>
@@ -254,6 +289,37 @@ document.getElementById('shipping-form').addEventListener('submit', async (e) =>
     goToStep(2);
 });
 
+async function ensureCheckoutOtp() {
+    if (checkoutOtpVerified) return true;
+
+    if (!checkoutOtpRequested) {
+        const requestRes = await API.post('/store/orders/otp/request/', {
+            email: document.getElementById('ship-email').value.trim(),
+            full_name: document.getElementById('ship-name').value.trim(),
+            phone: document.getElementById('ship-phone').value.trim(),
+        });
+        if (!requestRes.ok) {
+            Toast.error(requestRes.data?.error || 'FAILED TO SEND CHECKOUT OTP');
+            return false;
+        }
+        checkoutOtpRequested = true;
+        Toast.success('OTP SENT TO YOUR EMAIL');
+    }
+
+    const code = window.prompt('Enter the 6-digit OTP sent to your email to continue checkout:');
+    if (!code) return false;
+
+    const verifyRes = await API.post('/store/orders/otp/verify/', { otp_code: code.trim() });
+    if (!verifyRes.ok) {
+        Toast.error(verifyRes.data?.error || 'OTP VERIFICATION FAILED');
+        return false;
+    }
+
+    checkoutOtpVerified = true;
+    Toast.success('OTP VERIFIED');
+    return true;
+}
+
 async function proceedToPayment() {
     if (pageBusy) return;
     pageBusy = true;
@@ -270,13 +336,13 @@ async function proceedToPayment() {
             street: document.getElementById('ship-address').value,
             city: document.getElementById('ship-city').value,
             pincode: document.getElementById('ship-pincode').value,
-            save_address: document.getElementById('save-address').checked,
+            save_address: !isGuestSession && document.getElementById('save-address').checked,
             notes: ''
         });
         if (res.ok) {
             createdOrder = res.data;
             document.getElementById('payment-amount-display').textContent = formatPrice(createdOrder.total_amount);
-            updatePaymentQRCode(createdOrder.total_amount, createdOrder.id);
+            updatePaymentQRCode(createdOrder.total_amount, createdOrder.checkout_reference || createdOrder.order_number || createdOrder.id);
             updateCartCount();
             goToStep(3);
         }
@@ -286,7 +352,7 @@ async function proceedToPayment() {
 function updatePaymentQRCode(amt, orderId = '') {
     const qrImg = document.querySelector('#step-3 img');
     const amount = Number(amt || 0).toFixed(2);
-    const note = orderId ? `ORDER-ID-${orderId}` : 'PAYMENT';
+    const note = orderId ? `CHECKOUT-${orderId}` : 'PAYMENT';
     qrImg.src = `/api/payments/qr-code/?amount=${encodeURIComponent(amount)}&note=${encodeURIComponent(note)}`;
 }
 
@@ -302,7 +368,11 @@ async function confirmPaid() {
             order_id: createdOrder.id,
         });
         if (res.ok) {
+            createdOrder.order_number = res.data?.order_number || createdOrder.order_number;
             document.getElementById('confirmation-details').innerHTML = `<div class="util-card util-card--static" style="padding:var(--space-md); font-weight:700; display:inline-block;">ORDER: ${createdOrder.order_number}<br>TOTAL: ${formatPrice(createdOrder.total_amount)}</div>`;
+            if (isGuestSession) {
+                document.getElementById('guest-convert-wrap').classList.remove('hidden');
+            }
             goToStep(4);
         } else {
             Toast.error(res.data?.error || 'FAILED TO CONFIRM PAYMENT');
@@ -340,6 +410,36 @@ async function cancelOrder() {
         console.error(err);
         Toast.error('AN ERROR OCCURRED WHILE CANCELLING THE ORDER');
     } finally { pageBusy = false; btn.textContent = 'CANCEL'; }
+}
+
+async function convertGuestCheckoutAccount() {
+    if (!isGuestSession) return;
+
+    const email = document.getElementById('ship-email').value.trim();
+    const fullName = document.getElementById('ship-name').value.trim();
+    const phone = document.getElementById('ship-phone').value.trim();
+    const password = window.prompt('Set a password for your new account (min 8 characters):');
+    if (!password) return;
+    const confirmPassword = window.prompt('Confirm password:');
+    if (!confirmPassword) return;
+
+    const res = await API.post('/auth/convert-guest/', {
+        email,
+        full_name: fullName,
+        phone,
+        password,
+        password2: confirmPassword,
+    });
+
+    if (!res.ok) {
+        Toast.error(res.data?.error || 'FAILED TO CREATE ACCOUNT');
+        return;
+    }
+
+    API.setUser(res.data.user);
+    isGuestSession = false;
+    document.getElementById('guest-convert-wrap').classList.add('hidden');
+    Toast.success('ACCOUNT CREATED');
 }
 </script>
 {% endblock %}

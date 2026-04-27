@@ -89,6 +89,11 @@ class SecurityHeadersMiddleware:
             )
             response.setdefault("Pragma", "no-cache")
 
+        if request.path.startswith("/static/"):
+            response.setdefault(
+                "Cache-Control", "public, max-age=31536000, immutable"
+            )
+
         # ── Content Security Policy ──────────────────────────────────────
         # Mitigates XSS and Quishing (QR Phishing) attacks.
         response.setdefault(

@@ -6,6 +6,8 @@ router = DefaultRouter()
 router.register(r'addresses', views.AddressViewSet, basename='address')
 
 urlpatterns = [
+    path("guest-session/", views.GuestSessionView.as_view(), name="guest_session"),
+    path("convert-guest/", views.ConvertGuestAccountView.as_view(), name="convert_guest"),
     path("request-otp/", views.RequestOTPView.as_view(), name="request_otp"),
     path("verify-otp/", views.VerifyOTPView.as_view(), name="verify_otp"),
     path("register/", views.RegisterView.as_view(), name="register"),

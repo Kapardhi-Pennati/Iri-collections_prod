@@ -143,18 +143,21 @@ class OrderSerializer(serializers.ModelSerializer):
     transaction = TransactionSerializer(read_only=True)
     upi_url = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
+    order_number = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = (
             "id",
             "order_number",
+            "checkout_reference",
             "total_amount",
             "shipping_fee",
             "status",
             "shipping_address",
             "phone",
             "notes",
+            "tracking_id",
             "tracking_image",
             "items",
             "transaction",
@@ -168,7 +171,8 @@ class OrderSerializer(serializers.ModelSerializer):
         upi_id = getattr(settings, "UPI_ID", "your-upi-id@paytm")
         name = getattr(settings, "UPI_DISPLAY_NAME", "Iri Collections")
         # Format: upi://pay?pa=VPA&pn=NAME&am=AMOUNT&cu=INR&tn=NOTES
-        return f"upi://pay?pa={upi_id}&pn={name}&am={obj.total_amount}&cu=INR&tn=Order-{obj.order_number}"
+        reference = obj.order_number or f"PENDING-{str(obj.checkout_reference)[:8].upper()}"
+        return f"upi://pay?pa={upi_id}&pn={name}&am={obj.total_amount}&cu=INR&tn=Order-{reference}"
 
     def get_status(self, obj):
         # Backward compatibility: legacy rows may still have "delivered".
@@ -176,6 +180,9 @@ class OrderSerializer(serializers.ModelSerializer):
         if obj.status == "delivered":
             return "shipped"
         return obj.status
+
+    def get_order_number(self, obj):
+        return obj.order_number or f"PENDING-{str(obj.checkout_reference)[:8].upper()}"
 
 
 class OrderCreateSerializer(serializers.Serializer):

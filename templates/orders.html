@@ -19,6 +19,8 @@
 
 {% block extra_js %}
 <script>
+let orderAutoRefreshTimer = null;
+
 async function loadOrders() {
     if (!API.isLoggedIn()) { window.location.href = '/login/'; return; }
     try {
@@ -49,6 +51,7 @@ async function loadOrders() {
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md); border-bottom: var(--border-width) solid var(--border-color); padding-bottom: 12px;">
                         <div>
                             <div style="font-weight: 700; font-size: 1.2rem;">${order.order_number}</div>
+                            ${order.tracking_id ? `<div style="font-weight: 700; font-size: 0.72rem; margin-top: 4px; color: var(--text-secondary);">TRACKING: ${escapeHTML(order.tracking_id)}</div>` : ''}
                             <div style="font-weight: 500; font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">${date}</div>
                         </div>
                         <div class="badge" style="background: var(--black); color: var(--white);">
@@ -79,6 +82,13 @@ async function loadOrders() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', loadOrders);
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadOrders();
+    orderAutoRefreshTimer = setInterval(loadOrders, 15000);
+});
+
+window.addEventListener('beforeunload', () => {
+    if (orderAutoRefreshTimer) clearInterval(orderAutoRefreshTimer);
+});
 </script>
 {% endblock %}

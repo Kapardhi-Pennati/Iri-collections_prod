@@ -11,6 +11,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponse
+from django.core.cache import cache
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -21,7 +22,7 @@ from core.permissions import IsCustomerUser
 from core.security import audit_log, get_client_ip
 from core.throttling import AdminMutationThrottle, PaymentThrottle
 from store.models import Order, OrderItem, Product, StockReservation, Transaction
-from store.views import IsAdminRole
+from store.views import IsAdminRole, _finalize_paid_order
 
 logger = logging.getLogger("payments")
 
@@ -135,23 +136,10 @@ class UploadPaymentProofView(APIView):
         if order.status != "pending":
             return Response({"error": f"Order is already {order.status}."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ ATOMIC STOCK SETTLEMENT: Deduct stock from Product model now.
-        # This replaces the temporary reservation system for this order.
-        order_items = list(OrderItem.objects.filter(order=order).select_related("product"))
-        for item in order_items:
-            if item.product:
-                # Use select_for_update to prevent race conditions
-                product = Product.objects.select_for_update().get(pk=item.product.pk)
-                if product.stock < item.quantity:
-                    return Response(
-                        {"error": f"Insufficient stock for {product.name}."},
-                        status=status.HTTP_409_CONFLICT
-                    )
-                product.stock -= item.quantity
-                product.save(update_fields=["stock"])
-
-        # Release all reservations for this order now that stock is officially deducted.
-        StockReservation.objects.filter(order=order).delete()
+        # Extend reservation hold while proof is awaiting review.
+        StockReservation.objects.filter(order=order).update(
+            expires_at=timezone.now() + timedelta(hours=24)
+        )
 
         txn = Transaction.objects.select_for_update().filter(order=order).first()
         
@@ -172,12 +160,12 @@ class UploadPaymentProofView(APIView):
         audit_log(
             action="PAYMENT_PROOF_UPLOADED",
             user_id=request.user.id,
-            details={"order_id": str(order.id), "order_number": order.order_number, "stock_deducted": "true"},
+            details={"order_id": str(order.id), "order_number": order.order_number or "pending", "stock_deducted": "false"},
             severity="INFO",
             ip_address=get_client_ip(request),
         )
 
-        return Response({"message": "Proof uploaded and stock secured. Awaiting admin verification.", "order_number": order.order_number, "status": "pending_verification"})
+        return Response({"message": "Proof uploaded. Awaiting admin verification.", "order_number": order.order_number or f"PENDING-{str(order.checkout_reference)[:8].upper()}", "status": "pending_verification"})
 
 
 class ApprovePaymentView(APIView):
@@ -195,13 +183,16 @@ class ApprovePaymentView(APIView):
         if txn.status == "paid":
             return Response({"message": "Payment already approved.", "status": "paid"})
 
-        # ✅ Stock was already deducted at the UploadPaymentProof step.
-        # We just confirm the payment here.
         txn.status = "paid"
         txn.save(update_fields=["status"])
 
-        order.status = "confirmed"
-        order.save(update_fields=["status"])
+        finalized, message = _finalize_paid_order(order)
+        if not finalized:
+            txn.status = "rejected"
+            txn.admin_notes = message
+            txn.save(update_fields=["status", "admin_notes"])
+            StockReservation.objects.filter(order=order).delete()
+            return Response({"error": message}, status=status.HTTP_409_CONFLICT)
 
         audit_log(action="PAYMENT_APPROVED", user_id=request.user.id, details={"order_number": order.order_number}, severity="INFO")
         return Response({"message": "Payment approved. Order confirmed.", "order_number": order.order_number, "status": "confirmed"})
@@ -222,22 +213,16 @@ class RejectPaymentView(APIView):
         if txn.status == "rejected":
             return Response({"message": "Payment already rejected.", "status": "rejected"})
 
-        # ✅ RESTORE STOCK: Since stock was deducted at upload, we must add it back on rejection.
-        order_items = list(OrderItem.objects.filter(order=order).select_related("product"))
-        for item in order_items:
-            if item.product:
-                product = Product.objects.select_for_update().get(pk=item.product.pk)
-                product.stock += item.quantity
-                product.save(update_fields=["stock"])
-
         txn.status = "rejected"
         txn.save(update_fields=["status"])
 
         order.status = "cancelled"
         order.save(update_fields=["status"])
 
-        audit_log(action="PAYMENT_REJECTED", user_id=request.user.id, details={"order_number": order.order_number, "stock_restored": "true"}, severity="WARNING")
-        return Response({"message": "Payment rejected and stock restored.", "order_number": order.order_number, "status": "rejected"})
+        StockReservation.objects.filter(order=order).delete()
+
+        audit_log(action="PAYMENT_REJECTED", user_id=request.user.id, details={"order_number": order.order_number or "pending", "stock_restored": "not-required"}, severity="WARNING")
+        return Response({"message": "Payment rejected and reservation released.", "order_number": order.order_number or "pending", "status": "rejected"})
 
 
 
@@ -270,6 +255,11 @@ class GenerateUPIQRView(APIView):
             }
         )
 
+        cache_key = f"payments:qr:{upi_uri}"
+        cached_png = cache.get(cache_key)
+        if cached_png:
+            return HttpResponse(cached_png, content_type="image/png")
+
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -284,5 +274,7 @@ class GenerateUPIQRView(APIView):
         buf = io.BytesIO()
         img.save(buf, format="PNG")
         buf.seek(0)
+        png_bytes = buf.getvalue()
+        cache.set(cache_key, png_bytes, 600)
 
-        return HttpResponse(buf.getvalue(), content_type="image/png")
+        return HttpResponse(png_bytes, content_type="image/png")

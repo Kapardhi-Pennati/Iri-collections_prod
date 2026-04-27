@@ -23,6 +23,8 @@ urlpatterns = [
     path("wishlist/toggle/", views.WishlistToggleView.as_view(), name="wishlist-toggle"),
     # Orders (authenticated)
     path("orders/pincode-verify/", views.PincodeVerifyView.as_view(), name="pincode-verify"),
+    path("orders/otp/request/", views.CheckoutOTPRequestView.as_view(), name="checkout-otp-request"),
+    path("orders/otp/verify/", views.CheckoutOTPVerifyView.as_view(), name="checkout-otp-verify"),
     path("orders/", views.OrderListView.as_view(), name="order-list"),
     path("orders/create/", views.OrderCreateView.as_view(), name="order-create"),
     path("orders/confirm-payment/", views.OrderConfirmPaymentView.as_view(), name="order-confirm-payment"),
