@@ -474,4 +474,4 @@ h1, h2, h3, h4 {
     body { padding-top: 140px; }
     .hero-grid { grid-template-columns: 1fr; }
     .navbar-top { padding: 0 var(--space-sm); }
-}
+}}
