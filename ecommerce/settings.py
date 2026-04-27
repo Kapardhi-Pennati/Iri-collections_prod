@@ -1,3 +1,9 @@
+try:
+    import pymysql
+    pymysql.install_as_MySQLdb()
+except ImportError:
+    pass
+
 """
 SECURE DJANGO SETTINGS - Production & Development
 All security standards enforced (OWASP Top 10, Django Best Practices)
@@ -119,7 +125,7 @@ if db_url:
         "default": dj_database_url.parse(
             db_url,
             conn_max_age=int(os.getenv("DB_CONN_MAX_AGE", "600")),
-            ssl_require=True,
+            ssl_require=os.getenv("DB_SSL_REQUIRE", "False").lower() == "true",
         )
     }
 else:
