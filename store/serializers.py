@@ -142,6 +142,7 @@ class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     transaction = TransactionSerializer(read_only=True)
     upi_url = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
@@ -168,6 +169,13 @@ class OrderSerializer(serializers.ModelSerializer):
         name = getattr(settings, "UPI_DISPLAY_NAME", "Iri Collections")
         # Format: upi://pay?pa=VPA&pn=NAME&am=AMOUNT&cu=INR&tn=NOTES
         return f"upi://pay?pa={upi_id}&pn={name}&am={obj.total_amount}&cu=INR&tn=Order-{obj.order_number}"
+
+    def get_status(self, obj):
+        # Backward compatibility: legacy rows may still have "delivered".
+        # Product requirement now treats that state as shipped.
+        if obj.status == "delivered":
+            return "shipped"
+        return obj.status
 
 
 class OrderCreateSerializer(serializers.Serializer):

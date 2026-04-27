@@ -101,7 +101,7 @@ class Command(BaseCommand):
                     order_number=f"STRESS-ORD-{i}",
                     total_amount=Decimal(random.randint(1000, 50000)),
                     status=random.choice(
-                        ["pending", "confirmed", "shipped", "delivered"]
+                        ["pending", "confirmed", "shipped", "cancelled"]
                     ),
                     shipping_address="123 Stress St, Test City, TS 12345",
                 )
@@ -151,7 +151,7 @@ class Command(BaseCommand):
         # Query 2: Aggregation (Admin Dashboard Analytics style)
         q2_start = time.time()
         revenue_metrics = Order.objects.filter(
-            status__in=["confirmed", "shipped", "delivered"]
+            status__in=["confirmed", "shipped"]
         ).aggregate(total_revenue=Sum("total_amount"), total_orders=Count("id"))
         q2_time = time.time() - q2_start
         self.stdout.write(

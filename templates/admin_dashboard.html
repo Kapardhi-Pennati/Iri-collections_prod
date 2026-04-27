@@ -19,29 +19,29 @@
         
         <nav>
             <a href="#" onclick="showSection('overview')" class="admin-nav-item active" id="nav-overview">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                <svg class="icon-svg"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
                 OVERVIEW
             </a>
             <a href="#" onclick="showSection('products')" class="admin-nav-item" id="nav-products">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                <svg class="icon-svg"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
                 PRODUCTS
             </a>
             <a href="#" onclick="showSection('orders')" class="admin-nav-item" id="nav-orders">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <svg class="icon-svg"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                 ORDERS
             </a>
             <a href="#" onclick="showSection('categories')" class="admin-nav-item" id="nav-categories">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>
+                <svg class="icon-svg"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>
                 CATEGORIES
             </a>
             <a href="#" onclick="showSection('traffic')" class="admin-nav-item" id="nav-traffic">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                <svg class="icon-svg"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
                 TRAFFIC
             </a>
             
             <div style="margin-top: 50px; border-top: 2px solid var(--border-color); padding-top: 20px;">
                 <a href="/" class="admin-nav-item" style="font-size: 0.8rem; color: var(--text-muted);">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                    <svg class="icon-svg"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
                     BACK TO STORE
                 </a>
             </div>
@@ -79,17 +79,17 @@
             </div>
 
             <div class="chart-grid">
-                <div class="brutalist-card" style="padding: 30px; background: var(--bg-elevated);">
+                <div class="util-card" style="padding: 30px; background: var(--white);">
                     <h3 style="margin-bottom: 20px;">REVENUE (LAST 30 DAYS)</h3>
                     <canvas id="revenue-chart" height="300"></canvas>
                 </div>
-                <div class="brutalist-card" style="padding: 30px; background: var(--bg-elevated);">
+                <div class="util-card" style="padding: 30px; background: var(--white);">
                     <h3 style="margin-bottom: 20px;">ORDERS BY STATUS</h3>
                     <canvas id="status-chart" height="300"></canvas>
                 </div>
             </div>
 
-            <div class="brutalist-card" style="padding: 30px; background: var(--bg-elevated); margin-top: var(--space-xl);">
+            <div class="util-card" style="padding: 30px; background: var(--white); margin-top: var(--space-xl);">
                 <h3 style="margin-bottom: 20px;">TOP PRODUCTS</h3>
                 <div id="top-products-list"></div>
             </div>
@@ -105,13 +105,13 @@
                 <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOP PAGE TODAY</div><div class="stat-value" id="traffic-toppage" style="font-size:1rem; word-break:break-all;">—</div></div>
             </div>
 
-            <div class="brutalist-card" style="padding: 30px; background: var(--bg-elevated); margin-bottom:var(--space-xl);">
+            <div class="util-card" style="padding: 30px; background: var(--white); margin-bottom:var(--space-xl);">
                 <h3>Daily Visitors (Last 30 Days)</h3>
                 <canvas id="traffic-chart" height="200"></canvas>
             </div>
 
             <div class="chart-grid-equal">
-                <div class="brutalist-card" style="padding: 30px; background: var(--bg-elevated);">
+                <div class="util-card" style="padding: 30px; background: var(--white);">
                     <h3 style="margin-bottom: 20px;">TOP PAGES</h3>
                     <div style="overflow-y:auto; max-height:320px;">
                         <table style="width:100%; border-collapse:collapse;" id="top-pages-table">
@@ -119,7 +119,7 @@
                         </table>
                     </div>
                 </div>
-                <div class="brutalist-card" style="padding: 30px; background: var(--bg-elevated);">
+                <div class="util-card" style="padding: 30px; background: var(--white);">
                     <h3 style="margin-bottom: 20px;">DEVICE BREAKDOWN</h3>
                     <canvas id="device-chart" height="240"></canvas>
                 </div>
@@ -130,7 +130,7 @@
         <div id="section-products" class="hidden">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xl);">
                 <h2 style="font-family:var(--font-display);">MANAGE PRODUCTS</h2>
-                <button class="brutalist-btn" onclick="openProductModal()" style="background:var(--text-primary); color:var(--text-inverted);">+ ADD PRODUCT</button>
+                <button class="btn-brutalist btn-primary" onclick="openProductModal()" style="">+ ADD PRODUCT</button>
             </div>
             <div class="admin-table-responsive">
                 <table class="admin-table" id="products-table">
@@ -159,7 +159,7 @@
         <div id="section-categories" class="hidden">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xl);">
                 <h2 style="font-family:var(--font-display);">MANAGE CATEGORIES</h2>
-                <button class="brutalist-btn" onclick="openCategoryModal()" style="background:var(--text-primary); color:var(--text-inverted);">+ ADD CATEGORY</button>
+                <button class="btn-brutalist btn-primary" onclick="openCategoryModal()" style="">+ ADD CATEGORY</button>
             </div>
             <div id="categories-list"></div>
         </div>
@@ -728,7 +728,7 @@ async function loadAdminOrders() {
                     <td style="color:var(--text-muted); font-size:0.85rem;">${date}</td>
                     <td>
                         <div style="display:flex; gap:var(--space-sm); align-items:center;">
-                            <a href="/invoice/${o.id}/" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;" title="Print Invoice">🖨️</a>
+                            <a href="/invoice/${o.id}/" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;" title="View Invoice">View Invoice</a>
                             ${o.status === 'pending' && o.transaction && o.transaction.status === 'pending_verification' 
                                 ? `<button class="btn btn-primary btn-sm" onclick="openPaymentVerifyModal(${o.id}, '${o.transaction.payment_screenshot}', '${o.transaction.upi_reference_id}')">Verify Payment</button>` 
                                 : ''}
@@ -876,7 +876,7 @@ async function loadAdminCategories() {
         allCategories = cats;
         const container = document.getElementById('categories-list');
         container.innerHTML = cats.map(c => `
-            <div class="brutalist-card flex-wrap-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--space-md);">
+            <div class="util-card flex-wrap-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--space-md);">
                 <div>
                     <div style="font-weight:600; font-size:1.05rem;">${escapeHTML(c.name)}</div>
                     <div style="font-size:0.85rem; color:var(--text-muted);">${c.product_count} products · /${escapeHTML(c.slug)}</div>

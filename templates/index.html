@@ -17,15 +17,11 @@
                     markups. No compromises.
                 </p>
                 <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                    <a href="/catalog/" class="brutalist-btn"
-                        style="background: var(--text-primary); color: var(--text-inverted);">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m21 21-6.05-6.05m0 0a7 7 0 1 0-9.9-9.9 7 7 0 0 0 9.9 9.9Z" />
-                        </svg>
+                    <a href="/catalog/" class="btn-brutalist btn-primary">
+                        <svg class="icon-svg"><path d="m21 21-6.05-6.05m0 0a7 7 0 1 0-9.9-9.9 7 7 0 0 0 9.9 9.9Z" /></svg>
                         EXPLORE DROPS
                     </a>
-                    <a href="/about/" class="brutalist-btn">OUR MISSION</a>
+                    <a href="/about/" class="btn-brutalist">OUR MISSION</a>
                 </div>
             </div>
             <div class="hero-image">
@@ -68,14 +64,9 @@
         </div>
 
         <div style="margin-top: var(--space-xl); text-align: center;">
-            <a href="/catalog/" class="brutalist-btn"
-                style="background: var(--text-primary); color: var(--text-inverted); padding: 1rem 2.5rem;">
+            <a href="/catalog/" class="btn-brutalist btn-primary">
                 VIEW FULL VAULT
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M5 12h14" />
-                    <path d="m12 5 7 7-7 7" />
-                </svg>
+                <svg class="icon-svg"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
             </a>
         </div>
     </div>
@@ -84,7 +75,7 @@
 <!-- POLICY NOTICE -->
 <section style="padding: var(--space-xl) 0;">
     <div class="container">
-        <div class="brutalist-card" style="padding: var(--space-xl); background: var(--bg-accent); text-align: center;">
+        <div class="util-card" style="padding: var(--space-xl); background: var(--gray-100); text-align: center;">
             <h2 style="font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: var(--space-sm);">WHOLESALE REALITY.</h2>
             <p
                 style="font-weight: 500; font-size: 0.95rem; max-width: 640px; margin: 0 auto var(--space-md); color: var(--text-secondary); line-height: 1.7;">
@@ -137,7 +128,7 @@
                 };
                 const defaultIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>';
                 catGrid.innerHTML = cats.map(cat => `
-                <a href="/catalog/?category=${cat.slug}" class="brutalist-card" style="padding: var(--space-lg); text-align: center;">
+                <a href="/catalog/?category=${cat.slug}" class="util-card" style="padding: var(--space-lg); text-align: center;">
                     <div style="margin-bottom: var(--space-sm); color: var(--text-secondary);">
                         ${categoryIcons[cat.name] || defaultIcon}
                     </div>

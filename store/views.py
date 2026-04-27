@@ -94,6 +94,76 @@ def _get_or_create_cart(user):
     return _cart_queryset().get(pk=cart.pk)
 
 
+def _merge_session_cart_with_user_cart(user, session_items: list = None) -> Cart:
+    """
+    Merge guest/session cart items with the authenticated user's cart.
+
+    This function supports the following scenarios:
+    1. User already has a cart: merge session items into existing cart
+    2. User has no cart: create new cart and populate with session items
+    3. Duplicate products: update quantities instead of creating duplicates
+    4. Out-of-stock products: skip without error
+
+    Args:
+        user: Authenticated user instance
+        session_items: List of dicts with 'product_id' and 'quantity' keys,
+                      sourced from session/localStorage. If None, no merge occurs.
+
+    Returns:
+        The user's Cart instance (created or existing)
+    """
+    cart = _get_or_create_cart(user)
+
+    if not session_items:
+        return cart
+
+    cart = Cart.objects.select_for_update().get(pk=cart.pk)
+
+    for item_data in session_items:
+        try:
+            product_id = int(item_data.get("product_id"))
+            quantity = int(item_data.get("quantity", 1))
+            if quantity <= 0:
+                continue
+        except (TypeError, ValueError):
+            continue
+
+        try:
+            product = Product.objects.get(id=product_id, is_active=True)
+        except Product.DoesNotExist:
+            continue
+
+        existing_item = CartItem.objects.filter(
+            cart=cart, product=product
+        ).first()
+
+        if existing_item:
+            existing_item.quantity += quantity
+            existing_item.save(update_fields=["quantity"])
+        else:
+            CartItem.objects.create(cart=cart, product=product, quantity=quantity)
+
+        # Create or update stock reservation for the guest/session item
+        expires_at = timezone.now() + timedelta(hours=24)
+        reservation = StockReservation.objects.filter(
+            user=user, product=product, order__isnull=True
+        ).first()
+
+        if reservation:
+            reservation.quantity += quantity
+            reservation.expires_at = expires_at
+            reservation.save(update_fields=["quantity", "expires_at"])
+        else:
+            StockReservation.objects.create(
+                user=user,
+                product=product,
+                quantity=quantity,
+                expires_at=expires_at,
+            )
+
+    return _cart_queryset().get(pk=cart.pk)
+
+
 # ─── Public: Categories ────────────────────────────────────────
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.annotate(
@@ -453,7 +523,7 @@ class OrderCreateView(APIView):
             if street and city and state and pincode:
                 phone = serializer.validated_data.get("phone", "")
                 name = serializer.validated_data.get("recipient_name", "").strip() or "Shipping"
-                Address.objects.get_or_create(
+                address, created = Address.objects.get_or_create(
                     user=request.user,
                     street=street,
                     city=city,
@@ -461,6 +531,20 @@ class OrderCreateView(APIView):
                     pincode=pincode,
                     defaults={"name": name[:150], "phone": phone},
                 )
+                if not created:
+                    updated_fields = []
+                    if phone and address.phone != phone:
+                        address.phone = phone
+                        updated_fields.append("phone")
+                    if name and address.name != name[:150]:
+                        address.name = name[:150]
+                        updated_fields.append("name")
+                    if updated_fields:
+                        address.save(update_fields=updated_fields)
+
+                if not Address.objects.filter(user=request.user, is_default=True).exists():
+                    address.is_default = True
+                    address.save(update_fields=["is_default"])
 
         for data in order_items_data:
             item = data["item"]
@@ -1060,7 +1144,7 @@ class AdminAnalyticsView(APIView):
 
         # ── Stat card numbers ──────────────────────────────────────
         total_revenue = (
-            Order.objects.filter(status__in=["confirmed", "shipped", "delivered"])
+            Order.objects.filter(status__in=["confirmed", "shipped"])
             .aggregate(total=Sum("total_amount"))["total"] or 0
         )
         total_orders = Order.objects.count()
@@ -1071,7 +1155,7 @@ class AdminAnalyticsView(APIView):
         # ── Daily revenue (last 30 days) ───────────────────────────
         daily_revenue_qs = (
             Order.objects.filter(
-                status__in=["confirmed", "shipped", "delivered"],
+                status__in=["confirmed", "shipped"],
                 created_at__gte=thirty_days_ago,
             )
             .annotate(date=TruncDate("created_at"))
@@ -1090,14 +1174,19 @@ class AdminAnalyticsView(APIView):
             .annotate(count=Count("id"))
             .order_by("status")
         )
+        status_totals = {}
+        for s in status_qs:
+            normalized_status = "shipped" if s["status"] == "delivered" else s["status"]
+            status_totals[normalized_status] = status_totals.get(normalized_status, 0) + s["count"]
         status_breakdown = [
-            {"status": s["status"], "count": s["count"]} for s in status_qs
+            {"status": key, "count": value}
+            for key, value in status_totals.items()
         ]
 
         # ── Top products ───────────────────────────────────────────
         top_products_qs = (
             OrderItem.objects.filter(
-                order__status__in=["confirmed", "shipped", "delivered"]
+                order__status__in=["confirmed", "shipped"]
             )
             .values("product_name")
             .annotate(

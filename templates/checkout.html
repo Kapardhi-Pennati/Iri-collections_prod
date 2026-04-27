@@ -8,124 +8,120 @@
     <div class="container" style="max-width: 860px;">
         <!-- HEADER -->
         <div class="page-header" style="text-align: center;">
-            <h1>CHECKOUT</h1>
+            <h1 class="brand-text">CHECKOUT PROCESS</h1>
         </div>
 
-        <!-- PROGRESS -->
+        <!-- PROGRESS ARCHITECTURE -->
         <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-xl); position: relative;">
-            <div style="position: absolute; top: 22px; left: 0; right: 0; height: 3px; background: var(--border-color); z-index: 0;"></div>
+            <div style="position: absolute; top: 22px; left: 0; right: 0; height: 2px; background: var(--black); z-index: 0;"></div>
 
-            <div class="checkout-step active" id="step-indicator-1" style="z-index: 1; background: var(--bg-elevated); border: var(--border-width) solid var(--border-color); width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--shadow-color);">1</div>
-            <div class="checkout-step" id="step-indicator-2" style="z-index: 1; background: var(--bg-elevated); border: var(--border-width) solid var(--border-color); width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--shadow-color);">2</div>
-            <div class="checkout-step" id="step-indicator-3" style="z-index: 1; background: var(--bg-elevated); border: var(--border-width) solid var(--border-color); width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--shadow-color);">3</div>
-            <div class="checkout-step" id="step-indicator-4" style="z-index: 1; background: var(--bg-elevated); border: var(--border-width) solid var(--border-color); width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--shadow-color);">4</div>
+            <div class="checkout-step active" id="step-indicator-1" style="z-index: 1; background: var(--white); border: 2px solid var(--black); width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; box-shadow: 4px 4px 0 0 var(--black);">1</div>
+            <div class="checkout-step" id="step-indicator-2" style="z-index: 1; background: var(--white); border: 2px solid var(--black); width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; box-shadow: 4px 4px 0 0 var(--black);">2</div>
+            <div class="checkout-step" id="step-indicator-3" style="z-index: 1; background: var(--white); border: 2px solid var(--black); width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; box-shadow: 4px 4px 0 0 var(--black);">3</div>
+            <div class="checkout-step" id="step-indicator-4" style="z-index: 1; background: var(--white); border: 2px solid var(--black); width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; box-shadow: 4px 4px 0 0 var(--black);">4</div>
         </div>
 
         <div id="checkout-content">
             <!-- STEP 1: SHIPPING -->
-            <div id="step-1" class="brutalist-card" style="padding: var(--space-xl); background: var(--bg-elevated);">
-                <h2 style="font-size: 1.5rem; margin-bottom: var(--space-lg); border-bottom: var(--border-width) solid var(--border-color); padding-bottom: 10px;">1. SHIPPING DETAILS</h2>
+            <div id="step-1" class="util-card">
+                <h2 style="font-size: 1.2rem; margin-bottom: var(--space-lg); border-bottom: 2px solid var(--black); padding-bottom: 12px;">01 // LOGISTICS DETAILS</h2>
 
                 <div id="saved-addresses-container" style="margin-bottom: var(--space-lg); display: none;">
-                    <label class="form-label">SAVED ADDRESSES</label>
+                    <label style="display:block; font-family:var(--font-mono); font-size:0.7rem; font-weight:700; margin-bottom:8px;">PREVIOUS LOCATIONS</label>
                     <select id="saved-address-select" class="brutalist-input" style="appearance: none;" onchange="fillSavedAddress()">
-                        <option value="">— NEW ADDRESS —</option>
+                        <option value="">— NEW ENTRY —</option>
                     </select>
                 </div>
 
                 <form id="shipping-form">
-                    <div class="form-grid">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); margin-bottom: var(--space-md);">
                         <div>
-                            <label class="form-label">FULL NAME</label>
+                            <label style="display:block; font-family:var(--font-mono); font-size:0.7rem; font-weight:700; margin-bottom:8px;">FULL NAME</label>
                             <input type="text" id="ship-name" class="brutalist-input" required>
                         </div>
                         <div>
-                            <label class="form-label">PHONE NUMBER</label>
+                            <label style="display:block; font-family:var(--font-mono); font-size:0.7rem; font-weight:700; margin-bottom:8px;">CONTACT NUMBER</label>
                             <input type="tel" id="ship-phone" class="brutalist-input" placeholder="+91" required>
                         </div>
                     </div>
                     <div style="margin-bottom: var(--space-md);">
-                        <label class="form-label">COMPLETE ADDRESS</label>
-                        <textarea id="ship-address" class="brutalist-input" rows="3" required placeholder="Flat no, street, landmark"></textarea>
+                        <label style="display:block; font-family:var(--font-mono); font-size:0.7rem; font-weight:700; margin-bottom:8px;">PHYSICAL ADDRESS</label>
+                        <textarea id="ship-address" class="brutalist-input" rows="3" required style="resize:none;"></textarea>
                     </div>
-                    <div class="form-grid">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); margin-bottom: var(--space-lg);">
                         <div>
-                            <label class="form-label">CITY</label>
+                            <label style="display:block; font-family:var(--font-mono); font-size:0.7rem; font-weight:700; margin-bottom:8px;">CITY</label>
                             <input type="text" id="ship-city" class="brutalist-input" required>
                         </div>
                         <div>
-                            <label class="form-label">PINCODE</label>
+                            <label style="display:block; font-family:var(--font-mono); font-size:0.7rem; font-weight:700; margin-bottom:8px;">PINCODE / ZIP</label>
                             <input type="text" id="ship-pincode" class="brutalist-input" required maxlength="6">
                         </div>
                     </div>
 
-                    <div id="shipping-estimate" class="brutalist-card" style="margin-bottom: var(--space-lg); padding: 14px; font-weight: 600; font-size: 0.8rem; background: var(--bg-secondary); letter-spacing: 0.03em;">
-                        ENTER PINCODE FOR SHIPPING QUOTE
+                    <div style="margin-bottom: var(--space-lg); display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700;">
+                        <input type="checkbox" id="save-address" checked>
+                        <label for="save-address">SAVE THIS ADDRESS FOR FUTURE AUTOFILL</label>
                     </div>
 
-                    <button type="submit" class="brutalist-btn" style="width: 100%; background: var(--text-primary); color: var(--text-inverted);">
-                        CONTINUE TO REVIEW
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    <div id="shipping-estimate" style="margin-bottom: var(--space-lg); padding: 12px; font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem; background: var(--gray-100); border: 1px solid var(--black);">
+                        AWAITING PINCODE INPUT...
+                    </div>
+
+                    <button type="submit" class="btn-brutalist btn-primary" style="width: 100%;">
+                        VERIFY & PROCEED
+                        <svg class="icon-svg"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                     </button>
                 </form>
             </div>
 
             <!-- STEP 2: REVIEW -->
-            <div id="step-2" class="brutalist-card hidden" style="padding: var(--space-xl); background: var(--bg-elevated);">
-                <h2 style="font-size: 1.5rem; margin-bottom: var(--space-lg); border-bottom: var(--border-width) solid var(--border-color); padding-bottom: 10px;">2. REVIEW ORDER</h2>
-                <div id="review-shipping" class="brutalist-card" style="margin-bottom: var(--space-lg); background: var(--bg-secondary); padding: var(--space-md); font-weight: 600; font-size: 0.85rem;"></div>
+            <div id="step-2" class="util-card hidden">
+                <h2 style="font-size: 1.2rem; margin-bottom: var(--space-lg); border-bottom: 2px solid var(--black); padding-bottom: 12px;">02 // ORDER VALIDATION</h2>
+                <div style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 8px; color: var(--text-muted);">SHIPPED TO</div>
+                <div id="review-shipping" class="util-card" style="margin-bottom: var(--space-lg); background: var(--gray-100); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; box-shadow: none;"></div>
                 <div id="review-items" style="margin-bottom: var(--space-lg);"></div>
-                <div id="review-total" class="brutalist-card" style="padding: var(--space-md); margin-bottom: var(--space-lg);"></div>
+                <div id="review-total" class="util-card" style="box-shadow: none; margin-bottom: var(--space-lg);"></div>
 
-                <div class="flex-wrap-mobile" style="display: flex; gap: var(--space-md);">
-                    <button type="button" class="brutalist-btn" onclick="goToStep(1)" style="flex: 0.5;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                        BACK
+                <div style="display: flex; gap: var(--space-md);">
+                    <button type="button" class="btn-brutalist" onclick="goToStep(1)" style="flex: 0.4;">
+                        [ BACK ]
                     </button>
-                    <button type="button" class="brutalist-btn" id="pay-now-btn" onclick="proceedToPayment()" style="background: var(--text-primary); color: var(--text-inverted); flex: 1;">PROCEED TO PAYMENT</button>
+                    <button type="button" class="btn-brutalist btn-primary" id="pay-now-btn" onclick="proceedToPayment()" style="flex: 1;">INITIATE SETTLEMENT</button>
                 </div>
             </div>
 
             <!-- STEP 3: PAYMENT -->
-            <div id="step-3" class="brutalist-card hidden" style="padding: var(--space-xl); background: var(--bg-elevated); text-align: center;">
-                <h2 style="font-size: 1.5rem; margin-bottom: var(--space-md); border-bottom: var(--border-width) solid var(--border-color); padding-bottom: 10px;">3. COMPLETE PAYMENT</h2>
-                <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: var(--space-lg); color: var(--text-secondary);">SCAN & PAY VIA UPI</p>
+            <div id="step-3" class="util-card hidden" style="text-align: center;">
+                <h2 style="font-size: 1.2rem; margin-bottom: var(--space-lg); border-bottom: 2px solid var(--black); padding-bottom: 12px;">03 // SETTLEMENT CHANNEL</h2>
+                <p style="font-family: var(--font-mono); font-weight: 700; font-size: 0.8rem; margin-bottom: var(--space-lg);">SCAN UPI ENDPOINT FOR TRANSFER</p>
 
-                <div class="brutalist-card" style="display: inline-block; padding: var(--space-md); background: var(--bg-elevated); margin-bottom: var(--space-lg);">
-                    <img src="/api/payments/qr-code/?amount=0" alt="UPI QR Code" style="width: 220px; border: var(--border-width) solid var(--border-color);">
-                    <div style="margin-top: 12px; font-weight: 700; font-size: 1.1rem;">TOTAL: <span id="payment-amount-display"></span></div>
+                <div class="util-card" style="display: inline-block; padding: var(--space-md); margin-bottom: var(--space-lg); box-shadow: 8px 8px 0 0 var(--black);">
+                    <img src="/api/payments/qr-code/?amount=0" alt="UPI QR Code" style="width: 240px;">
+                    <div style="margin-top: 12px; font-family: var(--font-mono); font-weight: 900; font-size: 1.2rem;">TOTAL: <span id="payment-amount-display"></span></div>
                 </div>
 
-                <form id="payment-proof-form" style="max-width: 460px; margin: 0 auto; text-align: left;">
-                    <div style="margin-bottom: var(--space-md);">
-                        <label class="form-label" style="font-size: 0.75rem;">UPI TRANSACTION ID (UTR)</label>
-                        <input type="text" id="payment-utr" class="brutalist-input" placeholder="12-digit number" required style="font-family: monospace;">
-                    </div>
-                    <div style="margin-bottom: var(--space-lg);">
-                        <label class="form-label" style="font-size: 0.75rem;">UPLOAD SCREENSHOT</label>
-                        <input type="file" id="payment-screenshot" class="brutalist-input" accept="image/*" required>
+                <div style="max-width: 480px; margin: 0 auto; text-align: center;">
+                    <div style="background: var(--black); color: var(--white); padding: 12px; margin-bottom: var(--space-lg); font-family: var(--font-mono); font-weight: 700; font-size: 0.65rem; text-align: center; letter-spacing: 0.1em;">
+                        COMPLETE PAYMENT AND CONFIRM TRANSACTION
                     </div>
 
-                    <div class="brutalist-card" style="background: var(--bg-accent); padding: 12px; margin-bottom: var(--space-lg); font-weight: 600; font-size: 0.75rem; letter-spacing: 0.04em; text-align: center;">
-                        ALL SALES FINAL · NO REFUNDS · NO RETURNS
+                    <div style="display: flex; gap: var(--space-md);">
+                        <button type="button" class="btn-brutalist btn-secondary" id="cancel-order-btn" onclick="cancelOrder()" style="flex: 0.4;">[ CANCEL ]</button>
+                        <button type="button" class="btn-brutalist btn-primary" id="confirm-paid-btn" onclick="confirmPaid()" style="flex: 1;">I HAVE PAID</button>
                     </div>
-
-                    <div class="flex-wrap-mobile" style="display: flex; gap: var(--space-md);">
-                        <button type="button" class="brutalist-btn" id="cancel-order-btn" onclick="cancelOrder()" style="flex: 0.5;">CANCEL</button>
-                        <button type="submit" class="brutalist-btn" id="confirm-paid-btn" style="flex: 1; background: var(--text-primary); color: var(--text-inverted);">SUBMIT PROOF</button>
-                    </div>
-                </form>
+                </div>
             </div>
 
             <!-- STEP 4: DONE -->
-            <div id="step-4" class="brutalist-card hidden" style="padding: var(--space-xl); text-align: center; background: var(--bg-elevated);">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-md);"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
-                <h2 style="font-size: 2rem; margin-bottom: 8px;">ORDER RECEIVED</h2>
-                <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-lg);">We are verifying your payment. Check your email for updates.</p>
+            <div id="step-4" class="util-card hidden" style="text-align: center;">
+                <svg class="icon-svg" style="width: 64px; height: 64px; color: var(--black); margin-bottom: var(--space-md);"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                <h2 style="font-size: 2rem; margin-bottom: 8px;">ALLOCATION COMPLETE</h2>
+                <p style="font-family: var(--font-mono); font-weight: 600; font-size: 0.9rem; color: var(--gray-800); margin-bottom: var(--space-lg);">PAYMENT STATUS MARKED AS PAID.</p>
                 <div id="confirmation-details" style="margin-bottom: var(--space-lg);"></div>
                 <div style="display: flex; gap: var(--space-md); justify-content: center;">
-                    <a href="/orders/" class="brutalist-btn" style="background: var(--text-primary); color: var(--text-inverted);">MY ORDERS</a>
-                    <a href="/catalog/" class="brutalist-btn">KEEP SHOPPING</a>
+                    <a href="/orders/" class="btn-brutalist btn-primary">VIEW ORDERS</a>
+                    <a href="/catalog/" class="btn-brutalist">RETURN TO VAULT</a>
                 </div>
             </div>
         </div>
@@ -156,7 +152,7 @@ async function loadCheckoutCart() {
     try {
         cartData = await API.get('/store/cart/');
         if (!cartData || !cartData.items?.length) {
-            document.getElementById('checkout-content').innerHTML = '<div class="brutalist-card" style="padding:80px; text-align:center;"><h3 style="margin-bottom:8px;">BAG IS EMPTY</h3><a href="/catalog/" class="brutalist-btn" style="margin-top:var(--space-md);">SHOP NOW</a></div>';
+            document.getElementById('checkout-content').innerHTML = '<div class="util-card" style="padding:80px; text-align:center;"><h3 style="margin-bottom:8px;">BAG IS EMPTY</h3><a href="/catalog/" class="btn-brutalist btn-primary" style="margin-top:var(--space-md);">SHOP NOW</a></div>';
             return;
         }
         document.getElementById('ship-name').value = user.full_name || '';
@@ -173,6 +169,12 @@ async function loadCheckoutCart() {
                 opt.textContent = `${a.street}, ${a.city} - ${a.pincode}`.toUpperCase();
                 select.appendChild(opt);
             });
+
+            const preferred = addresses.find(a => a.is_default) || addresses[0];
+            if (preferred) {
+                select.value = String(preferred.id);
+                fillSavedAddress();
+            }
         }
     } catch { Toast.error('SYSTEM ERROR. REFRESH PAGE.'); }
 }
@@ -267,7 +269,7 @@ async function proceedToPayment() {
             street: document.getElementById('ship-address').value,
             city: document.getElementById('ship-city').value,
             pincode: document.getElementById('ship-pincode').value,
-            save_address: true,
+            save_address: document.getElementById('save-address').checked,
             notes: ''
         });
         if (res.ok) {
@@ -283,51 +285,33 @@ async function proceedToPayment() {
 function updatePaymentQRCode(amt, orderNum = '') {
     const qrImg = document.querySelector('#step-3 img');
     qrImg.src = `/api/payments/qr-code/?amount=${amt}&note=ORDER-${orderNum}`;
-    document.getElementById('upi-payment-url').value = `upi://pay?pa=${UPI_ID}&pn=${UPI_DISPLAY_NAME}&am=${amt}&tn=ORDER-${orderNum}`;
 }
 
-function copyUpiUrl() {
-    const url = document.getElementById('upi-payment-url').value;
-    navigator.clipboard.writeText(url).then(() => Toast.success('URL COPIED'));
-}
-
-document.getElementById('payment-proof-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
+async function confirmPaid() {
     if (pageBusy || !createdOrder) return;
     pageBusy = true;
     const btn = document.getElementById('confirm-paid-btn');
     const originalText = btn.textContent;
-    btn.textContent = 'UPLOADING...';
+    btn.textContent = 'CONFIRMING...';
 
     try {
-        const formData = new FormData();
-        formData.append('order_id', createdOrder.id);
-        formData.append('upi_reference_id', document.getElementById('payment-utr').value.trim());
-        const file = document.getElementById('payment-screenshot').files[0];
-        if (file) {
-            formData.append('payment_screenshot', file);
-        }
-
-        const res = await API.request('/api/payments/upload-proof/', {
-            method: 'POST',
-            body: formData,
-            headers: {} // Let browser set boundary
+        const res = await API.post('/store/orders/confirm-payment/', {
+            order_id: createdOrder.id,
         });
-
         if (res.ok) {
-            document.getElementById('confirmation-details').innerHTML = `<div class="brutalist-card" style="padding:var(--space-md); font-weight:700; display:inline-block;">ORDER: ${createdOrder.order_number}<br>TOTAL: ${formatPrice(createdOrder.total_amount)}</div>`;
+            document.getElementById('confirmation-details').innerHTML = `<div class="util-card" style="padding:var(--space-md); font-weight:700; display:inline-block;">ORDER: ${createdOrder.order_number}<br>TOTAL: ${formatPrice(createdOrder.total_amount)}</div>`;
             goToStep(4);
         } else {
-            Toast.error(res.data?.error || 'FAILED TO UPLOAD PROOF');
+            Toast.error(res.data?.error || 'FAILED TO CONFIRM PAYMENT');
         }
     } catch (err) {
         console.error(err);
-        Toast.error('AN ERROR OCCURRED DURING UPLOAD');
+        Toast.error('AN ERROR OCCURRED');
     } finally { 
         pageBusy = false; 
         btn.textContent = originalText; 
     }
-});
+}
 
 async function cancelOrder() {
     if (pageBusy || !createdOrder) return;
@@ -347,7 +331,7 @@ async function cancelOrder() {
         } else {
             Toast.error(res.data?.error || 'FAILED TO CANCEL ORDER');
         }
-    } finally { pageBusy = false; btn.textContent = 'CANCEL ORDER'; }
+    } finally { pageBusy = false; btn.textContent = 'CANCEL'; }
 }
 </script>
 {% endblock %}

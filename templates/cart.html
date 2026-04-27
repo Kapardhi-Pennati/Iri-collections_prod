@@ -7,12 +7,13 @@
     <div class="container">
         <!-- HEADER -->
         <div class="page-header">
-            <h1>YOUR ORDERS </h1>
+            <h1 class="brand-text">YOUR BAG</h1>
         </div>
 
         <div id="cart-content">
-            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted);">OPENING YOUR
-                BAG...</div>
+            <div style="text-align: center; padding: 80px; font-weight: 700; color: var(--gray-400); font-family: var(--font-mono);">
+                SCANNING INVENTORY...
+            </div>
         </div>
     </div>
 </section>
@@ -29,11 +30,11 @@
 
     function renderLoginRequired() {
         cartContainer().innerHTML = `
-        <div class="brutalist-card" style="padding: 80px; text-align: center;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-md);"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <h3 style="font-size: 1.8rem; margin-bottom: 8px;">ACCESS REQUIRED</h3>
-            <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">Please sign in to view your bag.</p>
-            <a href="/login/" class="brutalist-btn" style="background: var(--text-primary); color: var(--text-inverted);">LOGIN NOW</a>
+        <div class="util-card" style="padding: 80px; text-align: center;">
+            <svg class="icon-svg" style="width: 48px; height: 48px; margin-bottom: var(--space-md);"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <h3 style="font-size: 1.5rem; margin-bottom: 8px;">ACCESS DENIED</h3>
+            <p style="font-weight: 500; color: var(--text-secondary); margin-bottom: var(--space-md);">AUTHENTICATION REQUIRED TO VIEW BAG.</p>
+            <a href="/login/" class="btn-brutalist btn-primary">IDENTITY LOGIN</a>
         </div>
     `;
     }
@@ -42,11 +43,11 @@
         cartState = cart;
         if (!cart || !cart.items || cart.items.length === 0) {
             cartContainer().innerHTML = `
-            <div class="brutalist-card" style="padding: 80px; text-align: center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-md);"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                <h3 style="font-size: 1.8rem; margin-bottom: 8px;">BAG IS EMPTY</h3>
-                <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">Find your next piece.</p>
-                <a href="/catalog/" class="brutalist-btn" style="background: var(--text-primary); color: var(--text-inverted);">START SHOPPING</a>
+            <div class="util-card" style="padding: 80px; text-align: center;">
+                <svg class="icon-svg" style="width: 48px; height: 48px; margin-bottom: var(--space-md);"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <h3 style="font-size: 1.5rem; margin-bottom: 8px;">BAG EMPTY</h3>
+                <p style="font-weight: 500; color: var(--text-secondary); margin-bottom: var(--space-md);">NO PIECES IN CURRENT ALLOCATION.</p>
+                <a href="/catalog/" class="btn-brutalist btn-primary">BROWSE DROPS</a>
             </div>
         `;
             return;
@@ -58,61 +59,61 @@
             const outOfStock = item.is_out_of_stock;
 
             return `
-            <div class="brutalist-card cart-item-grid" style="padding: var(--space-sm); margin-bottom: var(--space-md); opacity: ${outOfStock ? '0.5' : '1'};">
-                <div style="border: 2px solid var(--border-color); overflow: hidden; background: var(--bg-secondary);">
+            <div class="util-card" style="padding: var(--space-sm); margin-bottom: var(--space-md); opacity: ${outOfStock ? '0.5' : '1'}; display: grid; grid-template-columns: 120px 1fr auto; gap: var(--space-md); align-items: center;">
+                <div style="border: 1px solid var(--black); aspect-ratio: 1; overflow: hidden; background: var(--bg-secondary);">
                     <img src="${image}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
                 <div>
                     <h3 style="font-size: 1rem; margin-bottom: 4px;">${p.name.toUpperCase()}</h3>
-                    <div style="font-weight: 500; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">MATERIAL: ${p.material || 'N/A'}</div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="display: flex; border: 2px solid var(--border-color); background: var(--bg-elevated);">
-                            <button onclick="updateCartItem(${item.id}, ${item.quantity - 1})" style="padding: 4px 10px; font-weight: 700; border:none; background:var(--bg-elevated); cursor:pointer; font-size: 0.9rem;">−</button>
-                            <span style="padding: 4px 14px; border-left: 2px solid var(--border-color); border-right: 2px solid var(--border-color); font-weight: 700; font-size: 0.85rem;">${item.quantity}</span>
-                            <button onclick="updateCartItem(${item.id}, ${item.quantity + 1})" style="padding: 4px 10px; font-weight: 700; border:none; background:var(--bg-elevated); cursor:pointer; font-size: 0.9rem;">+</button>
+                    <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--gray-400); margin-bottom: 12px;">REF: ${p.id}</div>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="display: flex; border: 2px solid var(--black);">
+                            <button onclick="updateCartItem(${item.id}, ${item.quantity - 1})" style="padding: 4px 12px; font-weight: 900; border:none; background:var(--white); cursor:pointer;">−</button>
+                            <span style="padding: 4px 12px; border-left: 2px solid var(--black); border-right: 2px solid var(--black); font-family: var(--font-mono); font-weight: 700;">${item.quantity}</span>
+                            <button onclick="updateCartItem(${item.id}, ${item.quantity + 1})" style="padding: 4px 12px; font-weight: 900; border:none; background:var(--white); cursor:pointer;">+</button>
                         </div>
-                        <button onclick="removeCartItem(${item.id})" style="font-weight: 600; text-decoration: underline; background:none; border:none; cursor:pointer; font-size: 0.75rem; color: var(--text-muted);">REMOVE</button>
+                        <button onclick="removeCartItem(${item.id})" style="font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; text-decoration: underline; background:none; border:none; cursor:pointer;">[ DELETE ]</button>
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <div class="product-price">${formatPrice(item.subtotal)}</div>
+                    <div style="font-family: var(--font-mono); font-weight: 800; font-size: 1.1rem;">${formatPrice(item.subtotal)}</div>
                 </div>
             </div>
         `;
         }).join('');
 
         cartContainer().innerHTML = `
-        <div class="cart-grid">
+        <div class="grid-2" style="align-items: start;">
             <div>
                 ${itemsHTML}
-                <button class="brutalist-btn" onclick="clearCart()" style="font-size: 0.75rem; padding: 6px 14px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                    CLEAR ALL
+                <button class="btn-brutalist" onclick="clearCart()" style="font-size: 0.7rem; margin-top: var(--space-md);">
+                    <svg class="icon-svg" style="width: 14px; height: 14px;"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                    PURGE ALL
                 </button>
             </div>
 
-            <div class="brutalist-card" style="padding: var(--space-lg); position: sticky; top: 130px;">
-                <h2 style="font-size: 1.5rem; margin-bottom: var(--space-md); border-bottom: var(--border-width) solid var(--border-color); padding-bottom: 10px;">SUMMARY</h2>
-                <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 12px; font-size: 0.9rem;">
+            <div class="util-card" style="padding: var(--space-lg); position: sticky; top: 150px;">
+                <h2 style="font-size: 1.2rem; margin-bottom: var(--space-md); border-bottom: 2px solid var(--black); padding-bottom: 12px;">ORDER SUMMARY</h2>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 16px; font-size: 0.85rem; font-family: var(--font-mono);">
                     <span>SUBTOTAL</span>
                     <span>${formatPrice(cart.total)}</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-weight: 500; margin-bottom: 12px; font-size: 0.85rem; color: var(--text-muted);">
-                    <span>SHIPPING</span>
-                    <span>AT CHECKOUT</span>
+                <div style="display: flex; justify-content: space-between; font-weight: 500; margin-bottom: 16px; font-size: 0.8rem; color: var(--gray-400); font-family: var(--font-mono);">
+                    <span>LOGISTICS</span>
+                    <span>CALCULATED AT STEP 2</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-size: 1.5rem; font-weight: 800; margin-top: var(--space-md); padding-top: var(--space-md); border-top: var(--border-width) solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; font-size: 1.5rem; font-weight: 900; margin-top: var(--space-md); padding-top: var(--space-md); border-top: 2px solid var(--black);">
                     <span>TOTAL</span>
                     <span>${formatPrice(cart.total)}</span>
                 </div>
 
-                <a href="/checkout/" class="brutalist-btn" style="width: 100%; background: var(--text-primary); color: var(--text-inverted); margin-top: var(--space-md); text-align: center;">
-                    PROCEED TO CHECKOUT
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                <a href="/checkout/" class="btn-brutalist btn-primary" style="width: 100%; margin-top: var(--space-lg); text-align: center;">
+                    SECURE CHECKOUT
+                    <svg class="icon-svg"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </a>
 
-                <div class="brutalist-card" style="background: var(--bg-accent); padding: 12px; margin-top: var(--space-md); font-weight: 600; font-size: 0.75rem; text-align: center; letter-spacing: 0.04em;">
-                    ALL SALES FINAL · NO RETURNS · NO REFUNDS
+                <div style="background: var(--black); color: var(--white); padding: 12px; margin-top: var(--space-md); font-family: var(--font-mono); font-weight: 700; font-size: 0.65rem; text-align: center; letter-spacing: 0.1em;">
+                    ALL SALES FINAL // NO RETURNS // NO REFUNDS
                 </div>
             </div>
         </div>

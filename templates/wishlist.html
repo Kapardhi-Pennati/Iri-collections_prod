@@ -24,11 +24,11 @@ async function loadWishlist() {
     const container = document.getElementById('wishlist-content');
     if (!API.isLoggedIn()) {
         container.innerHTML = `
-            <div class="brutalist-card" style="padding: 80px; text-align: center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-md);"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            <div class="util-card" style="padding: 80px; text-align: center;">
+                <svg class="icon-svg" style="width: 40px; height: 40px; margin-bottom: var(--space-md);"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
                 <h3 style="font-size: 1.8rem; margin-bottom: 8px;">ACCESS REQUIRED</h3>
                 <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">Please sign in to view saved pieces.</p>
-                <a href="/login/" class="brutalist-btn" style="background: var(--text-primary); color: var(--text-inverted);">LOGIN NOW</a>
+                <a href="/login/" class="btn-brutalist btn-primary">LOGIN NOW</a>
             </div>`;
         return;
     }
@@ -46,11 +46,11 @@ function renderWishlist(items) {
 
     if (!items || items.length === 0) {
         container.innerHTML = `
-            <div class="brutalist-card" style="padding: 80px; text-align: center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-md);"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            <div class="util-card" style="padding: 80px; text-align: center;">
+                <svg class="icon-svg" style="width: 40px; height: 40px; margin-bottom: var(--space-md);"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
                 <h3 style="font-size: 1.8rem; margin-bottom: 8px;">VAULT IS EMPTY</h3>
                 <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">Browse our pieces and save your favorites.</p>
-                <a href="/catalog/" class="brutalist-btn" style="background: var(--text-primary); color: var(--text-inverted);">EXPLORE COLLECTION</a>
+                <a href="/catalog/" class="btn-brutalist btn-primary">EXPLORE COLLECTION</a>
             </div>`;
         return;
     }

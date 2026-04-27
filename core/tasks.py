@@ -36,7 +36,6 @@ def task_send_verification_email(self, user_id: int) -> bool:
     Send email verification link with secure token.
 
     Triggered from: accounts/views.py → RegisterView.create()
-    (sent alongside the welcome email)
     """
     from core.services.email_service import send_verification_email
     return send_verification_email(user_id)

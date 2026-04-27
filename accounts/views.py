@@ -384,7 +384,7 @@ class RegisterView(generics.CreateAPIView):
         ✅ Argon2 password hashing (configured in settings.PASSWORD_HASHERS)
         ✅ full_name sanitised against XSS via django.utils.html.escape
         ✅ Entire operation wrapped in a DB transaction (atomic rollback)
-        ✅ Welcome and verification emails dispatched asynchronously
+        ✅ Verification email dispatched asynchronously
     """
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
@@ -447,16 +447,13 @@ class RegisterView(generics.CreateAPIView):
 
         otp.delete()  # Consume the OTP — cannot be reused
 
-        from core.tasks import task_send_verification_email
-        from core.services.email_service import (
-            send_verification_email,
-        )
+        # Verify-email notification removed per product requirement.
 
-        _dispatch_email_task(
-            task_send_verification_email,
-            send_verification_email,
-            user.id,
-        )
+        # Merge session/guest cart with user's cart (if session items provided)
+        from store.views import _merge_session_cart_with_user_cart
+        session_items = request.data.get("session_cart_items")
+        if session_items and isinstance(session_items, list):
+            _merge_session_cart_with_user_cart(user, session_items)
 
         audit_log(
             action="USER_REGISTERED",
@@ -565,6 +562,12 @@ class LoginView(APIView):
             )
 
         unlock_account(user.id)  # Reset counter on successful login
+
+        # Merge session/guest cart with user's cart (if session items provided)
+        from store.views import _merge_session_cart_with_user_cart
+        session_items = request.data.get("session_cart_items")
+        if session_items and isinstance(session_items, list):
+            _merge_session_cart_with_user_cart(authenticated_user, session_items)
 
         audit_log(
             action="LOGIN_SUCCESS",

@@ -24,11 +24,11 @@ async function loadProduct() {
         const product = await API.get(`/store/products/${slug}/`);
         if (!product || product.detail) {
             document.getElementById('product-detail-content').innerHTML = `
-                <div class="brutalist-card" style="padding: 80px; text-align: center;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-md);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m15 8-6 6"/></svg>
+                <div class="util-card" style="padding: 80px; text-align: center;">
+                    <svg class="icon-svg" style="width: 40px; height: 40px; color: var(--text-muted); margin-bottom: var(--space-md);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m15 8-6 6"/></svg>
                     <h3 style="font-size: 2rem; margin-bottom: 8px;">NOT FOUND</h3>
                     <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">This piece has left the collection.</p>
-                    <a href="/catalog/" class="brutalist-btn">BACK TO SHOP</a>
+                    <a href="/catalog/" class="btn-brutalist">BACK TO SHOP</a>
                 </div>`;
             return;
         }
@@ -55,7 +55,7 @@ function renderProduct(p) {
     document.getElementById('product-detail-content').innerHTML = `
         <div class="product-detail-grid">
             <!-- IMAGE -->
-            <div class="brutalist-card" style="padding: 0; overflow: hidden; background: var(--bg-secondary);">
+            <div class="util-card" style="padding: 0; overflow: hidden; background: var(--gray-100);">
                 <img src="${imgSrc}" alt="${p.name}" style="width: 100%; display: block;">
             </div>
 
@@ -78,11 +78,11 @@ function renderProduct(p) {
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-sm); margin-bottom: var(--space-lg);">
-                    <div class="brutalist-card" style="padding: 14px; font-weight: 600; font-size: 0.85rem;">
+                    <div class="util-card" style="padding: 14px; font-weight: 600; font-size: 0.85rem;">
                         <span style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-bottom: 2px;">MATERIAL</span>
                         ${p.material || 'N/A'}
                     </div>
-                    <div class="brutalist-card" style="padding: 14px; font-weight: 600; font-size: 0.85rem;">
+                    <div class="util-card" style="padding: 14px; font-weight: 600; font-size: 0.85rem;">
                         <span style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-bottom: 2px;">WEIGHT</span>
                         ${p.weight || 'N/A'}
                     </div>
@@ -96,22 +96,22 @@ function renderProduct(p) {
                         <input type="number" id="qty-input" value="1" readonly style="width: 50px; text-align: center; border:none; border-left: var(--border-width) solid var(--border-color); border-right: var(--border-width) solid var(--border-color); font-weight: 700; font-size: 1rem; background: var(--bg-elevated);">
                         <button onclick="changeQty(1)" style="padding: 10px 16px; font-weight: 700; background: var(--bg-elevated); border:none; cursor:pointer;">+</button>
                     </div>
-                    <button class="brutalist-btn" onclick="addToCartDetail()" style="flex: 1;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    <button class="btn-brutalist" onclick="addToCartDetail()" style="flex: 1;">
+                        <svg class="icon-svg"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                         ADD TO CART
                     </button>
-                    <button class="brutalist-btn" onclick="toggleWishlist(${p.id})" id="btn-wishlist-${p.id}" style="width: 48px; padding: 0;">${heartIcon}</button>
+                    <button class="btn-brutalist" onclick="toggleWishlist(${p.id})" id="btn-wishlist-${p.id}" style="width: 48px; padding: 0;"><svg class="icon-svg"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
                 </div>
-                <button class="brutalist-btn" onclick="buyNow()" style="width: 100%; background: var(--text-primary); color: var(--text-inverted); margin-bottom: var(--space-lg);">
+                <button class="btn-brutalist btn-primary" onclick="buyNow()" style="width: 100%; margin-bottom: var(--space-lg);">
                     SECURE NOW
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    <svg class="icon-svg"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </button>
                 ` : `
-                <button class="brutalist-btn" disabled style="width: 100%; margin-bottom: var(--space-lg);">PIECE SOLD OUT</button>
+                <button class="btn-brutalist" disabled style="width: 100%; margin-bottom: var(--space-lg);">PIECE SOLD OUT</button>
                 `}
 
                 <!-- POLICY -->
-                <div class="brutalist-card" style="background: var(--bg-accent); padding: var(--space-md);">
+                <div class="util-card" style="background: var(--gray-100); padding: var(--space-md);">
                     <div style="font-weight: 700; font-size: 0.8rem; margin-bottom: 6px; letter-spacing: 0.06em;">STRICT POLICY</div>
                     <p style="font-weight: 500; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary);">
                         We do not accept returns, refunds, or exchanges. All sales are final. By purchasing, you agree to these terms.

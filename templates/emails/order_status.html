@@ -1,92 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Status Update</title>
 </head>
-
-<body style="margin:0; padding:0; background:#f3f1ec; font-family:Arial,Helvetica,sans-serif;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-        style="background:#f3f1ec; padding:24px 12px;">
+<body style="margin:0; padding:0; background:#ece9e1; font-family:Arial,Helvetica,sans-serif; color:#111;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ece9e1; padding:24px 12px;">
         <tr>
             <td align="center">
-                <table role="presentation" width="600" cellpadding="0" cellspacing="0"
-                    style="background:#fff; border:2px solid #111;">
+                <table role="presentation" width="620" cellpadding="0" cellspacing="0" style="background:#fff; border:2px solid #111;">
                     <tr>
-                        <td style="padding:20px; text-align:center; border-bottom:2px solid #111;">
-                            <h1 style="margin:0; font-size:22px; letter-spacing:1px;">IRI COLLECTIONS</h1>
+                        <td style="padding:18px 20px; border-bottom:2px solid #111; text-align:center;">
+                            <h1 style="margin:0; font-size:21px; letter-spacing:1px;">IRI COLLECTIONS</h1>
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding:20px 20px 0; text-align:center;">
-                            <div style="font-size:34px; margin-bottom:6px;">{{ new_status_emoji }}</div>
-                            <h2 style="margin:0 0 6px; font-size:20px;">Order {{ new_status }}</h2>
-                            <p style="font-size:13px; margin:0;">Order #{{ order_number }}</p>
+                        <td style="padding:20px; border-bottom:1px solid #d8d3c8;">
+                            <div style="font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:#6a6459; margin-bottom:8px;">Order Update</div>
+                            <h2 style="margin:0 0 8px; font-size:22px;">{{ new_status_emoji }} {{ new_status|upper }}</h2>
+                            <p style="margin:0; font-size:13px; color:#4a463f;">Order #{{ order_number }}</p>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding:20px;">
-                            <p style="line-height:1.6; margin:0 0 16px; font-size:14px;">
-                                Hi {{ user_name }}, your order status has been updated:
-                            </p>
-                            <div style="background:#f7f7f7; border:1px solid #ddd; padding:14px; margin-bottom:16px;">
-                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                    <tr>
-                                        <td style="font-size:12px; padding-bottom:6px;">Previous Status</td>
-                                        <td style="font-size:12px; padding-bottom:6px; text-align:right;">New Status</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-size:15px; font-weight:600;">{{ old_status }}</td>
-                                        <td style="text-align:right;">
-                                            <span style="background:#111; color:#fff; padding:4px 10px; font-weight:700; font-size:12px;">
-                                                {{ new_status|upper }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                            {% if is_shipped %}
-                            <div style="background:#eef8ef; border:1px solid #9ac79f; padding:12px; margin-bottom:16px;">
-                                <p style="font-size:13px; margin:0; line-height:1.5;">
-                                    Your order has been shipped.
-                                </p>
-                            </div>
-                            {% endif %}
-                            {% if is_cancelled %}
-                            <div style="background:#fdeeee; border:1px solid #e4a0a0; padding:12px; margin-bottom:16px;">
-                                <p style="font-size:13px; margin:0; line-height:1.5;">
-                                    Your order has been cancelled. For any help, please contact our support team.
-                                </p>
-                            </div>
-                            {% endif %}
-                            <div style="background:#f7f7f7; border:1px solid #ddd; padding:12px; margin-bottom:16px;">
-                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                    <tr>
-                                        <td style="font-size:13px;">Order Total</td>
-                                        <td style="font-size:16px; font-weight:700; text-align:right;">
-                                            ₹{{ total_amount }}</td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:12px 0;">
+                            <p style="margin:0 0 14px; font-size:14px; line-height:1.6;">Hi {{ user_name }}, your order status has changed.</p>
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #111; margin-bottom:14px;">
                                 <tr>
-                                    <td style="background:#111; padding:12px 18px;">
-                                        <a href="{{ site_url }}/orders/" style="color:#fff; text-decoration:none; font-weight:700; font-size:14px; display:block;">
-                                            VIEW ORDER DETAILS
-                                        </a>
+                                    <td style="padding:10px 12px; font-size:12px; text-transform:uppercase; letter-spacing:0.06em; border-bottom:1px solid #111;">Previous</td>
+                                    <td style="padding:10px 12px; font-size:12px; text-transform:uppercase; letter-spacing:0.06em; border-bottom:1px solid #111; border-left:1px solid #111;">Current</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px 12px; font-size:14px; font-weight:700;">{{ old_status|upper }}</td>
+                                    <td style="padding:10px 12px; font-size:14px; font-weight:700; border-left:1px solid #111;">{{ new_status|upper }}</td>
+                                </tr>
+                            </table>
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #111; margin-bottom:16px;">
+                                <tr>
+                                    <td style="padding:10px 12px; font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:#6a6459;">Order Total</td>
+                                    <td style="padding:10px 12px; text-align:right; font-size:16px; font-weight:700;">₹{{ total_amount }}</td>
+                                </tr>
+                            </table>
+                            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 0;">
+                                <tr>
+                                    <td style="background:#111; border:2px solid #111;">
+                                        <a href="{{ site_url }}/orders/" style="display:block; color:#fff; text-decoration:none; font-weight:700; font-size:13px; letter-spacing:0.05em; padding:11px 16px; text-transform:uppercase;">View Orders</a>
                                     </td>
                                 </tr>
                             </table>
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding:14px 20px; border-top:2px solid #111; text-align:center;">
-                            <p style="font-size:12px; margin:0; line-height:1.5;">
-                                © {{ current_year }} Iri Collections. All rights reserved.<br>
-                                Need help? <a href="mailto:{{ support_email }}" style="color:#111;">{{ support_email }}</a>
-                            </p>
+                        <td style="border-top:2px solid #111; background:#f5f2ea; padding:8px 0;">
+                            <marquee behavior="scroll" direction="left" scrollamount="5" style="font-size:12px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:#111;">NO REFUNDS • NO RETURNS • NO EXCHANGES • NO GUARANTEES • NO WARRANTIES</marquee>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:12px 20px; border-top:1px solid #d8d3c8; text-align:center; font-size:12px; line-height:1.5; color:#5b564d;">
+                            © {{ current_year }} Iri Collections. Need help? <a href="mailto:{{ support_email }}" style="color:#111;">{{ support_email }}</a>
                         </td>
                     </tr>
                 </table>
@@ -94,5 +65,4 @@
         </tr>
     </table>
 </body>
-
 </html>
