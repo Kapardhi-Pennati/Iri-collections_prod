@@ -604,11 +604,11 @@ class OrderCreateView(APIView):
 
 class OrderConfirmPaymentView(APIView):
     """
-    "I have paid" action — mark an existing pending order as awaiting
-    admin verification WITHOUT requiring screenshot/UTR proof.
+    "I have paid" action — mark an existing pending order as paid
+    without requiring screenshot/UTR proof.
 
-    Creates (or updates) a Transaction row with status='pending_verification'.
-    Stock is NOT deducted here; deduction remains the admin-approval step.
+    Creates (or updates) a Transaction row with status='paid'.
+    Stock is NOT deducted here.
     """
     permission_classes = [IsCustomerRole]
     throttle_classes = [CheckoutThrottle]
@@ -647,7 +647,7 @@ class OrderConfirmPaymentView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Extend stock reservations for 24 h while admin verifies
+        # Extend stock reservations while the order proceeds to fulfillment.
         expires_at = timezone.now() + timedelta(hours=24)
         StockReservation.objects.filter(order=order).update(expires_at=expires_at)
 

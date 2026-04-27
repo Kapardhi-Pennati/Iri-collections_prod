@@ -266,39 +266,6 @@
     </div>
 </div>
 
-<!-- Payment Verification Modal -->
-<div class="modal-overlay" id="payment-verify-modal">
-    <div class="modal" style="max-width: 500px;">
-        <h2>Verify Payment Proof</h2>
-        <input type="hidden" id="pv-order-id">
-        
-        <div style="margin-bottom: var(--space-md);">
-            <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">UTR / Reference Number</div>
-            <div id="pv-utr" style="font-weight:600; font-family: monospace; font-size:1.1rem; user-select:all; padding:8px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-sm);">—</div>
-        </div>
-        
-        <div style="margin-bottom: var(--space-lg);">
-            <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Customer Screenshot</div>
-            <a id="pv-img-link" href="#" target="_blank" style="display:block;">
-                <img id="pv-img" src="" alt="Payment Proof" style="width:100%; max-height:400px; object-fit:contain; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated);">
-            </a>
-            <small style="display:block; text-align:center; margin-top:8px; color:var(--text-muted);">Click image to open in new tab</small>
-        </div>
-
-        <div class="form-group">
-            <label>Admin Notes <span class="text-muted" style="text-transform:none; font-weight:normal;">(optional)</span></label>
-            <textarea id="pv-notes" rows="2" placeholder="Reason for rejection, or notes for approval..."></textarea>
-        </div>
-
-        <div style="display:flex; gap:var(--space-md); margin-top:var(--space-xl);">
-            <button class="btn btn-ghost" style="color:var(--error); flex:1;" onclick="rejectPayment()">Reject (Cancel Order)</button>
-            <button class="btn btn-primary" style="flex:2;" onclick="approvePayment()">Approve Payment</button>
-        </div>
-        <div style="text-align:center; margin-top:var(--space-md);">
-            <button class="btn btn-ghost btn-sm" onclick="closeModal('payment-verify-modal')">Close Without Action</button>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -729,9 +696,6 @@ async function loadAdminOrders() {
                     <td>
                         <div style="display:flex; gap:var(--space-sm); align-items:center;">
                             <a href="/invoice/${o.id}/" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;" title="View Invoice">View Invoice</a>
-                            ${o.status === 'pending' && o.transaction && o.transaction.status === 'pending_verification' 
-                                ? `<button class="btn btn-primary btn-sm" onclick="openPaymentVerifyModal(${o.id}, '${o.transaction.payment_screenshot}', '${o.transaction.upi_reference_id}')">Verify Payment</button>` 
-                                : ''}
                             ${o.status === 'shipped' ? `<button class="btn btn-ghost btn-sm" onclick="openTrackingModal(${o.id})">Tracking</button>` : ''}
                             <button class="btn btn-ghost btn-sm" onclick="openOrderStatusModal(${o.id}, '${o.status}')">Update</button>
                             <button class="btn btn-ghost btn-sm" style="color:var(--error);" onclick="deleteOrder(${o.id}, '${o.order_number}')">Delete</button>
@@ -813,60 +777,6 @@ document.getElementById('tracking-form').addEventListener('submit', async (e) =>
     btn.disabled = false;
     btn.textContent = 'Upload';
 });
-
-// ─── Payment Verification ──────────────────────────────────────
-
-function openPaymentVerifyModal(orderId, screenshotUrl, utr) {
-    document.getElementById('pv-order-id').value = orderId;
-    document.getElementById('pv-utr').textContent = utr || 'Not provided';
-    document.getElementById('pv-notes').value = '';
-    
-    const imgUrl = screenshotUrl && screenshotUrl !== 'null' ? screenshotUrl : '';
-    document.getElementById('pv-img').src = imgUrl;
-    document.getElementById('pv-img-link').href = imgUrl;
-    
-    openModal('payment-verify-modal');
-}
-
-async function approvePayment() {
-    const orderId = document.getElementById('pv-order-id').value;
-    const notes = document.getElementById('pv-notes').value;
-    
-    if (!confirm('Approve payment? This will confirm the order and deduct stock.')) return;
-    
-    const res = await API.post(`/payments/approve/${orderId}/`, { admin_notes: notes });
-    if (res && res.ok) {
-        Toast.success('Payment approved and order confirmed!');
-        closeModal('payment-verify-modal');
-        loadAdminOrders();
-        loadOverview();
-    } else {
-        Toast.error(res?.data?.error || 'Failed to approve payment.');
-    }
-}
-
-async function rejectPayment() {
-    const orderId = document.getElementById('pv-order-id').value;
-    const notes = document.getElementById('pv-notes').value;
-    
-    if (!notes) {
-        Toast.error('Please provide a reason for rejection in the Admin Notes.');
-        document.getElementById('pv-notes').focus();
-        return;
-    }
-    
-    if (!confirm('Reject payment? This will permanently CANCEL the order.')) return;
-    
-    const res = await API.post(`/payments/reject/${orderId}/`, { admin_notes: notes });
-    if (res && res.ok) {
-        Toast.success('Payment rejected and order cancelled.');
-        closeModal('payment-verify-modal');
-        loadAdminOrders();
-        loadOverview();
-    } else {
-        Toast.error(res?.data?.error || 'Failed to reject payment.');
-    }
-}
 
 // ─── Categories Management ─────────────────────
 async function loadAdminCategories() {
