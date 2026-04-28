@@ -1256,15 +1256,24 @@ class AdminOrderStatusView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # When admin confirms, finalize the order (deduct stock, assign order number)
+            # When admin confirms, assign order number and deduct stock
             if new_status == "confirmed" and order.status == "pending":
-                finalized, message = _finalize_paid_order(order)
-                if not finalized:
-                    return Response(
-                        {"error": message},
-                        status=status.HTTP_409_CONFLICT,
-                    )
-                # _finalize_paid_order already saved the order with confirmed status
+                # Deduct stock for each item
+                for item in order.items.select_related("product").all():
+                    if item.product:
+                        product = Product.objects.select_for_update().get(pk=item.product.pk)
+                        if product.stock >= item.quantity:
+                            product.stock -= item.quantity
+                            product.save(update_fields=["stock"])
+
+                # Clear reservations
+                StockReservation.objects.filter(order=order).delete()
+
+                # Set status and assign order number
+                order.status = "confirmed"
+                order.save(update_fields=["status"])
+                order.finalize_order_number()
+
                 audit_log(
                     action="ADMIN_ORDER_STATUS_UPDATED",
                     user_id=request.user.id,
