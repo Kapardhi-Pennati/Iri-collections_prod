@@ -57,7 +57,7 @@ class Address(models.Model):
     street_hash = models.CharField(max_length=64, db_index=True, default="")
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
-    pincode = models.CharField(max_length=20)
+    pincode = models.TextField()
     pincode_hash = models.CharField(max_length=64, db_index=True, default="")
     phone = models.TextField(blank=True)
     is_default = models.BooleanField(default=False)

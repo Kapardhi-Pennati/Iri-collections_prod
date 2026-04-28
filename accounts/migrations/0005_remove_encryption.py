@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="address",
             name="pincode",
-            field=models.CharField(max_length=20),
+            field=models.TextField(),
         ),
         migrations.AlterField(
             model_name="address",

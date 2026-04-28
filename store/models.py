@@ -205,7 +205,7 @@ class Order(models.Model):
         max_length=12, choices=STATUS_CHOICES, default="pending", db_index=True
     )
     shipping_address = models.TextField()
-    phone = models.CharField(max_length=20, blank=True)
+    phone = models.TextField(blank=True)
     notes = models.TextField(blank=True)
     tracking_image = models.ImageField(upload_to="tracking/", blank=True, null=True)
     tracking_id = models.CharField(max_length=120, blank=True, db_index=True)
