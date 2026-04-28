@@ -245,16 +245,19 @@ class GenerateUPIQRView(APIView):
         upi_id = str(getattr(settings, "UPI_ID", "")).strip()
         upi_name = str(getattr(settings, "UPI_DISPLAY_NAME", "")).strip()
         note = str(request.query_params.get("note", "Payment")).strip()[:80] or "Payment"
+        ref = str(request.query_params.get("ref", "")).strip()[:50]
 
-        upi_uri = "upi://pay?" + urlencode(
-            {
-                "pa": upi_id,
-                "pn": upi_name,
-                "am": amount,
-                "cu": "INR",
-                "tn": note,
-            }
-        )
+        upi_params = {
+            "pa": upi_id,
+            "pn": upi_name,
+            "am": amount,
+            "cu": "INR",
+            "tn": note,
+        }
+        if ref:
+            upi_params["tr"] = ref
+
+        upi_uri = "upi://pay?" + urlencode(upi_params)
 
         cache_key = f"payments:qr:{upi_uri}"
         cached_png = cache.get(cache_key)
