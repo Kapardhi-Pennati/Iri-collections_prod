@@ -134,10 +134,22 @@
                 </div>
             </div>
         </div>
+
+        <!-- OTP VERIFICATION MODAL -->
+        <div id="otp-modal" class="menu-overlay">
+            <div class="util-card util-card--static" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; z-index: 1001; text-align: center;">
+                <h3 style="margin-bottom: 1rem;">VERIFY EMAIL</h3>
+                <p style="font-family: var(--font-mono); font-size: 0.8rem; margin-bottom: var(--space-md); color: var(--text-secondary);">An OTP has been sent to your email. Enter it below to proceed.</p>
+                <input type="text" id="otp-input" class="brutalist-input" placeholder="6-DIGIT CODE" maxlength="6" style="text-align: center; font-family: var(--font-mono); font-weight: 800; font-size: 1.2rem; letter-spacing: 0.2em; margin-bottom: var(--space-md);">
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-brutalist btn-secondary" id="otp-cancel-btn" style="flex: 1;">CANCEL</button>
+                    <button type="button" class="btn-brutalist btn-primary" id="otp-submit-btn" style="flex: 1;">VERIFY</button>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}
-
 {% block extra_js %}
 <script>
 let cartData = null;
@@ -290,6 +302,7 @@ document.getElementById('shipping-form').addEventListener('submit', async (e) =>
 });
 
 async function ensureCheckoutOtp() {
+    if (!isGuestSession) return true;
     if (checkoutOtpVerified) return true;
 
     if (!checkoutOtpRequested) {
@@ -306,18 +319,53 @@ async function ensureCheckoutOtp() {
         Toast.success('OTP SENT TO YOUR EMAIL');
     }
 
-    const code = window.prompt('Enter the 6-digit OTP sent to your email to continue checkout:');
-    if (!code) return false;
+    return new Promise((resolve) => {
+        const modal = document.getElementById('otp-modal');
+        const input = document.getElementById('otp-input');
+        const submitBtn = document.getElementById('otp-submit-btn');
+        const cancelBtn = document.getElementById('otp-cancel-btn');
 
-    const verifyRes = await API.post('/store/orders/otp/verify/', { otp_code: code.trim() });
-    if (!verifyRes.ok) {
-        Toast.error(verifyRes.data?.error || 'OTP VERIFICATION FAILED');
-        return false;
-    }
+        modal.classList.add('active');
+        input.value = '';
+        input.focus();
 
-    checkoutOtpVerified = true;
-    Toast.success('OTP VERIFIED');
-    return true;
+        const cleanup = () => {
+            modal.classList.remove('active');
+            submitBtn.onclick = null;
+            cancelBtn.onclick = null;
+        };
+
+        cancelBtn.onclick = () => {
+            cleanup();
+            resolve(false);
+        };
+
+        submitBtn.onclick = async () => {
+            const code = input.value.trim();
+            if (!code) {
+                Toast.error('ENTER OTP CODE');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'VERIFYING...';
+
+            const verifyRes = await API.post('/store/orders/otp/verify/', { otp_code: code });
+            
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'VERIFY';
+
+            if (!verifyRes.ok) {
+                Toast.error(verifyRes.data?.error || 'OTP VERIFICATION FAILED');
+                return;
+            }
+
+            checkoutOtpVerified = true;
+            Toast.success('OTP VERIFIED');
+            cleanup();
+            resolve(true);
+        };
+    });
 }
 
 async function proceedToPayment() {

@@ -616,11 +616,14 @@ class OrderCreateView(APIView):
     
     @transaction.atomic
     def post(self, request):
-        if not cache.get(_checkout_otp_verified_key(request.user.id)):
-            return Response(
-                {"error": "Checkout OTP verification is required before reserving stock."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        # Authenticated (non-guest) users already proved identity via login —
+        # skip OTP.  Guest sessions still need the checkout OTP gate.
+        if getattr(request.user, "is_guest", False):
+            if not cache.get(_checkout_otp_verified_key(request.user.id)):
+                return Response(
+                    {"error": "Checkout OTP verification is required before reserving stock."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
 
         serializer = OrderCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
