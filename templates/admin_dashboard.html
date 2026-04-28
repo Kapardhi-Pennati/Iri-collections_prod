@@ -700,7 +700,7 @@ async function loadAdminOrders() {
                     <td>
                         <div style="display:flex; gap:var(--space-sm); align-items:center;">
                             <a href="/invoice/${o.id}/" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;" title="View Invoice">View Invoice</a>
-                            ${o.status === 'shipped' ? `<button class="btn btn-ghost btn-sm" onclick="openTrackingModal(${o.id})">Tracking</button>` : ''}
+                            ${['confirmed', 'shipped'].includes(o.status) ? `<button class="btn btn-ghost btn-sm" onclick="openTrackingModal(${o.id})">Tracking</button>` : ''}
                             <button class="btn btn-ghost btn-sm" onclick="openOrderStatusModal(${o.id}, '${o.status}')">Update</button>
                             <button class="btn btn-ghost btn-sm" style="color:var(--error);" onclick="deleteOrder(${o.id}, '${o.order_number}')">Delete</button>
                         </div>

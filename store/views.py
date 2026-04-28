@@ -221,14 +221,13 @@ class ProductDetailView(generics.RetrieveAPIView):
         return response
 
 
-def _finalize_paid_order(order):
+def _deduct_order_stock(order):
     """
-    Finalize a paid order by deducting stock, clearing reservations
-    and marking the order as confirmed.
+    Deduct on-hand stock for every line item in the order.
     Returns (True, 'ok') on success or (False, message) on failure.
+    Caller must already hold a transaction.atomic() context.
     """
-    # validate reservations and adjust stock
-    order_items = list(order.items.all())
+    order_items = list(order.items.select_related("product").all())
     product_ids = [it.product_id for it in order_items if it.product_id]
     product_map = {p.id: p for p in Product.objects.select_for_update().filter(id__in=product_ids)}
 
@@ -237,7 +236,7 @@ def _finalize_paid_order(order):
             continue
         product = product_map.get(item.product_id)
         if product is None:
-            return False, f"Product missing for {item.product_id}."
+            return False, f"Product missing for {item.product_name}."
         if product.stock < item.quantity:
             return False, f"Insufficient stock for {product.name}."
 
@@ -249,10 +248,32 @@ def _finalize_paid_order(order):
         product.save(update_fields=["stock"])
 
     StockReservation.objects.filter(order=order).delete()
-    order.status = "confirmed"
-    order.save(update_fields=["status"])
-    order.finalize_order_number()
     return True, "ok"
+
+
+def _restore_order_stock(order):
+    """
+    Restore on-hand stock for every line item in the order.
+    Called when an order whose stock was already deducted is cancelled.
+    """
+    for item in order.items.select_related("product").all():
+        if not item.product_id:
+            continue
+        product = Product.objects.select_for_update().get(pk=item.product_id)
+        product.stock += item.quantity
+        product.save(update_fields=["stock"])
+
+
+def _order_stock_deducted(order) -> bool:
+    """
+    Return True if stock was already hard-deducted for this order.
+    This happens when the customer clicks 'I Have Paid' or when the
+    admin has already confirmed/shipped the order.
+    """
+    if order.status in {"confirmed", "shipped"}:
+        return True
+    txn = getattr(order, "transaction", None)
+    return txn is not None and txn.status == "paid"
 
 
 # ─── Cart ──────────────────────────────────────────────────────
@@ -769,11 +790,11 @@ class OrderCreateView(APIView):
 
 class OrderConfirmPaymentView(APIView):
     """
-    "I have paid" action - mark an existing pending order as paid
-    without requiring screenshot/UTR proof.
+    "I have paid" — customer confirms payment.
 
-    Creates (or updates) a Transaction row with status='paid'.
-    Stock is NOT deducted here.
+    Stock is deducted immediately and reservations are cleared.
+    The order stays 'pending' until the admin explicitly confirms it.
+    If the admin cancels the order, stock is restored.
     """
     permission_classes = [IsCustomerRole]
     throttle_classes = [CheckoutThrottle]
@@ -798,6 +819,7 @@ class OrderConfirmPaymentView(APIView):
         try:
             order = (
                 Order.objects.select_for_update()
+                .select_related("transaction")
                 .get(id=order_id, user=request.user)
             )
         except Order.DoesNotExist:
@@ -812,41 +834,50 @@ class OrderConfirmPaymentView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Idempotency: if already paid, just return success
+        if _order_stock_deducted(order):
+            display = order.order_number or f"PENDING-{str(order.checkout_reference)[:8].upper()}"
+            return Response({
+                "message": "Payment already confirmed. Awaiting admin approval.",
+                "order_number": display,
+                "order_id": order.id,
+                "status": "paid",
+            })
+
+        # Deduct stock immediately
+        ok, message = _deduct_order_stock(order)
+        if not ok:
+            return Response(
+                {"error": message},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        # Record the payment (order stays pending)
         txn, created = Transaction.objects.get_or_create(
             order=order,
-            defaults={
-                "amount": order.total_amount,
-                "status": "paid",
-            },
+            defaults={"amount": order.total_amount, "status": "paid"},
         )
         if not created and txn.status != "paid":
             txn.status = "paid"
             txn.save(update_fields=["status"])
 
-        finalized, message = _finalize_paid_order(order)
-        if not finalized:
-            txn.status = "rejected"
-            txn.admin_notes = message
-            txn.save(update_fields=["status", "admin_notes"])
-            StockReservation.objects.filter(order=order).delete()
-            return Response(
-                {"error": message},
-                status=status.HTTP_409_CONFLICT,
-            )
+        display = order.order_number or f"PENDING-{str(order.checkout_reference)[:8].upper()}"
 
         audit_log(
             action="PAYMENT_CONFIRMED_BY_CUSTOMER",
             user_id=request.user.id,
             details={
                 "order_id": str(order.id),
-                "order_number": order.order_number,
+                "order_display": display,
+                "stock_deducted": True,
             },
             severity="INFO",
         )
 
         return Response({
-            "message": "Payment marked as paid.",
-            "order_number": order.order_number,
+            "message": "Payment confirmed. Awaiting admin approval.",
+            "order_number": display,
+            "order_id": order.id,
             "status": "paid",
         })
 
@@ -882,6 +913,7 @@ class OrderCancelView(APIView):
 
             order = (
                 Order.objects.select_for_update()
+                .select_related("transaction")
                 .prefetch_related("items__product")
                 .filter(id=order_id, user=request.user)
                 .first()
@@ -889,6 +921,7 @@ class OrderCancelView(APIView):
         elif order_number:
             order = (
                 Order.objects.select_for_update()
+                .select_related("transaction")
                 .prefetch_related("items__product")
                 .filter(order_number=order_number, user=request.user)
                 .first()
@@ -910,6 +943,11 @@ class OrderCancelView(APIView):
                 {"error": f"Only pending orders can be cancelled. Current status: {order.status}."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        # If customer already paid, stock was hard-deducted — restore it
+        stock_was_deducted = _order_stock_deducted(order)
+        if stock_was_deducted:
+            _restore_order_stock(order)
 
         # Restore items to cart
         cart = _get_or_create_cart(request.user)
@@ -934,7 +972,7 @@ class OrderCancelView(APIView):
                     quantity=order_item.quantity,
                 )
 
-            # Convert order reservation back to cart reservation
+            # Convert order reservation back to cart reservation (if any remain)
             reservation = (
                 StockReservation.objects.select_for_update()
                 .filter(order=order, product=order_item.product)
@@ -1256,18 +1294,20 @@ class AdminOrderStatusView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # When admin confirms, assign order number and deduct stock
+            # When admin confirms, assign order number
             if new_status == "confirmed" and order.status == "pending":
-                # Deduct stock for each item
-                for item in order.items.select_related("product").all():
-                    if item.product:
-                        product = Product.objects.select_for_update().get(pk=item.product.pk)
-                        if product.stock >= item.quantity:
-                            product.stock -= item.quantity
-                            product.save(update_fields=["stock"])
-
-                # Clear reservations
-                StockReservation.objects.filter(order=order).delete()
+                # Stock may have been deducted already when customer clicked
+                # "I Have Paid". Only deduct if not yet done.
+                if not _order_stock_deducted(order):
+                    ok, msg = _deduct_order_stock(order)
+                    if not ok:
+                        return Response(
+                            {"error": msg},
+                            status=status.HTTP_409_CONFLICT,
+                        )
+                else:
+                    # Just clear any stale reservations
+                    StockReservation.objects.filter(order=order).delete()
 
                 # Set status and assign order number
                 order.status = "confirmed"
@@ -1288,19 +1328,15 @@ class AdminOrderStatusView(APIView):
 
             if new_status == "cancelled" and order.status != "cancelled":
                 txn = getattr(order, "transaction", None)
-                # Restore stock if the order was confirmed/shipped (stock was deducted)
-                if order.status in {"confirmed", "shipped"}:
-                    for item in order.items.all().select_related("product"):
-                        if item.product:
-                            product = Product.objects.select_for_update().get(pk=item.product.pk)
-                            product.stock += item.quantity
-                            product.save(update_fields=["stock"])
+                # Restore stock if it was deducted (paid pending, confirmed, shipped)
+                if _order_stock_deducted(order):
+                    _restore_order_stock(order)
 
                 if txn and txn.status != "rejected":
                     txn.status = "rejected"
                     txn.save(update_fields=["status"])
-            
-            if new_status == "cancelled" and order.status == "pending":
+
+                # Clear any remaining reservations (unpaid pending orders)
                 StockReservation.objects.filter(order=order).delete()
 
             order.status = new_status

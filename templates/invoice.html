@@ -270,9 +270,14 @@
             }
 
             try {
-                // Fetch order details
-                // If the user is an admin they can fetch any order because of how we built OrderDetailView
-                const order = await API.get(`/store/orders/${orderId}/`);
+                // Fetch order details — try customer endpoint first, admin endpoint as fallback
+                let order;
+                try {
+                    order = await API.get(`/store/orders/${orderId}/`);
+                } catch {
+                    // If customer endpoint fails (e.g., admin viewing another user's order), try admin
+                    order = await API.get(`/store/admin/orders/${orderId}/`);
+                }
                 
                 if (!order) throw new Error('Order not found');
 

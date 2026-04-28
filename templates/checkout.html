@@ -122,7 +122,7 @@
             <div id="step-4" class="util-card util-card--static hidden" style="text-align: center;">
                 <svg class="icon-svg" style="width: 64px; height: 64px; color: var(--black); margin-bottom: var(--space-md);"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
                 <h2 style="font-size: 2rem; margin-bottom: 8px;">ALLOCATION COMPLETE</h2>
-                <p style="font-family: var(--font-mono); font-weight: 600; font-size: 0.9rem; color: var(--gray-800); margin-bottom: var(--space-lg);">PAYMENT STATUS MARKED AS PAID.</p>
+                <p style="font-family: var(--font-mono); font-weight: 600; font-size: 0.9rem; color: var(--gray-800); margin-bottom: var(--space-lg);">PAYMENT CONFIRMED. YOUR ORDER IS AWAITING ADMIN APPROVAL.</p>
                 <div id="confirmation-details" style="margin-bottom: var(--space-lg);"></div>
                 <div id="guest-convert-wrap" class="hidden" style="margin-bottom: var(--space-lg);">
                     <button type="button" class="btn-brutalist" onclick="convertGuestCheckoutAccount()" style="width: 100%;">
@@ -400,8 +400,8 @@ async function proceedToPayment() {
             createdOrder = res.data;
             const orderRef = createdOrder.order_number || `PENDING-${(createdOrder.checkout_reference || '').substring(0, 8).toUpperCase()}`;
             document.getElementById('payment-amount-display').textContent = formatPrice(createdOrder.total_amount);
-            document.getElementById('payment-order-ref').textContent = `ORDER: ${orderRef}`;
-            updatePaymentQRCode(createdOrder.total_amount, orderRef);
+            document.getElementById('payment-order-ref').textContent = `ORDER #${createdOrder.id} // ${orderRef}`;
+            updatePaymentQRCode(createdOrder.total_amount, createdOrder.id, orderRef);
             updateCartCount();
             goToStep(3);
             return;
@@ -418,11 +418,11 @@ async function proceedToPayment() {
     }
 }
 
-function updatePaymentQRCode(amt, orderId = '') {
+function updatePaymentQRCode(amt, orderPk = '', orderRef = '') {
     const qrImg = document.querySelector('#step-3 img');
     const amount = Number(amt || 0).toFixed(2);
-    const note = orderId ? `Order-${orderId}` : 'Payment';
-    const ref = orderId || '';
+    const note = orderPk ? `Iri-Order-${orderPk}` : 'Payment';
+    const ref = orderPk ? String(orderPk) : '';
     qrImg.src = `/api/payments/qr-code/?amount=${encodeURIComponent(amount)}&note=${encodeURIComponent(note)}&ref=${encodeURIComponent(ref)}`;
 }
 
@@ -439,7 +439,8 @@ async function confirmPaid() {
         });
         if (res.ok) {
             createdOrder.order_number = res.data?.order_number || createdOrder.order_number;
-            document.getElementById('confirmation-details').innerHTML = `<div class="util-card util-card--static" style="padding:var(--space-md); font-weight:700; display:inline-block;">ORDER: ${createdOrder.order_number}<br>TOTAL: ${formatPrice(createdOrder.total_amount)}</div>`;
+            const displayId = res.data?.order_id || createdOrder.id;
+            document.getElementById('confirmation-details').innerHTML = `<div class="util-card util-card--static" style="padding:var(--space-md); font-weight:700; display:inline-block;">ORDER #${displayId} // ${createdOrder.order_number}<br>TOTAL: ${formatPrice(createdOrder.total_amount)}</div>`;
             if (isGuestSession) {
                 document.getElementById('guest-convert-wrap').classList.remove('hidden');
             }
