@@ -91,7 +91,7 @@
                         <svg class="icon-svg"><path d="m15 18-6-6 6-6"/></svg>
                         BACK
                     </button>
-                    <button type="button" class="btn-brutalist btn-primary" id="pay-now-btn" onclick="proceedToPayment()" style="flex: 1;">INITIATE SETTLEMENT</button>
+                    <button type="button" class="btn-brutalist btn-primary" id="pay-now-btn" onclick="proceedToPayment()" style="flex: 1;">INITIATE PAYMENT</button>
                 </div>
             </div>
 
@@ -372,9 +372,17 @@ async function proceedToPayment() {
     if (pageBusy) return;
     pageBusy = true;
     const btn = document.getElementById('pay-now-btn');
+    const idleLabel = btn.dataset.idleLabel || btn.textContent.trim();
+    btn.dataset.idleLabel = idleLabel;
+    btn.disabled = true;
     btn.textContent = 'INITIALIZING...';
 
     try {
+        if (!cartData?.items?.length) {
+            Toast.error('YOUR CART IS EMPTY');
+            return;
+        }
+
         const address = `${document.getElementById('ship-name').value}, ${document.getElementById('ship-address').value}, ${document.getElementById('ship-city').value} - ${document.getElementById('ship-pincode').value}`;
         const res = await API.post('/store/orders/create/', {
             shipping_address: address,
@@ -393,8 +401,18 @@ async function proceedToPayment() {
             updatePaymentQRCode(createdOrder.total_amount, createdOrder.checkout_reference || createdOrder.order_number || createdOrder.id);
             updateCartCount();
             goToStep(3);
+            return;
         }
-    } finally { pageBusy = false; btn.textContent = 'INITIATE SETTLEMENT'; }
+
+        Toast.error(res.data?.error || 'FAILED TO CREATE ORDER');
+    } catch (err) {
+        console.error(err);
+        Toast.error('AN ERROR OCCURRED WHILE CREATING THE ORDER');
+    } finally {
+        pageBusy = false;
+        btn.disabled = false;
+        btn.textContent = idleLabel;
+    }
 }
 
 function updatePaymentQRCode(amt, orderId = '') {

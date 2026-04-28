@@ -92,7 +92,7 @@ def _parse_product_id(raw_value) -> tuple:
 
     Returns:
         (True, int_id) on success.
-        (False, Response) on failure — caller should return the Response.
+        (False, Response) on failure - caller should return the Response.
     """
     from rest_framework import status as drf_status
     from rest_framework.response import Response as DRFResponse
@@ -123,73 +123,37 @@ def _merge_session_cart_with_user_cart(user, session_items: list = None) -> Cart
     """
     Merge guest/session cart items with the authenticated user's cart.
 
-    This function supports the following scenarios:
-    1. User already has a cart: merge session items into existing cart
-    2. User has no cart: create new cart and populate with session items
-    3. Duplicate products: update quantities instead of creating duplicates
-    4. Out-of-stock products: skip without error
-
-    Args:
-        user: Authenticated user instance
-        session_items: List of dicts with 'product_id' and 'quantity' keys,
-                      sourced from session/localStorage. If None, no merge occurs.
-
-    Returns:
-        The user's Cart instance (created or existing)
+    Returns the locked Cart instance after merging.
     """
     cart = _get_or_create_cart(user)
+    cart = Cart.objects.select_for_update().get(pk=cart.pk)
 
     if not session_items:
         return cart
 
-    cart = Cart.objects.select_for_update().get(pk=cart.pk)
-
-    for item_data in session_items:
+    for si in session_items:
         try:
-            product_id = int(item_data.get("product_id"))
-            quantity = int(item_data.get("quantity", 1))
-            if quantity <= 0:
-                continue
-        except (TypeError, ValueError):
+            pid = int(si.get("product_id") or si.get("product") or 0)
+        except Exception:
             continue
-
+        qty = int(si.get("quantity", 1)) if isinstance(si, dict) else 1
+        if qty <= 0:
+            continue
         try:
-            product = Product.objects.get(id=product_id, is_active=True)
+            product = Product.objects.get(id=pid, is_active=True)
         except Product.DoesNotExist:
             continue
 
-        existing_item = CartItem.objects.filter(
-            cart=cart, product=product
-        ).first()
-
-        if existing_item:
-            existing_item.quantity += quantity
-            existing_item.save(update_fields=["quantity"])
+        existing = CartItem.objects.select_for_update().filter(cart=cart, product=product).first()
+        if existing:
+            existing.quantity += qty
+            existing.save(update_fields=["quantity"])
         else:
-            CartItem.objects.create(cart=cart, product=product, quantity=quantity)
+            CartItem.objects.create(cart=cart, product=product, quantity=qty)
 
-        # Create or update stock reservation for the guest/session item
-        expires_at = timezone.now() + timedelta(hours=24)
-        reservation = StockReservation.objects.filter(
-            user=user, product=product, order__isnull=True
-        ).first()
-
-        if reservation:
-            reservation.quantity += quantity
-            reservation.expires_at = expires_at
-            reservation.save(update_fields=["quantity", "expires_at"])
-        else:
-            StockReservation.objects.create(
-                user=user,
-                product=product,
-                quantity=quantity,
-                expires_at=expires_at,
-            )
-
-    return _cart_queryset().get(pk=cart.pk)
+    return cart
 
 
-# ─── Public: Categories ────────────────────────────────────────
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.annotate(
         product_count=Count("products", filter=Q(products__is_active=True))
@@ -199,7 +163,6 @@ class CategoryListView(generics.ListAPIView):
     pagination_class = None
 
 
-# ─── Public: Products ──────────────────────────────────────────
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]
@@ -215,8 +178,6 @@ class ProductListView(generics.ListAPIView):
             qs = qs.filter(category__slug=category)
         if search:
             qs = qs.filter(name__icontains=search)
-        # Only activate featured filter on explicit truthy values.
-        # Previously `if featured:` would be True for "false" or "0" strings.
         if featured in ("true", "1", "yes"):
             qs = qs.filter(is_featured=True)
         if sort == "price_low":
@@ -260,38 +221,23 @@ class ProductDetailView(generics.RetrieveAPIView):
         return response
 
 
-def _finalize_paid_order(order: Order) -> tuple[bool, str]:
+def _finalize_paid_order(order):
     """
-    Atomically settle inventory and convert reservation to finalized inventory use.
+    Finalize a paid order by deducting stock, clearing reservations
+    and marking the order as confirmed.
+    Returns (True, 'ok') on success or (False, message) on failure.
     """
-    now = timezone.now()
-    order_items = list(OrderItem.objects.filter(order=order).select_related("product"))
-    product_ids = [item.product_id for item in order_items if item.product_id]
-    product_map = {
-        product.id: product
-        for product in Product.objects.select_for_update().filter(id__in=product_ids)
-    }
+    # validate reservations and adjust stock
+    order_items = list(order.items.all())
+    product_ids = [it.product_id for it in order_items if it.product_id]
+    product_map = {p.id: p for p in Product.objects.select_for_update().filter(id__in=product_ids)}
 
     for item in order_items:
         if not item.product_id:
             continue
-
         product = product_map.get(item.product_id)
-        if not product:
-            return False, f"Product for {item.product_name} no longer exists."
-
-        reservation = (
-            StockReservation.objects.select_for_update()
-            .filter(order=order, product=product)
-            .first()
-        )
-
-        if not reservation or reservation.expires_at <= now:
-            return False, f"Reservation expired for {product.name}."
-
-        if reservation.quantity < item.quantity:
-            return False, f"Reservation mismatch for {product.name}."
-
+        if product is None:
+            return False, f"Product missing for {item.product_id}."
         if product.stock < item.quantity:
             return False, f"Insufficient stock for {product.name}."
 
@@ -605,18 +551,18 @@ class OrderCreateView(APIView):
     Create order from cart with inventory locking.
     
     Security features:
-    ✅ User authentication required
-    ✅ Input validation with sanitization
-    ✅ Database transaction with row locking (prevents race conditions)
-    ✅ Stock validation
-    ✅ Audit logging
+    - User authentication required
+    - Input validation with sanitization
+    - Database transaction with row locking (prevents race conditions)
+    - Stock validation
+    - Audit logging
     """
     permission_classes = [IsCustomerRole]
     throttle_classes = [CheckoutThrottle]
     
     @transaction.atomic
     def post(self, request):
-        # Authenticated (non-guest) users already proved identity via login —
+        # Authenticated (non-guest) users already proved identity via login -
         # skip OTP.  Guest sessions still need the checkout OTP gate.
         if getattr(request.user, "is_guest", False):
             if not cache.get(_checkout_otp_verified_key(request.user.id)):
@@ -717,7 +663,11 @@ class OrderCreateView(APIView):
             notes=escape(serializer.validated_data.get("notes", ""))[:500],
         )
 
-        if serializer.validated_data.get("save_address", True):
+        should_save_address = (
+            not getattr(request.user, "is_guest", False)
+            and serializer.validated_data.get("save_address", True)
+        )
+        if should_save_address:
             street = serializer.validated_data.get("street", "").strip()
             city = serializer.validated_data.get("city", "").strip()
             state = serializer.validated_data.get("state", "").strip()
@@ -806,7 +756,6 @@ class OrderCreateView(APIView):
             },
             severity="INFO",
         )
-
         return Response(
             OrderSerializer(
                 Order.objects.select_related("transaction")
@@ -816,9 +765,10 @@ class OrderCreateView(APIView):
             status=status.HTTP_201_CREATED,
         )
 
+
 class OrderConfirmPaymentView(APIView):
     """
-    "I have paid" action — mark an existing pending order as paid
+    "I have paid" action - mark an existing pending order as paid
     without requiring screenshot/UTR proof.
 
     Creates (or updates) a Transaction row with status='paid'.
@@ -1549,7 +1499,7 @@ class AdminTrafficView(APIView):
             .order_by("-count")
             .first()
         )
-        top_page_today = top_today["path"] if top_today else "—"
+        top_page_today = top_today["path"] if top_today else "-"
 
         return Response(
             {

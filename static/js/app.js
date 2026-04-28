@@ -92,12 +92,15 @@ const API = {
         this.sessionValidated = true;
     },
 
-    clearSession() {
+    clearSession(options = {}) {
+        const preserveGuestCart = !!options.preserveGuestCart;
         sessionStorage.clear();
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
-        localStorage.removeItem('iri_guest_cart');
+        if (!preserveGuestCart) {
+            localStorage.removeItem('iri_guest_cart');
+        }
         this.isBootstrapped = false;
         this.sessionValidated = false;
     },
@@ -166,7 +169,7 @@ const API = {
             if (refreshed) {
                 res = await fetch(url, { ...requestOptions, headers });
             } else {
-                this.clearSession();
+                this.clearSession({ preserveGuestCart: true });
             }
         }
 
@@ -216,23 +219,30 @@ const API = {
                 const controller = createRequestController();
                 const user = await this.get('/auth/profile/', {
                     signal: controller.signal,
-                    skipRefresh: true,
                 });
                 this.setUser(user);
                 this.isBootstrapped = true;
                 this.sessionValidated = true;
                 return user;
-            } catch {
+            } catch (error) {
+                const status = error?.response?.status;
+                if (status === 401 || status === 403) {
+                    this.clearSession({ preserveGuestCart: true });
+                    this.isBootstrapped = true;
+                    this.sessionValidated = true;
+                    return null;
+                }
+
                 const cachedUser = this.getUser();
-                // Fall back to cache even if forceRefresh fails, but mark as not-yet-validated
+                // Fall back to cache only for transient network/server failures.
                 if (cachedUser) {
                     this.isBootstrapped = true;
-                    this.sessionValidated = false; // Server couldn't verify this session
+                    this.sessionValidated = false;
                     return cachedUser;
                 }
-                // Only clear session if there's no cached user (they were never logged in before)
-                this.clearSession();
-                this.isBootstrapped = true; // Mark as done even if it failed
+
+                this.isBootstrapped = true;
+                this.sessionValidated = false;
                 return null;
             } finally {
                 this.bootstrapPromise = null;
