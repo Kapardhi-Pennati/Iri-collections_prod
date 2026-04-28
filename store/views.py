@@ -154,73 +154,6 @@ def _merge_session_cart_with_user_cart(user, session_items: list = None) -> Cart
     return cart
 
 
-class CategoryListView(generics.ListAPIView):
-    queryset = Category.objects.annotate(
-        product_count=Count("products", filter=Q(products__is_active=True))
-    )
-    serializer_class = CategorySerializer
-    permission_classes = [AllowAny]
-    pagination_class = None
-
-
-class ProductListView(generics.ListAPIView):
-    serializer_class = ProductSerializer
-    permission_classes = [AllowAny]
-
-    def get_queryset(self):
-        qs = Product.objects.filter(is_active=True).select_related("category")
-        category = self.request.query_params.get("category")
-        search = self.request.query_params.get("search")
-        featured = self.request.query_params.get("featured")
-        sort = self.request.query_params.get("sort")
-
-        if category:
-            qs = qs.filter(category__slug=category)
-        if search:
-            qs = qs.filter(name__icontains=search)
-        if featured in ("true", "1", "yes"):
-            qs = qs.filter(is_featured=True)
-        if sort == "price_low":
-            qs = qs.order_by("price")
-        elif sort == "price_high":
-            qs = qs.order_by("-price")
-        elif sort == "newest":
-            qs = qs.order_by("-created_at")
-        return qs
-
-    def list(self, request, *args, **kwargs):
-        raw_query = request.META.get("QUERY_STRING", "")
-        fingerprint = hashlib.md5(raw_query.encode("utf-8")).hexdigest()
-        cache_key = f"catalog:list:v{_catalog_cache_version()}:{fingerprint}"
-        cached_payload = cache.get(cache_key)
-        if cached_payload is not None:
-            return Response(cached_payload)
-
-        response = super().list(request, *args, **kwargs)
-        if response.status_code == status.HTTP_200_OK:
-            cache.set(cache_key, response.data, PRODUCT_CACHE_TTL_SECONDS)
-        return response
-
-
-class ProductDetailView(generics.RetrieveAPIView):
-    queryset = Product.objects.filter(is_active=True).select_related("category")
-    serializer_class = ProductSerializer
-    permission_classes = [AllowAny]
-    lookup_field = "slug"
-
-    def retrieve(self, request, *args, **kwargs):
-        slug = kwargs.get(self.lookup_field, "")
-        cache_key = f"catalog:detail:v{_catalog_cache_version()}:{slug}"
-        cached_payload = cache.get(cache_key)
-        if cached_payload is not None:
-            return Response(cached_payload)
-
-        response = super().retrieve(request, *args, **kwargs)
-        if response.status_code == status.HTTP_200_OK:
-            cache.set(cache_key, response.data, PRODUCT_CACHE_TTL_SECONDS)
-        return response
-
-
 def _finalize_paid_order(order):
     """
     Finalize a paid order by deducting stock, clearing reservations
@@ -756,6 +689,7 @@ class OrderCreateView(APIView):
             },
             severity="INFO",
         )
+
         return Response(
             OrderSerializer(
                 Order.objects.select_related("transaction")
@@ -764,7 +698,7 @@ class OrderCreateView(APIView):
             ).data,
             status=status.HTTP_201_CREATED,
         )
-
+        
 
 class OrderConfirmPaymentView(APIView):
     """
