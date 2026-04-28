@@ -3,7 +3,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
 from django.utils import timezone
-from core.encryption import EncryptedCharField, EncryptedTextField
+
 
 
 class StockReservationQuerySet(models.QuerySet):
@@ -204,8 +204,8 @@ class Order(models.Model):
     status = models.CharField(
         max_length=12, choices=STATUS_CHOICES, default="pending", db_index=True
     )
-    shipping_address = EncryptedTextField()
-    phone = EncryptedCharField(blank=True)
+    shipping_address = models.TextField()
+    phone = models.CharField(max_length=20, blank=True)
     notes = models.TextField(blank=True)
     tracking_image = models.ImageField(upload_to="tracking/", blank=True, null=True)
     tracking_id = models.CharField(max_length=120, blank=True, db_index=True)

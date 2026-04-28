@@ -33,7 +33,7 @@ from core.throttling import (
 
 from .models import Category, Product, Cart, CartItem, Order, OrderItem, Wishlist, StockReservation, Transaction
 from accounts.models import Address
-from core.encryption import pii_hash
+
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
@@ -679,8 +679,8 @@ class OrderCreateView(APIView):
                     user=request.user,
                     city=city,
                     state=state,
-                    street_hash=pii_hash(street),
-                    pincode_hash=pii_hash(pincode),
+                    street_hash=hashlib.sha256(street.strip().lower().encode("utf-8")).hexdigest(),
+                    pincode_hash=hashlib.sha256(pincode.strip().lower().encode("utf-8")).hexdigest(),
                 ).first()
                 created = address is None
                 if created:

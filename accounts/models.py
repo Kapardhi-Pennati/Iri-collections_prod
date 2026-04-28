@@ -1,7 +1,7 @@
+import hashlib
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
-from core.encryption import EncryptedCharField, EncryptedTextField, pii_hash
 
 class User(AbstractUser):
     """Custom user with RBAC roles."""
@@ -12,8 +12,8 @@ class User(AbstractUser):
     )
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="customer")
-    phone = EncryptedCharField(blank=True)
-    full_name = EncryptedCharField(blank=True)
+    phone = models.TextField(blank=True)
+    full_name = models.TextField(blank=True)
     is_guest = models.BooleanField(default=False, db_index=True)
 
     USERNAME_FIELD = "email"
@@ -53,13 +53,13 @@ class Address(models.Model):
     """Model to store user addresses."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="addresses")
     name = models.CharField(max_length=150, help_text="e.g., Home, Work", blank=True)
-    street = EncryptedTextField()
+    street = models.TextField()
     street_hash = models.CharField(max_length=64, db_index=True, default="")
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
-    pincode = EncryptedCharField()
+    pincode = models.CharField(max_length=20)
     pincode_hash = models.CharField(max_length=64, db_index=True, default="")
-    phone = EncryptedCharField(blank=True)
+    phone = models.TextField(blank=True)
     is_default = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -73,6 +73,6 @@ class Address(models.Model):
         if self.is_default:
             # Unset default for other addresses
             Address.objects.filter(user=self.user).update(is_default=False)
-        self.street_hash = pii_hash(self.street)
-        self.pincode_hash = pii_hash(self.pincode)
+        self.street_hash = hashlib.sha256((self.street or "").strip().lower().encode("utf-8")).hexdigest()
+        self.pincode_hash = hashlib.sha256((self.pincode or "").strip().lower().encode("utf-8")).hexdigest()
         super().save(*args, **kwargs)
