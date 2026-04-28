@@ -6,6 +6,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("store", "0012_encrypt_order_pii"),
+        ("store", "0013_rename_orders_user_status_idx_orders_user_id_17dbdf_idx_and_more"),
     ]
 
     operations = [
