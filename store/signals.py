@@ -63,14 +63,22 @@ def order_status_changed(sender, instance, created, **kwargs):
         f"{old_status} → {new_status}. Dispatching email task."
     )
 
-    # ✅ .delay() sends this to the Celery queue immediately.
+    # .delay() sends this to the Celery queue immediately.
     # The worker processes it asynchronously — the current request
     # returns to the user without waiting for the SMTP connection.
-    task_send_order_status_email.delay(
-        order_id=instance.id,
-        old_status=old_status,
-        new_status=new_status,
-    )
+    # Wrapped in try/except: if the broker (Redis) is down, we must
+    # NOT let a failed email dispatch crash the order status update.
+    try:
+        task_send_order_status_email.delay(
+            order_id=instance.id,
+            old_status=old_status,
+            new_status=new_status,
+        )
+    except Exception:
+        logger.exception(
+            f"Failed to dispatch email task for order {instance.order_number}. "
+            f"Broker may be unreachable. Order update will proceed."
+        )
 
     # ── Update _original_status for future saves in the same request ──
     instance._original_status = new_status
