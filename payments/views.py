@@ -5,7 +5,6 @@ UPI QR code generation for the checkout payment step.
 import io
 import logging
 import qrcode
-import urllib.parse
 
 from django.conf import settings
 from django.core.cache import cache
@@ -30,24 +29,24 @@ class GenerateUPIQRView(APIView):
         except ValueError:
             amount = "0.00"
 
-        upi_id = str(getattr(settings, "UPI_ID", "")).strip()
-        upi_name = str(getattr(settings, "UPI_DISPLAY_NAME", "")).strip()
+        upi_id = str(getattr(settings, "UPI_ID", "your-upi-id@paytm")).strip()
+        upi_name = str(getattr(settings, "UPI_DISPLAY_NAME", "Iri Collections")).strip()
         note = str(request.query_params.get("note", "Payment")).strip()[:80] or "Payment"
         ref = str(request.query_params.get("ref", "")).strip()[:50]
 
-        # Build UPI URI manually — GPay/PhonePe need minimal encoding
-        # and @ in VPA must NOT be encoded.
-        q = urllib.parse.quote
+        # Build UPI URI — NO percent-encoding because this URI is
+        # embedded in a QR code and scanned directly by GPay/PhonePe/Paytm.
+        # Encoding turns spaces into %20 which apps display literally.
         upi_uri = (
             f"upi://pay"
-            f"?pa={q(upi_id, safe='@.')}"
-            f"&pn={q(upi_name, safe='')}"
-            f"&am={q(amount, safe='.')}"
+            f"?pa={upi_id}"
+            f"&pn={upi_name}"
+            f"&am={amount}"
             f"&cu=INR"
-            f"&tn={q(note, safe='')}"
+            f"&tn={note}"
         )
         if ref:
-            upi_uri += f"&tr={q(ref, safe='')}"
+            upi_uri += f"&tr={ref}"
 
         cache_key = f"payments:qr:{upi_uri}"
         cached_png = cache.get(cache_key)

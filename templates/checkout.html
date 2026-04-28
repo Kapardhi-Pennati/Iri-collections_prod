@@ -421,9 +421,9 @@ async function proceedToPayment() {
 function updatePaymentQRCode(amt, orderPk = '', orderRef = '') {
     const qrImg = document.querySelector('#step-3 img');
     const amount = Number(amt || 0).toFixed(2);
-    const note = orderPk ? `Iri-Order-${orderPk}` : 'Payment';
-    const ref = orderPk ? String(orderPk) : '';
-    qrImg.src = `/api/payments/qr-code/?amount=${encodeURIComponent(amount)}&note=${encodeURIComponent(note)}&ref=${encodeURIComponent(ref)}`;
+    const note = orderRef || (orderPk ? `Order ${orderPk}` : 'Payment');
+    const ref = orderRef || String(orderPk);
+    qrImg.src = `/api/payments/qr-code/?amount=${amount}&note=${note}&ref=${ref}`;
 }
 
 async function confirmPaid() {

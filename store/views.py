@@ -272,8 +272,11 @@ def _order_stock_deducted(order) -> bool:
     """
     if order.status in {"confirmed", "shipped"}:
         return True
-    txn = getattr(order, "transaction", None)
-    return txn is not None and txn.status == "paid"
+    try:
+        txn = order.transaction
+        return txn is not None and txn.status == "paid"
+    except Exception:
+        return False
 
 
 # ─── Cart ──────────────────────────────────────────────────────
@@ -1327,14 +1330,17 @@ class AdminOrderStatusView(APIView):
                 return Response(OrderSerializer(order).data)
 
             if new_status == "cancelled" and order.status != "cancelled":
-                txn = getattr(order, "transaction", None)
                 # Restore stock if it was deducted (paid pending, confirmed, shipped)
                 if _order_stock_deducted(order):
                     _restore_order_stock(order)
 
-                if txn and txn.status != "rejected":
-                    txn.status = "rejected"
-                    txn.save(update_fields=["status"])
+                try:
+                    txn = order.transaction
+                    if txn and txn.status != "rejected":
+                        txn.status = "rejected"
+                        txn.save(update_fields=["status"])
+                except Exception:
+                    pass
 
                 # Clear any remaining reservations (unpaid pending orders)
                 StockReservation.objects.filter(order=order).delete()
