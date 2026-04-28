@@ -98,10 +98,11 @@
             <!-- STEP 3: PAYMENT -->
             <div id="step-3" class="util-card util-card--static hidden" style="text-align: center;">
                 <h2 style="font-size: 1.2rem; margin-bottom: var(--space-lg); border-bottom: 2px solid var(--black); padding-bottom: 12px;">03 // SETTLEMENT CHANNEL</h2>
-                <p style="font-family: var(--font-mono); font-weight: 700; font-size: 0.8rem; margin-bottom: var(--space-lg);">SCAN UPI ENDPOINT FOR TRANSFER</p>
+                <p style="font-family: var(--font-mono); font-weight: 700; font-size: 0.8rem; margin-bottom: var(--space-sm);">SCAN UPI ENDPOINT FOR TRANSFER</p>
+                <div id="payment-order-ref" style="font-family: var(--font-mono); font-weight: 900; font-size: 0.75rem; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: var(--space-lg);"></div>
 
                 <div class="util-card util-card--static" style="display: inline-block; padding: var(--space-md); margin-bottom: var(--space-lg); box-shadow: 8px 8px 0 0 var(--black);">
-                    <img src="/api/payments/qr-code/?amount=0" alt="UPI QR Code" style="width: 240px;">
+                    <img src="" alt="UPI QR Code" style="width: 240px; min-height: 240px; background: var(--gray-100);">
                     <div style="margin-top: 12px; font-family: var(--font-mono); font-weight: 900; font-size: 1.2rem;">TOTAL: <span id="payment-amount-display"></span></div>
                 </div>
 
@@ -397,8 +398,10 @@ async function proceedToPayment() {
         });
         if (res.ok) {
             createdOrder = res.data;
+            const orderRef = createdOrder.order_number || `PENDING-${(createdOrder.checkout_reference || '').substring(0, 8).toUpperCase()}`;
             document.getElementById('payment-amount-display').textContent = formatPrice(createdOrder.total_amount);
-            updatePaymentQRCode(createdOrder.total_amount, createdOrder.checkout_reference || createdOrder.order_number || createdOrder.id);
+            document.getElementById('payment-order-ref').textContent = `ORDER: ${orderRef}`;
+            updatePaymentQRCode(createdOrder.total_amount, orderRef);
             updateCartCount();
             goToStep(3);
             return;
