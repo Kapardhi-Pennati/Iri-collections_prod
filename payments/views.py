@@ -6,6 +6,7 @@ import io
 import logging
 import qrcode
 from urllib.parse import urlencode
+import urllib.parse
 
 from datetime import timedelta
 from django.conf import settings
@@ -257,7 +258,7 @@ class GenerateUPIQRView(APIView):
         if ref:
             upi_params["tr"] = ref
 
-        upi_uri = "upi://pay?" + urlencode(upi_params)
+        upi_uri = "upi://pay?" + urlencode(upi_params, quote_via=urllib.parse.quote)
 
         cache_key = f"payments:qr:{upi_uri}"
         cached_png = cache.get(cache_key)
