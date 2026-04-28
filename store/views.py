@@ -1245,14 +1245,6 @@ class AdminOrderStatusView(APIView):
             if new_status == order.status:
                 return Response(OrderSerializer(order).data)
 
-            if new_status == "confirmed":
-                txn = getattr(order, "transaction", None)
-                if not txn or txn.status != "paid":
-                    return Response(
-                        {"error": "Paid transaction required before confirmation."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
             allowed_next = self._allowed_transitions.get(order.status, set())
             if new_status not in allowed_next:
                 return Response(
@@ -1264,10 +1256,31 @@ class AdminOrderStatusView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+            # When admin confirms, finalize the order (deduct stock, assign order number)
+            if new_status == "confirmed" and order.status == "pending":
+                finalized, message = _finalize_paid_order(order)
+                if not finalized:
+                    return Response(
+                        {"error": message},
+                        status=status.HTTP_409_CONFLICT,
+                    )
+                # _finalize_paid_order already saved the order with confirmed status
+                audit_log(
+                    action="ADMIN_ORDER_STATUS_UPDATED",
+                    user_id=request.user.id,
+                    details={
+                        "order_id": order.id,
+                        "order_number": order.order_number,
+                        "new_status": new_status,
+                    },
+                    severity="INFO",
+                )
+                return Response(OrderSerializer(order).data)
+
             if new_status == "cancelled" and order.status != "cancelled":
                 txn = getattr(order, "transaction", None)
-                # Restore stock only for legacy flow where screenshot upload deducted stock.
-                if txn and txn.status != "rejected" and txn.payment_screenshot:
+                # Restore stock if the order was confirmed/shipped (stock was deducted)
+                if order.status in {"confirmed", "shipped"}:
                     for item in order.items.all().select_related("product"):
                         if item.product:
                             product = Product.objects.select_for_update().get(pk=item.product.pk)

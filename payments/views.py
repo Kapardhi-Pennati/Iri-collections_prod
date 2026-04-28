@@ -248,17 +248,19 @@ class GenerateUPIQRView(APIView):
         note = str(request.query_params.get("note", "Payment")).strip()[:80] or "Payment"
         ref = str(request.query_params.get("ref", "")).strip()[:50]
 
-        upi_params = {
-            "pa": upi_id,
-            "pn": upi_name,
-            "am": amount,
-            "cu": "INR",
-            "tn": note,
-        }
+        # Build UPI URI manually — GPay/PhonePe need minimal encoding
+        # and @ in VPA must NOT be encoded.
+        q = urllib.parse.quote
+        upi_uri = (
+            f"upi://pay"
+            f"?pa={q(upi_id, safe='@.')}"
+            f"&pn={q(upi_name, safe='')}"
+            f"&am={q(amount, safe='.')}"
+            f"&cu=INR"
+            f"&tn={q(note, safe='')}"
+        )
         if ref:
-            upi_params["tr"] = ref
-
-        upi_uri = "upi://pay?" + urlencode(upi_params, quote_via=urllib.parse.quote)
+            upi_uri += f"&tr={q(ref, safe='')}"
 
         cache_key = f"payments:qr:{upi_uri}"
         cached_png = cache.get(cache_key)
