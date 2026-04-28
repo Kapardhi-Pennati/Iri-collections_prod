@@ -689,14 +689,16 @@ async function loadAdminOrders() {
         const orders = data.results || data;
         const tbody = document.getElementById('orders-tbody');
         tbody.innerHTML = orders.map(o => {
-            const date = new Date(o.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+            const dt = new Date(o.created_at);
+            const date = dt.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+            const time = dt.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
             return `
                 <tr>
                     <td><span style="font-weight:700;">${escapeHTML(o.order_number)}</span></td>
                     <td>${escapeHTML(o.shipping_address?.split(',')[0] || '—')}</td>
                     <td style="font-weight:600;">${formatPrice(o.total_amount)}</td>
                     <td><span class="order-status ${o.status}">${o.status}</span></td>
-                    <td style="color:var(--text-muted); font-size:0.85rem;">${date}</td>
+                    <td style="color:var(--text-muted); font-size:0.85rem;">${date}<br><span style="font-size:0.75rem; opacity:0.7;">${time}</span></td>
                     <td>
                         <div style="display:flex; gap:var(--space-sm); align-items:center;">
                             <a href="/invoice/${o.id}/" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;" title="View Invoice">View Invoice</a>
