@@ -224,11 +224,13 @@ const API = {
                 return user;
             } catch {
                 const cachedUser = this.getUser();
-                if (cachedUser && !forceRefresh) {
+                // Fall back to cache even if forceRefresh fails, but mark as not-yet-validated
+                if (cachedUser) {
                     this.isBootstrapped = true;
-                    this.sessionValidated = true;
+                    this.sessionValidated = false; // Server couldn't verify this session
                     return cachedUser;
                 }
+                // Only clear session if there's no cached user (they were never logged in before)
                 this.clearSession();
                 this.isBootstrapped = true; // Mark as done even if it failed
                 return null;

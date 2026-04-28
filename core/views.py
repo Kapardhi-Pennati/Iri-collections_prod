@@ -1,13 +1,39 @@
 from django.http import JsonResponse, HttpResponse
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+from django.conf import settings
 from django.utils.html import escape
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from accounts.authentication import CookieJWTAuthentication
 from core.security import audit_log, get_client_ip
 
 
-@login_required(login_url="/login/")
 def admin_dashboard_view(request):
-    user = request.user
+    user = getattr(request, "user", None) if getattr(request, "user", None) and request.user.is_authenticated else None
+
+    if user is None:
+        auth_result = CookieJWTAuthentication().authenticate(request)
+        if auth_result:
+            user, _ = auth_result
+
+    if user is None:
+        refresh_cookie_name = settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"]
+        refresh_token = request.COOKIES.get(refresh_cookie_name)
+        if refresh_token:
+            try:
+                refresh = RefreshToken(refresh_token)
+                user_id = refresh.get("user_id")
+                if user_id:
+                    from accounts.models import User
+
+                    user = User.objects.filter(id=user_id, is_active=True).first()
+            except TokenError:
+                user = None
+
+    if user is None:
+        return redirect(f"/login/?next={request.path}")
+
     if not (user.is_superuser or getattr(user, "role", None) == "admin"):
         return redirect("home")
     return render(request, "admin_dashboard.html")
