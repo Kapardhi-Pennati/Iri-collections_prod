@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}CART | IRI COLLECTIONS{% endblock %}
 
@@ -69,7 +69,7 @@
                     <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--gray-400); margin-bottom: 12px;">REF: ${p.id}</div>
                     <div style="display: flex; align-items: center; gap: 16px;">
                         <div style="display: flex; border: 2px solid var(--black);">
-                            <button onclick="updateCartItem(${item.id}, ${item.quantity - 1})" style="padding: 4px 12px; font-weight: 900; border:none; background:var(--white); cursor:pointer;">−</button>
+                            <button onclick="updateCartItem(${item.id}, ${item.quantity - 1})" style="padding: 4px 12px; font-weight: 900; border:none; background:var(--white); cursor:pointer;">âˆ’</button>
                             <span style="padding: 4px 12px; border-left: 2px solid var(--black); border-right: 2px solid var(--black); font-family: var(--font-mono); font-weight: 700;">${item.quantity}</span>
                             <button onclick="updateCartItem(${item.id}, ${item.quantity + 1})" style="padding: 4px 12px; font-weight: 900; border:none; background:var(--white); cursor:pointer;">+</button>
                         </div>
@@ -110,7 +110,7 @@
 
                 <a href="/checkout/" class="btn-brutalist btn-primary" style="width: 100%; margin-top: var(--space-lg); text-align: center;">
                     SECURE CHECKOUT
-                    <svg class="icon-svg"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </a>
 
                 <div style="background: var(--black); color: var(--white); padding: 12px; margin-top: var(--space-md); font-family: var(--font-mono); font-weight: 700; font-size: 0.65rem; text-align: center; letter-spacing: 0.1em;">

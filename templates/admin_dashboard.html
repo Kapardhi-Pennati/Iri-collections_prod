@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}ADMIN DASHBOARD | IRI COLLECTIONS{% endblock %}
@@ -19,36 +19,36 @@
         
         <nav>
             <a href="#" onclick="showSection('overview')" class="admin-nav-item active" id="nav-overview">
-                <svg class="icon-svg"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                <svg class="icon-svg" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
                 OVERVIEW
             </a>
             <a href="#" onclick="showSection('products')" class="admin-nav-item" id="nav-products">
-                <svg class="icon-svg"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                <svg class="icon-svg" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
                 PRODUCTS
             </a>
             <a href="#" onclick="showSection('orders')" class="admin-nav-item" id="nav-orders">
-                <svg class="icon-svg"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                 ORDERS
             </a>
             <a href="#" onclick="showSection('categories')" class="admin-nav-item" id="nav-categories">
-                <svg class="icon-svg"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>
+                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>
                 CATEGORIES
             </a>
             <a href="#" onclick="showSection('traffic')" class="admin-nav-item" id="nav-traffic">
-                <svg class="icon-svg"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
                 TRAFFIC
             </a>
             
             <div style="margin-top: 50px; border-top: 2px solid var(--border-color); padding-top: 20px;">
                 <a href="/" class="admin-nav-item" style="font-size: 0.8rem; color: var(--text-muted);">
-                    <svg class="icon-svg"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
                     BACK TO STORE
                 </a>
             </div>
         </nav>
     </aside>
 
-    <!-- 📊 MAIN CONTENT -->
+    <!-- ðŸ“Š MAIN CONTENT -->
     <main class="admin-main">
         <div id="section-overview">
             <h1 style="font-size: 2.5rem; margin-bottom: 40px;">DASHBOARD OVERVIEW</h1>
@@ -58,8 +58,8 @@
             <div class="stat-grid">
                 <div class="stat-card">
                     <div style="font-weight: 800; font-size: 0.8rem; color: var(--text-muted);">TOTAL REVENUE</div>
-                    <div class="stat-value" id="stat-revenue">₹0</div>
-                    <div style="font-size: 0.7rem; color: var(--success); font-weight: 700;">↑ 0% FROM LAST MONTH</div>
+                    <div class="stat-value" id="stat-revenue">â‚¹0</div>
+                    <div style="font-size: 0.7rem; color: var(--success); font-weight: 700;">â†‘ 0% FROM LAST MONTH</div>
                 </div>
                 <div class="stat-card">
                     <div style="font-weight: 800; font-size: 0.8rem; color: var(--text-muted);">TOTAL ORDERS</div>
@@ -99,10 +99,10 @@
         <div id="section-traffic" class="hidden">
             <h2 style="margin-bottom:var(--space-xl);">WEBSITE TRAFFIC</h2>
             <div class="stat-grid" id="traffic-stat-cards">
-                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOTAL VIEWS (30D)</div><div class="stat-value" id="traffic-total">—</div></div>
-                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">UNIQUE VISITORS (30D)</div><div class="stat-value" id="traffic-unique">—</div></div>
-                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TODAY'S VIEWS</div><div class="stat-value" id="traffic-today">—</div></div>
-                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOP PAGE TODAY</div><div class="stat-value" id="traffic-toppage" style="font-size:1rem; word-break:break-all;">—</div></div>
+                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOTAL VIEWS (30D)</div><div class="stat-value" id="traffic-total">â€”</div></div>
+                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">UNIQUE VISITORS (30D)</div><div class="stat-value" id="traffic-unique">â€”</div></div>
+                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TODAY'S VIEWS</div><div class="stat-value" id="traffic-today">â€”</div></div>
+                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOP PAGE TODAY</div><div class="stat-value" id="traffic-toppage" style="font-size:1rem; word-break:break-all;">â€”</div></div>
             </div>
 
             <div class="util-card" style="padding: 30px; background: var(--white); margin-bottom:var(--space-xl);">
@@ -175,8 +175,8 @@
             <div class="form-group"><label>Name</label><input type="text" id="pf-name" required></div>
             <div class="form-group"><label>Description</label><textarea id="pf-desc" rows="3" required></textarea></div>
             <div class="form-grid">
-                <div class="form-group"><label>Price (₹)</label><input type="number" id="pf-price" step="0.01" required></div>
-                <div class="form-group"><label>Compare Price (₹)</label><input type="number" id="pf-compare" step="0.01"></div>
+                <div class="form-group"><label>Price (â‚¹)</label><input type="number" id="pf-price" step="0.01" required></div>
+                <div class="form-group"><label>Compare Price (â‚¹)</label><input type="number" id="pf-compare" step="0.01"></div>
             </div>
             <div class="form-grid">
                 <div class="form-group"><label>Stock</label><input type="number" id="pf-stock" required></div>
@@ -278,7 +278,7 @@ let revenueChart = null;
 let statusChart = null;
 let allCategories = [];
 
-// ─── Auth guard ─────────────────────────────────
+// â”€â”€â”€ Auth guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 document.addEventListener('DOMContentLoaded', async () => {
     const user = await API.bootstrapUser({ forceRefresh: true });
     if (!user || !API.isAdmin()) {
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadAdminCategories();
 });
 
-// ─── Section navigation ────────────────────────
+// â”€â”€â”€ Section navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showSection(name) {
     ['overview', 'products', 'orders', 'categories', 'traffic'].forEach(s => {
         document.getElementById(`section-${s}`).classList.toggle('hidden', s !== name);
@@ -316,7 +316,7 @@ function openModal(id) {
     document.getElementById(id).classList.add('active');
 }
 
-// ─── Overview / Analytics ──────────────────────
+// â”€â”€â”€ Overview / Analytics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadOverview() {
     try {
         const data = await API.get('/store/admin/analytics/');
@@ -342,7 +342,7 @@ async function loadOverview() {
             data: {
                 labels: labels.length ? labels : ['No data'],
                 datasets: [{
-                    label: 'Revenue (₹)',
+                    label: 'Revenue (â‚¹)',
                     data: revenues.length ? revenues : [0],
                     borderColor: '#000000',
                     backgroundColor: 'rgba(0, 0, 0, 0.06)',
@@ -357,7 +357,7 @@ async function loadOverview() {
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#525252' } },
-                    y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#525252', callback: v => '₹' + v.toLocaleString() } }
+                    y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#525252', callback: v => 'â‚¹' + v.toLocaleString() } }
                 }
             }
         });
@@ -411,7 +411,7 @@ async function loadOverview() {
     }
 }
 
-// ─── Traffic Analytics ─────────────────────────
+// â”€â”€â”€ Traffic Analytics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let trafficChart = null;
 let deviceChart = null;
 
@@ -423,7 +423,7 @@ async function loadTrafficData() {
         document.getElementById('traffic-total').textContent = data.total_views.toLocaleString();
         document.getElementById('traffic-unique').textContent = data.unique_visitors.toLocaleString();
         document.getElementById('traffic-today').textContent = data.today_views.toLocaleString();
-        document.getElementById('traffic-toppage').textContent = data.top_page || '—';
+        document.getElementById('traffic-toppage').textContent = data.top_page || 'â€”';
 
         // Daily visitors chart
         const tCtx = document.getElementById('traffic-chart').getContext('2d');
@@ -478,7 +478,7 @@ async function loadTrafficData() {
                     <td class="page-path">${escapeHTML(p.path)}</td>
                     <td class="page-count">${p.count.toLocaleString()}</td>
                 </tr>`).join('')
-            : '<tr><td colspan="3" style="color:var(--text-muted); padding:1rem;">No data yet — browse the site first</td></tr>';
+            : '<tr><td colspan="3" style="color:var(--text-muted); padding:1rem;">No data yet â€” browse the site first</td></tr>';
 
         // Device doughnut
         const dCtx = document.getElementById('device-chart').getContext('2d');
@@ -507,7 +507,7 @@ async function loadTrafficData() {
     }
 }
 
-// ─── Products CRUD ─────────────────────────────
+// â”€â”€â”€ Products CRUD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadAdminProducts() {
     try {
         const data = await API.get('/store/admin/products/');
@@ -594,7 +594,7 @@ function openProductModal(product = null) {
     openModal('product-modal');
 }
 
-// Image preview logic — stores base64 for later submission
+// Image preview logic â€” stores base64 for later submission
 let pendingImageBase64 = null;
 
 document.getElementById('pf-image-file').addEventListener('change', function(e) {
@@ -681,7 +681,7 @@ async function deleteProduct(id, name) {
     }
 }
 
-// ─── Orders Management ────────────────────────
+// â”€â”€â”€ Orders Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadAdminOrders() {
     try {
         const data = await API.get('/store/admin/orders/');
@@ -695,7 +695,7 @@ async function loadAdminOrders() {
             return `
                 <tr>
                     <td><span style="font-weight:700;">${escapeHTML(o.order_number)}</span></td>
-                    <td>${escapeHTML(o.shipping_address?.split(',')[0] || '—')}</td>
+                    <td>${escapeHTML(o.shipping_address?.split(',')[0] || 'â€”')}</td>
                     <td style="font-weight:600;">${formatPrice(o.total_amount)}</td>
                     <td><span class="order-status ${o.status}">${o.status}</span></td>
                     <td style="color:var(--text-muted); font-size:0.85rem;">${date}<br><span style="font-size:0.75rem; opacity:0.7;">${time}</span></td>
@@ -794,7 +794,7 @@ document.getElementById('tracking-form').addEventListener('submit', async (e) =>
     btn.textContent = 'Upload';
 });
 
-// ─── Categories Management ─────────────────────
+// â”€â”€â”€ Categories Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadAdminCategories() {
     try {
         const cats = await API.get('/store/categories/');
@@ -805,7 +805,7 @@ async function loadAdminCategories() {
             <div class="util-card flex-wrap-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--space-md);">
                 <div>
                     <div style="font-weight:600; font-size:1.05rem;">${escapeHTML(c.name)}</div>
-                    <div style="font-size:0.85rem; color:var(--text-muted);">${c.product_count} products · /${escapeHTML(c.slug)}</div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">${c.product_count} products Â· /${escapeHTML(c.slug)}</div>
                 </div>
                 <div style="display:flex; gap:var(--space-sm);">
                     <button class="btn btn-ghost btn-sm" onclick="editCategory(${c.id}, '${c.name.replace(/'/g, "\\'")}', '${(c.description || '').replace(/'/g, "\\'")}')">Edit</button>
@@ -880,3 +880,4 @@ async function deleteCategory(id, name) {
 }
 </script>
 {% endblock %}
+
