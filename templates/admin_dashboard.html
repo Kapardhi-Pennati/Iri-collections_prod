@@ -58,8 +58,8 @@
             <div class="stat-grid">
                 <div class="stat-card">
                     <div style="font-weight: 800; font-size: 0.8rem; color: var(--text-muted);">TOTAL REVENUE</div>
-                    <div class="stat-value" id="stat-revenue">â‚¹0</div>
-                    <div style="font-size: 0.7rem; color: var(--success); font-weight: 700;">â†‘ 0% FROM LAST MONTH</div>
+                    <div class="stat-value" id="stat-revenue">₹0</div>
+                    <div style="font-size: 0.7rem; color: var(--success); font-weight: 700;">↑ 0% FROM LAST MONTH</div>
                 </div>
                 <div class="stat-card">
                     <div style="font-weight: 800; font-size: 0.8rem; color: var(--text-muted);">TOTAL ORDERS</div>
@@ -99,10 +99,10 @@
         <div id="section-traffic" class="hidden">
             <h2 style="margin-bottom:var(--space-xl);">WEBSITE TRAFFIC</h2>
             <div class="stat-grid" id="traffic-stat-cards">
-                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOTAL VIEWS (30D)</div><div class="stat-value" id="traffic-total">â€”</div></div>
-                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">UNIQUE VISITORS (30D)</div><div class="stat-value" id="traffic-unique">â€”</div></div>
-                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TODAY'S VIEWS</div><div class="stat-value" id="traffic-today">â€”</div></div>
-                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOP PAGE TODAY</div><div class="stat-value" id="traffic-toppage" style="font-size:1rem; word-break:break-all;">â€”</div></div>
+                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOTAL VIEWS (30D)</div><div class="stat-value" id="traffic-total">—</div></div>
+                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">UNIQUE VISITORS (30D)</div><div class="stat-value" id="traffic-unique">—</div></div>
+                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TODAY'S VIEWS</div><div class="stat-value" id="traffic-today">—</div></div>
+                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOP PAGE TODAY</div><div class="stat-value" id="traffic-toppage" style="font-size:1rem; word-break:break-all;">—</div></div>
             </div>
 
             <div class="util-card" style="padding: 30px; background: var(--white); margin-bottom:var(--space-xl);">
@@ -175,8 +175,8 @@
             <div class="form-group"><label>Name</label><input type="text" id="pf-name" required></div>
             <div class="form-group"><label>Description</label><textarea id="pf-desc" rows="3" required></textarea></div>
             <div class="form-grid">
-                <div class="form-group"><label>Price (â‚¹)</label><input type="number" id="pf-price" step="0.01" required></div>
-                <div class="form-group"><label>Compare Price (â‚¹)</label><input type="number" id="pf-compare" step="0.01"></div>
+                <div class="form-group"><label>Price (₹)</label><input type="number" id="pf-price" step="0.01" required></div>
+                <div class="form-group"><label>Compare Price (₹)</label><input type="number" id="pf-compare" step="0.01"></div>
             </div>
             <div class="form-grid">
                 <div class="form-group"><label>Stock</label><input type="number" id="pf-stock" required></div>
@@ -278,7 +278,7 @@ let revenueChart = null;
 let statusChart = null;
 let allCategories = [];
 
-// â”€â”€â”€ Auth guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Auth guard ─────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
     const user = await API.bootstrapUser({ forceRefresh: true });
     if (!user || !API.isAdmin()) {
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadAdminCategories();
 });
 
-// â”€â”€â”€ Section navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Section navigation ────────────────────────
 function showSection(name) {
     ['overview', 'products', 'orders', 'categories', 'traffic'].forEach(s => {
         document.getElementById(`section-${s}`).classList.toggle('hidden', s !== name);
@@ -316,7 +316,7 @@ function openModal(id) {
     document.getElementById(id).classList.add('active');
 }
 
-// â”€â”€â”€ Overview / Analytics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Overview / Analytics ──────────────────────
 async function loadOverview() {
     try {
         const data = await API.get('/store/admin/analytics/');
@@ -342,7 +342,7 @@ async function loadOverview() {
             data: {
                 labels: labels.length ? labels : ['No data'],
                 datasets: [{
-                    label: 'Revenue (â‚¹)',
+                    label: 'Revenue (₹)',
                     data: revenues.length ? revenues : [0],
                     borderColor: '#000000',
                     backgroundColor: 'rgba(0, 0, 0, 0.06)',
@@ -357,7 +357,7 @@ async function loadOverview() {
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#525252' } },
-                    y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#525252', callback: v => 'â‚¹' + v.toLocaleString() } }
+                    y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#525252', callback: v => '₹' + v.toLocaleString() } }
                 }
             }
         });
@@ -411,7 +411,7 @@ async function loadOverview() {
     }
 }
 
-// â”€â”€â”€ Traffic Analytics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Traffic Analytics ─────────────────────────
 let trafficChart = null;
 let deviceChart = null;
 
@@ -423,7 +423,7 @@ async function loadTrafficData() {
         document.getElementById('traffic-total').textContent = data.total_views.toLocaleString();
         document.getElementById('traffic-unique').textContent = data.unique_visitors.toLocaleString();
         document.getElementById('traffic-today').textContent = data.today_views.toLocaleString();
-        document.getElementById('traffic-toppage').textContent = data.top_page || 'â€”';
+        document.getElementById('traffic-toppage').textContent = data.top_page || '—';
 
         // Daily visitors chart
         const tCtx = document.getElementById('traffic-chart').getContext('2d');
@@ -478,7 +478,7 @@ async function loadTrafficData() {
                     <td class="page-path">${escapeHTML(p.path)}</td>
                     <td class="page-count">${p.count.toLocaleString()}</td>
                 </tr>`).join('')
-            : '<tr><td colspan="3" style="color:var(--text-muted); padding:1rem;">No data yet â€” browse the site first</td></tr>';
+            : '<tr><td colspan="3" style="color:var(--text-muted); padding:1rem;">No data yet — browse the site first</td></tr>';
 
         // Device doughnut
         const dCtx = document.getElementById('device-chart').getContext('2d');
@@ -507,7 +507,7 @@ async function loadTrafficData() {
     }
 }
 
-// â”€â”€â”€ Products CRUD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Products CRUD ─────────────────────────────
 async function loadAdminProducts() {
     try {
         const data = await API.get('/store/admin/products/');
@@ -594,7 +594,7 @@ function openProductModal(product = null) {
     openModal('product-modal');
 }
 
-// Image preview logic â€” stores base64 for later submission
+// Image preview logic — stores base64 for later submission
 let pendingImageBase64 = null;
 
 document.getElementById('pf-image-file').addEventListener('change', function(e) {
@@ -681,7 +681,7 @@ async function deleteProduct(id, name) {
     }
 }
 
-// â”€â”€â”€ Orders Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Orders Management ────────────────────────
 async function loadAdminOrders() {
     try {
         const data = await API.get('/store/admin/orders/');
@@ -695,7 +695,7 @@ async function loadAdminOrders() {
             return `
                 <tr>
                     <td><span style="font-weight:700;">${escapeHTML(o.order_number)}</span></td>
-                    <td>${escapeHTML(o.shipping_address?.split(',')[0] || 'â€”')}</td>
+                    <td>${escapeHTML(o.shipping_address?.split(',')[0] || '—')}</td>
                     <td style="font-weight:600;">${formatPrice(o.total_amount)}</td>
                     <td><span class="order-status ${o.status}">${o.status}</span></td>
                     <td style="color:var(--text-muted); font-size:0.85rem;">${date}<br><span style="font-size:0.75rem; opacity:0.7;">${time}</span></td>
@@ -794,7 +794,7 @@ document.getElementById('tracking-form').addEventListener('submit', async (e) =>
     btn.textContent = 'Upload';
 });
 
-// â”€â”€â”€ Categories Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Categories Management ─────────────────────
 async function loadAdminCategories() {
     try {
         const cats = await API.get('/store/categories/');
@@ -805,7 +805,7 @@ async function loadAdminCategories() {
             <div class="util-card flex-wrap-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--space-md);">
                 <div>
                     <div style="font-weight:600; font-size:1.05rem;">${escapeHTML(c.name)}</div>
-                    <div style="font-size:0.85rem; color:var(--text-muted);">${c.product_count} products Â· /${escapeHTML(c.slug)}</div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">${c.product_count} products · /${escapeHTML(c.slug)}</div>
                 </div>
                 <div style="display:flex; gap:var(--space-sm);">
                     <button class="btn btn-ghost btn-sm" onclick="editCategory(${c.id}, '${c.name.replace(/'/g, "\\'")}', '${(c.description || '').replace(/'/g, "\\'")}')">Edit</button>
