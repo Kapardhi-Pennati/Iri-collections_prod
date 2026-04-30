@@ -12,7 +12,7 @@
             <!-- HEADER -->
             <div class="page-header" style="margin-bottom: var(--space-lg);">
                 <h1 id="form-title" style="font-size: 2rem;">JOIN US</h1>
-                <p style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">CREATE YOUR PRIVATE VAULT</p>
+                <p style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">CREATE YOUR ACCOUNT</p>
             </div>
 
             <!-- SIGNUP FORM -->
@@ -138,7 +138,7 @@ document.getElementById('otp-form').addEventListener('submit', async (e) => {
         if (res && res.ok) {
             API.setUser(res.data.user);
             await mergeGuestCart();
-            Toast.success('VAULT CREATED');
+            Toast.success('ACCOUNT CREATED');
             setTimeout(() => window.location.href = '/', 500);
             return;
         }

@@ -7,7 +7,7 @@
 <section style="padding: var(--space-xl) 0;">
     <div class="container">
         <div id="product-detail-content">
-            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted); font-family: var(--font-mono);">OPENING THE VAULT...</div>
+            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted); font-family: var(--font-mono);">LOADING PRODUCT...</div>
         </div>
     </div>
 </section>
@@ -27,7 +27,7 @@ async function loadProduct() {
                 <div class="util-card util-card--static" style="padding: 80px; text-align: center;">
                     <svg class="icon-svg" style="width: 40px; height: 40px; color: var(--text-muted); margin-bottom: var(--space-md);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m15 8-6 6"/></svg>
                     <h3 style="font-size: 2rem; margin-bottom: 8px;">NOT FOUND</h3>
-                    <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">This piece has left the collection.</p>
+                    <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">This product is no longer available.</p>
                     <a href="/catalog/" class="btn-brutalist">BACK TO SHOP</a>
                 </div>`;
             return;
@@ -105,7 +105,7 @@ function renderProduct(p) {
                     <svg class="icon-svg" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </button>
                 ` : `
-                <button class="btn-brutalist" disabled style="width: 100%; margin-bottom: var(--space-lg);">PIECE SOLD OUT</button>
+                <button class="btn-brutalist" disabled style="width: 100%; margin-bottom: var(--space-lg);">OUT OF STOCK</button>
                 `}
 
                 <!-- POLICY -->

@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}CHECKOUT | IRI COLLECTIONS{% endblock %}
@@ -35,7 +35,7 @@
         <div id="checkout-content">
             <!-- STEP 1: SHIPPING -->
             <div id="step-1" class="util-card util-card--static">
-                <h2 style="font-size: 1.2rem; margin-bottom: var(--space-lg); border-bottom: 2px solid var(--black); padding-bottom: 12px;">01 // LOGISTICS DETAILS</h2>
+                <h2 style="font-size: 1.2rem; margin-bottom: var(--space-lg); border-bottom: 2px solid var(--black); padding-bottom: 12px;">01 // SHIPPING DETAILS</h2>
 
                 <div id="saved-addresses-container" style="margin-bottom: var(--space-lg); display: none;">
                     <label class="form-label">PREVIOUS LOCATIONS</label>
@@ -92,7 +92,7 @@
 
             <!-- STEP 2: REVIEW -->
             <div id="step-2" class="util-card util-card--static hidden">
-                <h2 style="font-size: 1.2rem; margin-bottom: var(--space-lg); border-bottom: 2px solid var(--black); padding-bottom: 12px;">02 // ORDER VALIDATION</h2>
+                <h2 style="font-size: 1.2rem; margin-bottom: var(--space-lg); border-bottom: 2px solid var(--black); padding-bottom: 12px;">02 // REVIEW ORDER</h2>
                 <div style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 8px; color: var(--text-muted);">SHIPPED TO</div>
                 <div id="review-shipping" class="util-card util-card--static" style="margin-bottom: var(--space-lg); background: var(--gray-100); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; box-shadow: none;"></div>
                 <div id="review-items" style="margin-bottom: var(--space-lg);"></div>
@@ -109,8 +109,8 @@
 
             <!-- STEP 3: PAYMENT -->
             <div id="step-3" class="util-card util-card--static hidden" style="text-align: center;">
-                <h2 style="font-size: 1.2rem; margin-bottom: var(--space-lg); border-bottom: 2px solid var(--black); padding-bottom: 12px;">03 // SETTLEMENT CHANNEL</h2>
-                <p style="font-family: var(--font-mono); font-weight: 700; font-size: 0.8rem; margin-bottom: var(--space-sm);">SCAN UPI ENDPOINT FOR TRANSFER</p>
+                <h2 style="font-size: 1.2rem; margin-bottom: var(--space-lg); border-bottom: 2px solid var(--black); padding-bottom: 12px;">03 // PAYMENT</h2>
+                <p style="font-family: var(--font-mono); font-weight: 700; font-size: 0.8rem; margin-bottom: var(--space-sm);">SCAN UPI QR CODE TO PAY</p>
                 <div id="payment-order-ref" style="font-family: var(--font-mono); font-weight: 900; font-size: 0.75rem; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: var(--space-lg);"></div>
 
                 <div class="util-card util-card--static" style="display: inline-block; padding: var(--space-md); margin-bottom: var(--space-lg); box-shadow: 8px 8px 0 0 var(--black);">
@@ -133,7 +133,7 @@
             <!-- STEP 4: DONE -->
             <div id="step-4" class="util-card util-card--static hidden" style="text-align: center;">
                 <svg class="icon-svg" style="width: 64px; height: 64px; color: var(--black); margin-bottom: var(--space-md);"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
-                <h2 style="font-size: 2rem; margin-bottom: 8px;">ALLOCATION COMPLETE</h2>
+                <h2 style="font-size: 2rem; margin-bottom: 8px;">ORDER COMPLETE</h2>
                 <p style="font-family: var(--font-mono); font-weight: 600; font-size: 0.9rem; color: var(--gray-800); margin-bottom: var(--space-lg);">PAYMENT CONFIRMED. YOUR ORDER IS AWAITING ADMIN APPROVAL.</p>
                 <div id="confirmation-details" style="margin-bottom: var(--space-lg);"></div>
                 <div id="guest-convert-wrap" class="hidden" style="margin-bottom: var(--space-lg);">
@@ -143,7 +143,7 @@
                 </div>
                 <div style="display: flex; gap: var(--space-md); justify-content: center;">
                     <a href="/orders/" class="btn-brutalist btn-primary">VIEW ORDERS</a>
-                    <a href="/catalog/" class="btn-brutalist">RETURN TO VAULT</a>
+                    <a href="/catalog/" class="btn-brutalist">RETURN TO SHOP</a>
                 </div>
             </div>
         </div>
@@ -204,7 +204,7 @@ async function loadCheckoutCart() {
     try {
         cartData = await API.get('/store/cart/');
         if (!cartData || !cartData.items?.length) {
-            document.getElementById('checkout-content').innerHTML = '<div class="util-card util-card--static" style="padding:80px; text-align:center;"><h3 style="margin-bottom:8px;">BAG IS EMPTY</h3><a href="/catalog/" class="btn-brutalist btn-primary" style="margin-top:var(--space-md);">SHOP NOW</a></div>';
+            document.getElementById('checkout-content').innerHTML = '<div class="util-card util-card--static" style="padding:80px; text-align:center;"><h3 style="margin-bottom:8px;">CART IS EMPTY</h3><a href="/catalog/" class="btn-brutalist btn-primary" style="margin-top:var(--space-md);">SHOP NOW</a></div>';
             return;
         }
         document.getElementById('ship-email').value = user.email || '';

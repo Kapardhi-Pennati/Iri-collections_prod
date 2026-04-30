@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}ORDERS | IRI COLLECTIONS{% endblock %}
 
@@ -10,7 +10,7 @@
         </div>
 
         <div id="orders-list">
-            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted); font-family: var(--font-mono);">COLLECTING HISTORY...</div>
+            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted); font-family: var(--font-mono);">LOADING ORDERS...</div>
         </div>
     </div>
 </section>
@@ -30,8 +30,8 @@ async function loadOrders() {
             container.innerHTML = `
             <div class="util-card util-card--static" style="padding: 80px; text-align: center;">
                 <svg class="icon-svg" style="width: 40px; height: 40px; color: var(--text-muted); margin-bottom: var(--space-md);"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
-                    <h3 style="font-size: 1.8rem; margin-bottom: 8px;">NO HISTORY</h3>
-                    <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">Your collection journey hasn't started yet.</p>
+                    <h3 style="font-size: 1.8rem; margin-bottom: 8px;">NO ORDERS</h3>
+                    <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">You haven't placed any orders yet.</p>
                     <a href="/catalog/" class="btn-brutalist btn-primary">START SHOPPING</a>
                 </div>`;
             return;

@@ -12,7 +12,7 @@
             <!-- HEADER -->
             <div class="page-header" style="margin-bottom: var(--space-lg);">
                 <h1 id="form-title" style="font-size: 2rem;">LOGIN</h1>
-                <p id="form-subtitle" style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">SIGN IN TO YOUR VAULT</p>
+                <p id="form-subtitle" style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">SIGN IN TO YOUR ACCOUNT</p>
             </div>
 
             <!-- LOGIN FORM -->
@@ -91,7 +91,7 @@ document.getElementById('forgot-password-link').addEventListener('click', (e) =>
 document.getElementById('back-to-login-link').addEventListener('click', (e) => {
     e.preventDefault();
     document.getElementById('form-title').textContent = 'LOGIN';
-    document.getElementById('form-subtitle').textContent = 'SIGN IN TO YOUR VAULT';
+    document.getElementById('form-subtitle').textContent = 'SIGN IN TO YOUR ACCOUNT';
     document.getElementById('forgot-email-form').style.display = 'none';
     document.getElementById('reset-password-form').style.display = 'none';
     document.getElementById('login-form').style.display = 'block';

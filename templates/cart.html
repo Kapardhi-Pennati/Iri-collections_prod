@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}CART | IRI COLLECTIONS{% endblock %}
 
@@ -7,13 +7,13 @@
     <div class="container">
         <!-- HEADER -->
         <div class="page-header">
-            <h1 class="brand-text">YOUR BAG</h1>
+            <h1 class="brand-text">YOUR CART</h1>
         </div>
 
         <div id="cart-content">
             <div
                 style="text-align: center; padding: 80px; font-weight: 700; color: var(--gray-400); font-family: var(--font-mono);">
-                SCANNING INVENTORY...
+                LOADING CART...
             </div>
         </div>
     </div>
@@ -34,7 +34,7 @@
         <div class="util-card" style="padding: 80px; text-align: center;">
             <svg class="icon-svg" style="width: 48px; height: 48px; margin-bottom: var(--space-md);"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             <h3 style="font-size: 1.5rem; margin-bottom: 8px;">ACCESS DENIED</h3>
-            <p style="font-weight: 500; color: var(--text-secondary); margin-bottom: var(--space-md);">AUTHENTICATION REQUIRED TO VIEW BAG.</p>
+            <p style="font-weight: 500; color: var(--text-secondary); margin-bottom: var(--space-md);">AUTHENTICATION REQUIRED TO VIEW CART.</p>
             <a href="/login/" class="btn-brutalist btn-primary">IDENTITY LOGIN</a>
         </div>
     `;
@@ -46,9 +46,9 @@
             cartContainer().innerHTML = `
             <div class="util-card" style="padding: 80px; text-align: center;">
                 <svg class="icon-svg" style="width: 48px; height: 48px; margin-bottom: var(--space-md);"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                <h3 style="font-size: 1.5rem; margin-bottom: 8px;">BAG EMPTY</h3>
-                <p style="font-weight: 500; color: var(--text-secondary); margin-bottom: var(--space-md);">NO PIECES IN CURRENT ALLOCATION.</p>
-                <a href="/catalog/" class="btn-brutalist btn-primary">BROWSE DROPS</a>
+                <h3 style="font-size: 1.5rem; margin-bottom: 8px;">CART IS EMPTY</h3>
+                <p style="font-weight: 500; color: var(--text-secondary); margin-bottom: var(--space-md);">NO ITEMS IN CART.</p>
+                <a href="/catalog/" class="btn-brutalist btn-primary">BROWSE PRODUCTS</a>
             </div>
         `;
             return;
@@ -100,7 +100,7 @@
                     <span>${formatPrice(cart.total)}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-weight: 500; margin-bottom: 16px; font-size: 0.8rem; color: var(--gray-400); font-family: var(--font-mono);">
-                    <span>LOGISTICS</span>
+                    <span>SHIPPING</span>
                     <span>CALCULATED AT CHECKOUT</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-size: 1.5rem; font-weight: 900; margin-top: var(--space-md); padding-top: var(--space-md); border-top: 2px solid var(--black);">
@@ -127,7 +127,7 @@
             const data = await API.get('/store/cart/');
             renderCart(data);
         } catch {
-            cartContainer().innerHTML = '<div style="text-align: center; padding: 60px; font-weight: 600; color: var(--error);">ERROR LOADING BAG.</div>';
+            cartContainer().innerHTML = '<div style="text-align: center; padding: 60px; font-weight: 600; color: var(--error);">ERROR LOADING CART.</div>';
         }
     }
 
@@ -145,14 +145,14 @@
         cartMutationInFlight = true;
         try {
             const res = await API.delete(`/store/cart/?item_id=${itemId}`);
-            if (res.ok) { renderCart(res.data); updateCartCount(); Toast.success('PIECE REMOVED'); }
+            if (res.ok) { renderCart(res.data); updateCartCount(); Toast.success('ITEM REMOVED'); }
         } finally { cartMutationInFlight = false; }
     }
 
     async function clearCart() {
-        if (!confirm('CLEAR ALL PIECES?')) return;
+        if (!confirm('CLEAR CART?')) return;
         const res = await API.delete('/store/cart/');
-        if (res.ok) { renderCart(res.data); updateCartCount(); Toast.success('BAG CLEARED'); }
+        if (res.ok) { renderCart(res.data); updateCartCount(); Toast.success('CART CLEARED'); }
     }
 
     document.addEventListener('DOMContentLoaded', loadCart);

@@ -10,8 +10,8 @@
         <div class="page-header"
             style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: var(--space-md);">
             <h1>CATALOG</h1>
-            <div id="results-count" style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">COLLECTING
-                ALL PRODUCTS...</div>
+            <div id="results-count" style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">LOADING
+                PRODUCTS...</div>
         </div>
 
         <!-- FILTERS -->
@@ -24,7 +24,7 @@
 
             <!-- Search & Sort -->
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <input type="text" id="search-input" class="brutalist-input" placeholder="Search pieces..." style="width: 220px;">
+                <input type="text" id="search-input" class="brutalist-input" placeholder="Search products..." style="width: 220px;">
                 <select id="sort-select" class="brutalist-input"
                     style="width: 190px; box-shadow: 2px 2px 0 0 var(--shadow-color); appearance: none; cursor: pointer;">
                     <option value="">SORT BY</option>
@@ -39,7 +39,7 @@
         <div class="product-grid" id="products-grid">
             <div
                 style="grid-column: 1/-1; text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted);">
-                FETCHING ALL PRODUCTS...</div>
+                LOADING PRODUCTS...</div>
         </div>
 
         <!-- PAGINATION -->
@@ -67,7 +67,7 @@
 
         try {
             const data = await API.get(url);
-            document.getElementById('results-count').textContent = `${data.count || 0} PIECES FOUND`;
+            document.getElementById('results-count').textContent = `${data.count || 0} PRODUCTS FOUND`;
 
             if (data && data.results && data.results.length > 0) {
                 grid.innerHTML = data.results.map(p => productCardHTML(p)).join('');
@@ -76,8 +76,8 @@
             } else {
                 grid.innerHTML = `
                 <div class="util-card" style="grid-column: 1/-1; padding: 60px; text-align: center;">
-                    <h3 style="font-size: 1.5rem; margin-bottom: 8px;">EMPTY VAULT.</h3>
-                    <p style="font-weight: 500; color: var(--text-muted);">No pieces match your current filters.</p>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 8px;">NO PRODUCTS FOUND.</h3>
+                    <p style="font-weight: 500; color: var(--text-muted);">No products match your current filters.</p>
                     <button class="btn-brutalist" onclick="window.location.reload()" style="margin-top: var(--space-md);">RESET FILTERS</button>
                 </div>
             `;

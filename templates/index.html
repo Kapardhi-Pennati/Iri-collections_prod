@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}HOME | IRI COLLECTIONS{% endblock %}
@@ -9,8 +9,8 @@
     <div class="container">
         <div class="hero-grid">
             <div class="hero-content">
-                <div class="brutalist-badge" style="background: var(--black); color: var(--white); margin-bottom: var(--space-md);">DIRECT WHOLESALE DROPS</div>
-                <h1>THE VAULT IS OPEN.</h1>
+                <div class="brutalist-badge" style="background: var(--black); color: var(--white); margin-bottom: var(--space-md);">NEW ARRIVALS</div>
+                <h1>WELCOME TO OUR STORE.</h1>
                 <p>
                     Curated jewelry and timepieces at genuine wholesale pricing. Direct manufacturing sources. No
                     markups. No compromises.
@@ -42,7 +42,7 @@
     </div>
 </section>
 
-<!-- FEATURED DROPS -->
+<!-- FEATURED PRODUCTS -->
 <section
     style="padding: var(--space-xl) 0; background: var(--bg-secondary); border-top: var(--border-width) solid var(--border-color); border-bottom: var(--border-width) solid var(--border-color);">
     <div class="container">
@@ -60,7 +60,7 @@
 
         <div style="margin-top: var(--space-xl); text-align: center;">
             <a href="/catalog/" class="btn-brutalist btn-primary">
-                VIEW FULL VAULT
+                VIEW ALL PRODUCTS
                 <svg class="icon-svg" viewBox="0 0 24 24"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
             </a>
         </div>
@@ -75,7 +75,7 @@
             <p
                 style="font-weight: 500; font-size: 0.95rem; max-width: 640px; margin: 0 auto var(--space-md); color: var(--text-secondary); line-height: 1.7;">
                 To maintain genuine wholesale pricing and hygiene standards, we do not accept returns, refunds, or
-                exchanges. Every piece is inspected before sourcing.
+                exchanges. Every product is inspected before sourcing.
             </p>
             <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                 <span class="badge" style="background: var(--black); color: var(--white);">NO REFUNDS</span>
@@ -128,7 +128,7 @@
                         ${categoryIcons[cat.name] || defaultIcon}
                     </div>
                     <h3 style="font-size: 0.9rem; margin-bottom: 8px;">${cat.name}</h3>
-                    <div class="badge" style="background: var(--black); color: var(--white);">${cat.product_count} PIECES</div>
+                    <div class="badge" style="background: var(--black); color: var(--white);">${cat.product_count} PRODUCTS</div>
                 </a>
             `).join('');
             }
