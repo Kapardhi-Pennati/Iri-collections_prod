@@ -474,6 +474,14 @@ input[type="checkbox"]:focus-visible {
     background: none;
     border: none;
     z-index: 1001;
+    animation: menu-pulse 2s ease-in-out 3;
+}
+
+@keyframes menu-pulse {
+    0% { transform: scale(1); }
+    10% { transform: scale(1.1); }
+    20% { transform: scale(1); }
+    100% { transform: scale(1); }
 }
 
 .nav-toggle span {

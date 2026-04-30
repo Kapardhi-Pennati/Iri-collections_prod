@@ -297,7 +297,10 @@ function initLazyLoading() {
         entries.forEach((entry) => {
             if (!entry.isIntersecting) return;
             const img = entry.target;
-            img.src = img.dataset.src;
+            const targetSrc = img.dataset.src;
+            if (targetSrc && targetSrc !== 'undefined' && targetSrc !== 'null') {
+                img.src = targetSrc;
+            }
             img.removeAttribute('data-src');
             img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
             observer.unobserve(img);
@@ -370,7 +373,12 @@ async function updateNavbar() {
 
 function updateWishlistBadge() {
     const badge = document.getElementById('wishlist-count');
-    if (badge) badge.textContent = window.wishlistItems ? window.wishlistItems.size : 0;
+    if (badge) {
+        const count = window.wishlistItems ? window.wishlistItems.size : 0;
+        badge.textContent = count;
+        if (count === 0) badge.style.display = 'none';
+        else badge.style.display = 'flex';
+    }
 }
 
 async function updateCartCount() {
@@ -378,10 +386,18 @@ async function updateCartCount() {
         const controller = createRequestController();
         const cart = await API.get('/store/cart/', { signal: controller.signal });
         const badge = document.getElementById('cart-count');
-        if (badge && cart) badge.textContent = cart.item_count || '0';
+        if (badge && cart) {
+            const count = parseInt(cart.item_count || 0);
+            badge.textContent = count;
+            if (count === 0) badge.style.display = 'none';
+            else badge.style.display = 'flex';
+        }
     } catch {
         const badge = document.getElementById('cart-count');
-        if (badge) badge.textContent = '0';
+        if (badge) {
+            badge.textContent = '0';
+            badge.style.display = 'none';
+        }
     }
 }
 
@@ -410,7 +426,9 @@ function productCardHTML(product) {
     const discount = product.compare_price
         ? Math.round((1 - product.price / product.compare_price) * 100)
         : 0;
-    const imgSrc = product.display_image || product.image_url || product.image || '';
+    let imgSrc = product.display_image || product.image_url || product.image || '';
+    if (imgSrc === 'undefined' || imgSrc === 'null') imgSrc = '';
+    
     const isOOS = product.stock <= 0;
     const cardOpacity = isOOS ? '0.6' : '1';
     const isInWishlist = window.wishlistItems ? window.wishlistItems.has(product.id) : false;

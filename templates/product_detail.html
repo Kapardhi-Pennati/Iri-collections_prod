@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}PRODUCT | IRI COLLECTIONS{% endblock %}
@@ -42,7 +42,8 @@ async function loadProduct() {
 
 function renderProduct(p) {
     const discount = p.compare_price ? Math.round((1 - p.price / p.compare_price) * 100) : 0;
-    const imgSrc = p.display_image || p.image_url || p.image || '';
+    let imgSrc = p.display_image || p.image_url || p.image || '';
+    if (imgSrc === 'undefined' || imgSrc === 'null') imgSrc = '';
 
     let stockText = `${p.stock} AVAILABLE`;
     let stockStyle = 'background: var(--gray-200);';
