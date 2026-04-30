@@ -42,9 +42,7 @@ if not PII_ENCRYPTION_KEY:
     PII_ENCRYPTION_KEY = base64.urlsafe_b64encode(SECRET_KEY.encode("utf-8")[:32].ljust(32, b"0")).decode("utf-8")
 
 # ALLOWED_HOSTS configuration
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,.vercel.app").split(",")
-if os.getenv("VERCEL_URL"):
-    ALLOWED_HOSTS.append(os.getenv("VERCEL_URL"))
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 INSTALLED_APPS = [
@@ -142,9 +140,10 @@ elif os.getenv("DB_NAME"):
             "PASSWORD": os.getenv("DB_PASSWORD"),
             "HOST": os.getenv("DB_HOST", "localhost"),
             "PORT": os.getenv("DB_PORT", "3306"),
-            "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "600")),
+            "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "300")),
             "OPTIONS": {
                 "charset": "utf8mb4",
+                "init_command": "SET SESSION wait_timeout=600",
             }
         }
     }
@@ -323,6 +322,7 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() == "true"
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "iricollections1@gmail.com")
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "10"))  # Cap SMTP hangs under LSAPI
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FRONTEND URL
@@ -354,8 +354,15 @@ STATIC_HOST = os.getenv("STATIC_HOST", "")
 if STATIC_HOST:
     STATIC_URL = f"{STATIC_HOST.rstrip('/')}/static/"
 
-# ✅ Use WhiteNoise for efficient static file serving
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# ✅ Use WhiteNoise for efficient static file serving (Django 4.2+ STORAGES API)
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = DEBUG
 WHITENOISE_MAX_AGE = int(os.getenv("STATIC_CACHE_SECONDS", "31536000"))
@@ -443,7 +450,7 @@ LOGGING = {
     },
 }
 
-# Only try file logging if we are NOT on Vercel
+# Only try file logging if writable (skip on read-only filesystems)
 if not os.getenv("VERCEL"):
     try:
         _logs_dir = str(BASE_DIR / "logs")

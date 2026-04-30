@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -250,7 +251,7 @@
         </div>
     </div>
 
-    <script src="/static/js/app.js"></script>
+    <script data-cfasync="false" src="{% static 'js/app.js' %}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParts = window.location.pathname.split('/');

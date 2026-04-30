@@ -66,8 +66,10 @@ class SecurityHeadersMiddleware:
         # ── Cross-Origin Isolation (Spectre mitigation) ──────────────────
         # COOP prevents a cross-origin page from holding a reference to
         # this window, protecting against Spectre-style side-channel leaks.
+        # Use same-origin-allow-popups so Cloudflare managed challenges
+        # (Bot Fight Mode) can open in the same browsing context.
         response.setdefault(
-            "Cross-Origin-Opener-Policy", "same-origin"
+            "Cross-Origin-Opener-Policy", "same-origin-allow-popups"
         )
         # CORP declares that this response should only be readable by
         # same-origin contexts (prevents cross-origin information leakage).
@@ -96,14 +98,17 @@ class SecurityHeadersMiddleware:
 
         # ── Content Security Policy ──────────────────────────────────────
         # Mitigates XSS and Quishing (QR Phishing) attacks.
+        # Includes Cloudflare domains for Bot Fight Mode, Web Analytics,
+        # and managed challenge scripts.
         response.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://challenges.cloudflare.com https://static.cloudflareinsights.com; "
             "style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
             "font-src 'self' data: https://unpkg.com https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-            "img-src 'self' data: blob: https://api.qrserver.com https://*.iricollections.in https://*.hostinger.com; "
-            "connect-src 'self' https://api.postalpincode.in;"
+            "img-src 'self' data: blob: https://api.qrserver.com https://*.iricollections.in https://*.hostinger.com https://challenges.cloudflare.com; "
+            "connect-src 'self' https://api.postalpincode.in https://challenges.cloudflare.com https://cloudflareinsights.com;"
+            "frame-src https://challenges.cloudflare.com;"
         )
 
         return response
