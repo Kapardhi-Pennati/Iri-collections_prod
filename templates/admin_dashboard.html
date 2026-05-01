@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}ADMIN DASHBOARD | IRI COLLECTIONS{% endblock %}
@@ -128,9 +128,22 @@
 
         <!-- Section: Products -->
         <div id="section-products" class="hidden">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xl);">
-                <h2>MANAGE PRODUCTS</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-md); flex-wrap:wrap; gap:var(--space-md);">
+                <h2 style="margin:0;">MANAGE PRODUCTS</h2>
                 <button class="btn-brutalist btn-primary" onclick="openProductModal()" style="">+ ADD PRODUCT</button>
+            </div>
+            <div style="display:flex; gap:var(--space-md); margin-bottom:var(--space-lg); flex-wrap:wrap; align-items:center;">
+                <input type="text" id="product-search" placeholder="Search products..." oninput="applyProductFilters()" style="flex:1; min-width:200px; padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem;">
+                <select id="product-sort" onchange="applyProductFilters()" style="padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem; font-weight:600; cursor:pointer; background:var(--white);">
+                    <option value="name-asc">Name A→Z</option>
+                    <option value="name-desc">Name Z→A</option>
+                    <option value="price-asc">Price Low→High</option>
+                    <option value="price-desc">Price High→Low</option>
+                    <option value="stock-asc">Stock Low→High</option>
+                    <option value="stock-desc">Stock High→Low</option>
+                    <option value="category-asc">Category A→Z</option>
+                </select>
+                <span id="product-count" style="font-size:0.8rem; font-weight:700; color:var(--text-muted); white-space:nowrap;"></span>
             </div>
             <div class="admin-table-responsive">
                 <table class="admin-table" id="products-table">
@@ -142,9 +155,29 @@
             </div>
         </div>
 
-        <!-- Section: Orders -->
         <div id="section-orders" class="hidden">
-            <h2 style="margin-bottom:var(--space-xl);">MANAGE ORDERS</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-md); flex-wrap:wrap; gap:var(--space-md);">
+                <h2 style="margin:0;">MANAGE ORDERS</h2>
+            </div>
+            <div style="display:flex; gap:var(--space-md); margin-bottom:var(--space-lg); flex-wrap:wrap; align-items:center;">
+                <input type="text" id="order-search" placeholder="Search orders..." oninput="applyOrderFilters()" style="flex:1; min-width:200px; padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem;">
+                <select id="order-sort" onchange="applyOrderFilters()" style="padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem; font-weight:600; cursor:pointer; background:var(--white);">
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                    <option value="amount-desc">Amount High→Low</option>
+                    <option value="amount-asc">Amount Low→High</option>
+                    <option value="status-asc">Status A→Z</option>
+                    <option value="order-asc">Order # A→Z</option>
+                </select>
+                <select id="order-status-filter" onchange="applyOrderFilters()" style="padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem; font-weight:600; cursor:pointer; background:var(--white);">
+                    <option value="all">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+                <span id="order-count" style="font-size:0.8rem; font-weight:700; color:var(--text-muted); white-space:nowrap;"></span>
+            </div>
             <div class="admin-table-responsive">
                 <table class="admin-table" id="orders-table">
                     <thead>
@@ -507,39 +540,81 @@ async function loadTrafficData() {
     }
 }
 
+let allProducts = [];   // full product list for client-side sort/filter
+let allOrders = [];     // full order list for client-side sort/filter
+
 // ─── Products CRUD ─────────────────────────────
 async function loadAdminProducts() {
     try {
         const data = await API.get('/store/admin/products/');
         if (!data) return;
-        const products = data.results || data;
-        const tbody = document.getElementById('products-tbody');
-        tbody.innerHTML = products.map(p => `
-            <tr>
-                <td>
-                    <div style="display:flex; align-items:center; gap:var(--space-md);">
-                        <img src="${p.display_image || p.image_url || ''}" alt="" style="width:40px; height:40px; object-fit:cover; background:var(--gray-100); border:1px solid var(--gray-200);">
-                        <div>
-                            <div style="font-weight:600;">${escapeHTML(p.name)}</div>
-                            <div style="font-size:0.8rem; color:var(--text-muted);">${escapeHTML(p.material || '')}</div>
-                        </div>
-                    </div>
-                </td>
-                <td>${escapeHTML(p.category_name || '')}</td>
-                <td style="font-weight:700;">${formatPrice(p.price)}</td>
-                <td><span class="stock-badge ${p.stock === 0 ? 'out-of-stock' : p.stock <= 5 ? 'low-stock' : 'in-stock'}" style="font-size:0.8rem;">${p.stock}</span></td>
-                <td>${p.is_active ? '<span style="color:var(--success);">Active</span>' : '<span style="color:var(--text-muted);">Inactive</span>'}</td>
-                <td>
-                    <div style="display:flex; gap:var(--space-sm);">
-                        <button class="btn btn-ghost btn-sm" onclick="editProduct(${p.id})">Edit</button>
-                        <button class="btn btn-ghost btn-sm" style="color:var(--error);" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Delete</button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
+        allProducts = data.results || data;
+        applyProductFilters();
     } catch (err) {
         console.error(err);
     }
+}
+
+function applyProductFilters() {
+    const search = (document.getElementById('product-search')?.value || '').toLowerCase();
+    const sort = document.getElementById('product-sort')?.value || 'name-asc';
+
+    let filtered = allProducts.filter(p => {
+        const haystack = `${p.name} ${p.category_name || ''} ${p.material || ''}`.toLowerCase();
+        return haystack.includes(search);
+    });
+
+    // Sort
+    const [key, dir] = sort.split('-');
+    filtered.sort((a, b) => {
+        let va, vb;
+        switch (key) {
+            case 'name':     va = (a.name || '').toLowerCase(); vb = (b.name || '').toLowerCase(); break;
+            case 'price':    va = parseFloat(a.price) || 0; vb = parseFloat(b.price) || 0; break;
+            case 'stock':    va = a.stock ?? 0; vb = b.stock ?? 0; break;
+            case 'category': va = (a.category_name || '').toLowerCase(); vb = (b.category_name || '').toLowerCase(); break;
+            default:         va = (a.name || '').toLowerCase(); vb = (b.name || '').toLowerCase();
+        }
+        if (va < vb) return dir === 'asc' ? -1 : 1;
+        if (va > vb) return dir === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    renderProducts(filtered);
+}
+
+function renderProducts(products) {
+    const countEl = document.getElementById('product-count');
+    if (countEl) countEl.textContent = `${products.length} of ${allProducts.length} products`;
+
+    const tbody = document.getElementById('products-tbody');
+    if (products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">No products match your search</td></tr>';
+        return;
+    }
+    tbody.innerHTML = products.map(p => `
+        <tr>
+            <td>
+                <div style="display:flex; align-items:center; gap:var(--space-md);">
+                    <img src="${p.display_image || p.image_url || ''}" alt="" style="width:40px; height:40px; object-fit:cover; background:var(--gray-100); border:1px solid var(--gray-200);">
+                    <div>
+                        <div style="font-weight:600;">${escapeHTML(p.name)}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">${escapeHTML(p.material || '')}</div>
+                    </div>
+                </div>
+            </td>
+            <td>${escapeHTML(p.category_name || '')}</td>
+            <td style="font-weight:700;">${formatPrice(p.price)}</td>
+            <td><span class="stock-badge ${p.stock === 0 ? 'out-of-stock' : p.stock <= 5 ? 'low-stock' : 'in-stock'}" style="font-size:0.8rem;">${p.stock}</span></td>
+            <td>${p.is_active ? '<span style="color:var(--success);">Active</span>' : '<span style="color:var(--text-muted);">Inactive</span>'}</td>
+            <td>
+                <div style="display:flex; gap:var(--space-sm);">
+                    <button class="btn btn-ghost btn-sm" onclick="editProduct(${p.id})">Edit</button>
+                    <button class="btn btn-ghost btn-sm" style="color:var(--error);" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Delete</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
 }
 
 async function loadCategoryOptions() {
@@ -686,35 +761,73 @@ async function loadAdminOrders() {
     try {
         const data = await API.get('/store/admin/orders/');
         if (!data) return;
-        const orders = data.results || data;
-        const tbody = document.getElementById('orders-tbody');
-        tbody.innerHTML = orders.map(o => {
-            const dt = new Date(o.created_at);
-            const date = dt.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
-            const time = dt.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
-            return `
-                <tr>
-                    <td><span style="font-weight:700;">${escapeHTML(o.order_number)}</span></td>
-                    <td>${escapeHTML(o.shipping_address?.split(',')[0] || '—')}</td>
-                    <td style="font-weight:600;">${formatPrice(o.total_amount)}</td>
-                    <td><span class="order-status ${o.status}">${o.status}</span></td>
-                    <td style="color:var(--text-muted); font-size:0.85rem;">${date}<br><span style="font-size:0.75rem; opacity:0.7;">${time}</span></td>
-                    <td>
-                        <div style="display:flex; gap:var(--space-sm); align-items:center;">
-                            <a href="/invoice/${o.id}/" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;" title="View Invoice">View Invoice</a>
-                            ${['confirmed', 'shipped'].includes(o.status) ? `<button class="btn btn-ghost btn-sm" onclick="openTrackingModal(${o.id})">Tracking</button>` : ''}
-                            <button class="btn btn-ghost btn-sm" onclick="openOrderStatusModal(${o.id}, '${o.status}')">Update</button>
-                            <button class="btn btn-ghost btn-sm" style="color:var(--error);" onclick="deleteOrder(${o.id}, '${o.order_number}')">Delete</button>
-                        </div>
-                    </td>
-                </tr>`;
-        }).join('');
-        if (orders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">No orders yet</td></tr>';
-        }
+        allOrders = data.results || data;
+        applyOrderFilters();
     } catch (err) {
         console.error(err);
     }
+}
+
+function applyOrderFilters() {
+    const search = (document.getElementById('order-search')?.value || '').toLowerCase();
+    const sort = document.getElementById('order-sort')?.value || 'date-desc';
+    const statusFilter = document.getElementById('order-status-filter')?.value || 'all';
+
+    let filtered = allOrders.filter(o => {
+        if (statusFilter !== 'all' && o.status !== statusFilter) return false;
+        const haystack = `${o.order_number || ''} ${o.shipping_address || ''} ${o.status || ''}`.toLowerCase();
+        return haystack.includes(search);
+    });
+
+    // Sort
+    const [key, dir] = sort.split('-');
+    filtered.sort((a, b) => {
+        let va, vb;
+        switch (key) {
+            case 'date':   va = new Date(a.created_at).getTime(); vb = new Date(b.created_at).getTime(); break;
+            case 'amount': va = parseFloat(a.total_amount) || 0; vb = parseFloat(b.total_amount) || 0; break;
+            case 'status': va = (a.status || '').toLowerCase(); vb = (b.status || '').toLowerCase(); break;
+            case 'order':  va = (a.order_number || '').toLowerCase(); vb = (b.order_number || '').toLowerCase(); break;
+            default:       va = new Date(a.created_at).getTime(); vb = new Date(b.created_at).getTime();
+        }
+        if (va < vb) return dir === 'asc' ? -1 : 1;
+        if (va > vb) return dir === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    renderOrders(filtered);
+}
+
+function renderOrders(orders) {
+    const countEl = document.getElementById('order-count');
+    if (countEl) countEl.textContent = `${orders.length} of ${allOrders.length} orders`;
+
+    const tbody = document.getElementById('orders-tbody');
+    if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">No orders match your filters</td></tr>';
+        return;
+    }
+    tbody.innerHTML = orders.map(o => {
+        const dt = new Date(o.created_at);
+        const date = dt.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+        const time = dt.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
+        return `
+            <tr>
+                <td><span style="font-weight:700;">${escapeHTML(o.order_number)}</span></td>
+                <td>${escapeHTML(o.shipping_address?.split(',')[0] || '—')}</td>
+                <td style="font-weight:600;">${formatPrice(o.total_amount)}</td>
+                <td><span class="order-status ${o.status}">${o.status}</span></td>
+                <td style="color:var(--text-muted); font-size:0.85rem;">${date}<br><span style="font-size:0.75rem; opacity:0.7;">${time}</span></td>
+                <td>
+                    <div style="display:flex; gap:var(--space-sm); align-items:center;">
+                        <a href="/invoice/${o.id}/" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;" title="View Invoice">View Invoice</a>
+                        ${['confirmed', 'shipped'].includes(o.status) ? `<button class="btn btn-ghost btn-sm" onclick="openTrackingModal(${o.id})">Tracking</button>` : ''}
+                        <button class="btn btn-ghost btn-sm" onclick="openOrderStatusModal(${o.id}, '${o.status}')">Update</button>
+                        <button class="btn btn-ghost btn-sm" style="color:var(--error);" onclick="deleteOrder(${o.id}, '${o.order_number}')">Delete</button>
+                    </div>
+                </td>
+            </tr>`;
+    }).join('');
 }
 
 function openOrderStatusModal(orderId, currentStatus) {

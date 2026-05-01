@@ -1208,6 +1208,7 @@ class AdminProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductAdminSerializer
     permission_classes = [IsAdminRole]
     throttle_classes = [AdminMutationThrottle]
+    pagination_class = None  # Show ALL products in admin dashboard
 
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):
@@ -1245,6 +1246,7 @@ class AdminOrderListView(generics.ListAPIView):
     )
     serializer_class = OrderSerializer
     permission_classes = [IsAdminRole]
+    pagination_class = None  # Show ALL orders in admin dashboard
 
 
 class AdminOrderDetailView(generics.RetrieveDestroyAPIView):
