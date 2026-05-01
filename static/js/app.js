@@ -446,7 +446,10 @@ function productCardHTML(product) {
                 <div style="font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em;">${escapeHTML(product.category_name || 'JEWELRY')}</div>
                 <h3 style="font-size: 0.95rem; margin-bottom: 8px;">${escapeHTML(product.name)}</h3>
                 <div style="display:flex; align-items:center; justify-content:space-between;">
-                    <div class="product-price">${formatPrice(product.price)}</div>
+                    <div style="display:flex; align-items:baseline; gap:6px;">
+                        <div class="product-price">${formatPrice(product.price)}</div>
+                        ${product.compare_price && product.compare_price > product.price ? `<span style="text-decoration:line-through; font-weight:500; color:var(--text-muted); font-size:0.8rem;">${formatPrice(product.compare_price)}</span>` : ''}
+                    </div>
                     ${isOOS 
                         ? `<span style="font-weight:800; font-size:0.7rem;">OUT</span>`
                         : `<button class="brutalist-btn" onclick="event.stopPropagation(); addToCart(${product.id})" style="width:36px; height:36px; box-shadow:2px 2px 0 0 var(--shadow-color); padding:0;">

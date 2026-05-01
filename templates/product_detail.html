@@ -67,7 +67,8 @@ function renderProduct(p) {
 
                 <div style="display: flex; gap: var(--space-md); align-items: center; margin-bottom: var(--space-lg); flex-wrap: wrap;">
                     <div class="product-price" style="font-size: 2.2rem;">${formatPrice(p.price)}</div>
-                    ${p.compare_price ? `<div style="text-decoration: line-through; font-weight: 500; color: var(--text-muted); font-size: 1.1rem;">${formatPrice(p.compare_price)}</div>` : ''}
+                    ${p.compare_price && p.compare_price > p.price ? `<div style="text-decoration: line-through; font-weight: 500; color: var(--text-muted); font-size: 1.1rem;">${formatPrice(p.compare_price)}</div>` : ''}
+                    ${discount > 0 ? `<span class="badge" style="background: var(--bg-accent); font-weight: 700;">${discount}% OFF</span>` : ''}
                     <div class="badge" style="${stockStyle}">${stockText}</div>
                 </div>
 
