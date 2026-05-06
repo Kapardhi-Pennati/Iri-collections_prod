@@ -6,6 +6,6 @@ class StoreConfig(AppConfig):
     name = "store"
 
     def ready(self):
-        # ✅ Import signals so the post_save handler for Order
+        # Import signals so the post_save handler for Order
         # status changes is registered when the app is loaded.
         import store.signals  # noqa: F401

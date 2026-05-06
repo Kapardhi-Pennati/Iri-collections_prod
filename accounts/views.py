@@ -186,11 +186,11 @@ class RequestOTPView(APIView):
     Generate and dispatch a cryptographically secure OTP via email.
 
     Security:
-        ✅ secrets.randbelow() — cryptographic OTP, no modulo bias
-        ✅ Atomic rate limiting: 3 OTPs per email per hour
-        ✅ Old OTPs deleted before issuing new one (prevents accumulation)
-        ✅ Anti-enumeration: password-reset for unknown email returns 200
-        ✅ Sanitised audit log (no log injection)
+            secrets.randbelow() — cryptographic OTP, no modulo bias
+            Atomic rate limiting: 3 OTPs per email per hour
+            Old OTPs deleted before issuing new one (prevents accumulation)
+            Anti-enumeration: password-reset for unknown email returns 200
+            Sanitised audit log (no log injection)
     """
     permission_classes = [AllowAny]
     throttle_classes = [OTPThrottle]
@@ -296,11 +296,11 @@ class VerifyOTPView(APIView):
     Verify a user-submitted OTP and mark it as verified.
 
     Security:
-        ✅ select_for_update() prevents two concurrent requests from both
-           verifying the same OTP record (race condition fix)
-        ✅ Atomic rate limiting: 5 failed attempts per 30 minutes per email
-        ✅ OTP expiry enforced via OTP.is_valid() (15-minute window)
-        ✅ Consistent response time prevents timing oracle on invalid codes
+            select_for_update() prevents two concurrent requests from both
+            verifying the same OTP record (race condition fix)
+            Atomic rate limiting: 5 failed attempts per 30 minutes per email
+            OTP expiry enforced via OTP.is_valid() (15-minute window)
+            Consistent response time prevents timing oracle on invalid codes
     """
     permission_classes = [AllowAny]
 
@@ -381,11 +381,11 @@ class RegisterView(generics.CreateAPIView):
     Register a new user, gated behind a verified OTP.
 
     Security:
-        ✅ Requires OTP to be verified before account creation
-        ✅ Argon2 password hashing (configured in settings.PASSWORD_HASHERS)
-        ✅ full_name sanitised against XSS via django.utils.html.escape
-        ✅ Entire operation wrapped in a DB transaction (atomic rollback)
-        ✅ Verification email dispatched asynchronously
+        Requires OTP to be verified before account creation
+        Argon2 password hashing (configured in settings.PASSWORD_HASHERS)
+        full_name sanitised against XSS via django.utils.html.escape
+        Entire operation wrapped in a DB transaction (atomic rollback)
+        Verification email dispatched asynchronously
     """
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
@@ -478,10 +478,10 @@ class LoginView(APIView):
     Secure login with account lockout and rate limiting.
 
     Security:
-        ✅ Atomic failed-attempt tracking (no race condition on lockout)
-        ✅ Anti-enumeration: non-existent email returns generic "Invalid credentials"
-        ✅ Consistent error wording prevents user/password oracle distinction
-        ✅ Audit log records IP for security correlation
+        Atomic failed-attempt tracking (no race condition on lockout)
+        Anti-enumeration: non-existent email returns generic "Invalid credentials"
+        Consistent error wording prevents user/password oracle distinction
+        Audit log records IP for security correlation
     """
     permission_classes = [AllowAny]
     throttle_classes = [LoginThrottle]
@@ -592,10 +592,10 @@ class ResetPasswordView(APIView):
     Reset password after OTP verification.
 
     Security:
-        ✅ select_for_update() prevents race conditions on OTP consumption
-        ✅ Password strength validated before hashing
-        ✅ Anti-enumeration: missing OTP returns 200 (not 404)
-        ✅ Argon2 hashing applied via set_password()
+        select_for_update() prevents race conditions on OTP consumption
+        Password strength validated before hashing
+        Anti-enumeration: missing OTP returns 200 (not 404)
+        Argon2 hashing applied via set_password()
     """
     permission_classes = [AllowAny]
 
@@ -892,9 +892,9 @@ class AddressViewSet(viewsets.ModelViewSet):
     CRUD for user shipping addresses.
 
     Security:
-        ✅ Queryset scoped to request.user — prevents IDOR
-        ✅ user auto-assigned on create — client cannot set arbitrary owner
-        ✅ Audit logging on every mutating operation
+        Queryset scoped to request.user — prevents IDOR
+        user auto-assigned on create — client cannot set arbitrary owner
+        Audit logging on every mutating operation
     """
     serializer_class = AddressSerializer
     permission_classes = [IsAdminOrCustomerUser]

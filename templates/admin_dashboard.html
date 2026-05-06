@@ -14,34 +14,59 @@
     <!-- SIDEBAR -->
     <aside class="admin-sidebar">
         <div style="margin-bottom: 30px;">
-            <h2 style="font-size: 1.2rem; margin: 0; border-left: var(--border-width) solid var(--black); padding-left: 10px;">IRI ADMIN</h2>
+            <h2
+                style="font-size: 1.2rem; margin: 0; border-left: var(--border-width) solid var(--black); padding-left: 10px;">
+                IRI ADMIN</h2>
         </div>
-        
+
         <nav>
             <a href="#" onclick="showSection('overview')" class="admin-nav-item active" id="nav-overview">
-                <svg class="icon-svg" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                <svg class="icon-svg" viewBox="0 0 24 24">
+                    <rect width="18" height="18" x="3" y="3" rx="2" />
+                    <path d="M3 9h18" />
+                    <path d="M9 21V9" />
+                </svg>
                 OVERVIEW
             </a>
             <a href="#" onclick="showSection('products')" class="admin-nav-item" id="nav-products">
-                <svg class="icon-svg" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                <svg class="icon-svg" viewBox="0 0 24 24">
+                    <path d="m7.5 4.27 9 5.15" />
+                    <path
+                        d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                    <path d="m3.3 7 8.7 5 8.7-5" />
+                    <path d="M12 22V12" />
+                </svg>
                 PRODUCTS
             </a>
             <a href="#" onclick="showSection('orders')" class="admin-nav-item" id="nav-orders">
-                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <svg class="icon-svg" viewBox="0 0 24 24">
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                    <path d="M3 6h18" />
+                    <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
                 ORDERS
             </a>
             <a href="#" onclick="showSection('categories')" class="admin-nav-item" id="nav-categories">
-                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>
+                <svg class="icon-svg" viewBox="0 0 24 24">
+                    <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z" />
+                    <path d="M7 7h.01" />
+                </svg>
                 CATEGORIES
             </a>
             <a href="#" onclick="showSection('traffic')" class="admin-nav-item" id="nav-traffic">
-                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                <svg class="icon-svg" viewBox="0 0 24 24">
+                    <path d="M3 3v18h18" />
+                    <path d="m19 9-5 5-4-4-3 3" />
+                </svg>
                 TRAFFIC
             </a>
-            
+
             <div style="margin-top: 50px; border-top: 2px solid var(--border-color); padding-top: 20px;">
                 <a href="/" class="admin-nav-item" style="font-size: 0.8rem; color: var(--text-muted);">
-                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                    <svg class="icon-svg" viewBox="0 0 24 24">
+                        <path d="m12 19-7-7 7-7" />
+                        <path d="M19 12H5" />
+                    </svg>
                     BACK TO STORE
                 </a>
             </div>
@@ -54,7 +79,7 @@
             <h1 style="font-size: 2.5rem; margin-bottom: 40px;">DASHBOARD OVERVIEW</h1>
             <!-- stat-lowstock placeholder for JS -->
             <span id="stat-lowstock" style="display:none;"></span>
-            
+
             <div class="stat-grid">
                 <div class="stat-card">
                     <div style="font-weight: 800; font-size: 0.8rem; color: var(--text-muted);">TOTAL REVENUE</div>
@@ -99,10 +124,22 @@
         <div id="section-traffic" class="hidden">
             <h2 style="margin-bottom:var(--space-xl);">WEBSITE TRAFFIC</h2>
             <div class="stat-grid" id="traffic-stat-cards">
-                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOTAL VIEWS (30D)</div><div class="stat-value" id="traffic-total">—</div></div>
-                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">UNIQUE VISITORS (30D)</div><div class="stat-value" id="traffic-unique">—</div></div>
-                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TODAY'S VIEWS</div><div class="stat-value" id="traffic-today">—</div></div>
-                <div class="stat-card"><div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOP PAGE TODAY</div><div class="stat-value" id="traffic-toppage" style="font-size:1rem; word-break:break-all;">—</div></div>
+                <div class="stat-card">
+                    <div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOTAL VIEWS (30D)</div>
+                    <div class="stat-value" id="traffic-total">—</div>
+                </div>
+                <div class="stat-card">
+                    <div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">UNIQUE VISITORS (30D)</div>
+                    <div class="stat-value" id="traffic-unique">—</div>
+                </div>
+                <div class="stat-card">
+                    <div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TODAY'S VIEWS</div>
+                    <div class="stat-value" id="traffic-today">—</div>
+                </div>
+                <div class="stat-card">
+                    <div style="font-weight:800; font-size:0.8rem; color:var(--text-muted);">TOP PAGE TODAY</div>
+                    <div class="stat-value" id="traffic-toppage" style="font-size:1rem; word-break:break-all;">—</div>
+                </div>
             </div>
 
             <div class="util-card" style="padding: 30px; background: var(--white); margin-bottom:var(--space-xl);">
@@ -128,13 +165,17 @@
 
         <!-- Section: Products -->
         <div id="section-products" class="hidden">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-md); flex-wrap:wrap; gap:var(--space-md);">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-md); flex-wrap:wrap; gap:var(--space-md);">
                 <h2 style="margin:0;">MANAGE PRODUCTS</h2>
-                <button class="btn-brutalist btn-primary" onclick="openProductModal()" style="">+ ADD PRODUCT</button>
+                <button class="btn-brutalist btn-primary" onclick="openProductModal()">+ ADD PRODUCT</button>
             </div>
-            <div style="display:flex; gap:var(--space-md); margin-bottom:var(--space-lg); flex-wrap:wrap; align-items:center;">
-                <input type="text" id="product-search" placeholder="Search products..." oninput="applyProductFilters()" style="flex:1; min-width:200px; padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem;">
-                <select id="product-sort" onchange="applyProductFilters()" style="padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem; font-weight:600; cursor:pointer; background:var(--white);">
+            <div
+                style="display:flex; gap:var(--space-md); margin-bottom:var(--space-lg); flex-wrap:wrap; align-items:center;">
+                <input type="text" id="product-search" placeholder="Search products..." oninput="applyProductFilters()"
+                    style="flex:1; min-width:200px; padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem;">
+                <select id="product-sort" onchange="applyProductFilters()"
+                    style="padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem; font-weight:600; cursor:pointer; background:var(--white);">
                     <option value="name-asc">Name A→Z</option>
                     <option value="name-desc">Name Z→A</option>
                     <option value="price-asc">Price Low→High</option>
@@ -143,12 +184,20 @@
                     <option value="stock-desc">Stock High→Low</option>
                     <option value="category-asc">Category A→Z</option>
                 </select>
-                <span id="product-count" style="font-size:0.8rem; font-weight:700; color:var(--text-muted); white-space:nowrap;"></span>
+                <span id="product-count"
+                    style="font-size:0.8rem; font-weight:700; color:var(--text-muted); white-space:nowrap;"></span>
             </div>
             <div class="admin-table-responsive">
                 <table class="admin-table" id="products-table">
                     <thead>
-                        <tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
                     </thead>
                     <tbody id="products-tbody"></tbody>
                 </table>
@@ -156,12 +205,16 @@
         </div>
 
         <div id="section-orders" class="hidden">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-md); flex-wrap:wrap; gap:var(--space-md);">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-md); flex-wrap:wrap; gap:var(--space-md);">
                 <h2 style="margin:0;">MANAGE ORDERS</h2>
             </div>
-            <div style="display:flex; gap:var(--space-md); margin-bottom:var(--space-lg); flex-wrap:wrap; align-items:center;">
-                <input type="text" id="order-search" placeholder="Search orders..." oninput="applyOrderFilters()" style="flex:1; min-width:200px; padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem;">
-                <select id="order-sort" onchange="applyOrderFilters()" style="padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem; font-weight:600; cursor:pointer; background:var(--white);">
+            <div
+                style="display:flex; gap:var(--space-md); margin-bottom:var(--space-lg); flex-wrap:wrap; align-items:center;">
+                <input type="text" id="order-search" placeholder="Search orders..." oninput="applyOrderFilters()"
+                    style="flex:1; min-width:200px; padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem;">
+                <select id="order-sort" onchange="applyOrderFilters()"
+                    style="padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem; font-weight:600; cursor:pointer; background:var(--white);">
                     <option value="date-desc">Newest First</option>
                     <option value="date-asc">Oldest First</option>
                     <option value="amount-desc">Amount High→Low</option>
@@ -169,19 +222,28 @@
                     <option value="status-asc">Status A→Z</option>
                     <option value="order-asc">Order # A→Z</option>
                 </select>
-                <select id="order-status-filter" onchange="applyOrderFilters()" style="padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem; font-weight:600; cursor:pointer; background:var(--white);">
+                <select id="order-status-filter" onchange="applyOrderFilters()"
+                    style="padding:8px 12px; border:var(--border-width) solid var(--black); font-family:inherit; font-size:0.85rem; font-weight:600; cursor:pointer; background:var(--white);">
                     <option value="all">All Statuses</option>
                     <option value="pending">Pending</option>
                     <option value="confirmed">Confirmed</option>
                     <option value="shipped">Shipped</option>
                     <option value="cancelled">Cancelled</option>
                 </select>
-                <span id="order-count" style="font-size:0.8rem; font-weight:700; color:var(--text-muted); white-space:nowrap;"></span>
+                <span id="order-count"
+                    style="font-size:0.8rem; font-weight:700; color:var(--text-muted); white-space:nowrap;"></span>
             </div>
             <div class="admin-table-responsive">
                 <table class="admin-table" id="orders-table">
                     <thead>
-                        <tr><th>Order #</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
                     </thead>
                     <tbody id="orders-tbody"></tbody>
                 </table>
@@ -190,9 +252,10 @@
 
         <!-- Section: Categories -->
         <div id="section-categories" class="hidden">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xl);">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xl);">
                 <h2>MANAGE CATEGORIES</h2>
-                <button class="btn-brutalist btn-primary" onclick="openCategoryModal()" style="">+ ADD CATEGORY</button>
+                <button class="btn-brutalist btn-primary" onclick="openCategoryModal()">+ ADD CATEGORY</button>
             </div>
             <div id="categories-list"></div>
         </div>
@@ -208,24 +271,31 @@
             <div class="form-group"><label>Name</label><input type="text" id="pf-name" required></div>
             <div class="form-group"><label>Description</label><textarea id="pf-desc" rows="3" required></textarea></div>
             <div class="form-grid">
-                <div class="form-group"><label>Price (₹)</label><input type="number" id="pf-price" step="0.01" required></div>
-                <div class="form-group"><label>Compare Price (₹)</label><input type="number" id="pf-compare" step="0.01"></div>
+                <div class="form-group"><label>Price (₹)</label><input type="number" id="pf-price" step="0.01" required>
+                </div>
+                <div class="form-group"><label>Compare Price (₹)</label><input type="number" id="pf-compare"
+                        step="0.01"></div>
             </div>
             <div class="form-grid">
                 <div class="form-group"><label>Stock</label><input type="number" id="pf-stock" required></div>
                 <div class="form-group"><label>Category</label><select id="pf-category" required></select></div>
             </div>
             <div class="form-grid" style="align-items: end;">
-                <div class="form-group"><label>Image URL</label><input type="url" id="pf-image" placeholder="https://..."></div>
-                <div class="form-group"><label>Or Upload Image</label><input type="file" id="pf-image-file" accept="image/*"></div>
+                <div class="form-group"><label>Image URL</label><input type="url" id="pf-image"
+                        placeholder="https://..."></div>
+                <div class="form-group"><label>Or Upload Image</label><input type="file" id="pf-image-file"
+                        accept="image/*"></div>
             </div>
             <div id="pf-image-preview" style="margin-bottom: var(--space-md); display: none;">
-                <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Preview</label>
-                <img src="" alt="Preview" style="max-width: 100px; max-height: 100px; object-fit: cover; border: var(--border-width) solid var(--black);">
+                <label
+                    style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Preview</label>
+                <img src="" alt="Preview"
+                    style="max-width: 100px; max-height: 100px; object-fit: cover; border: var(--border-width) solid var(--black);">
             </div>
             <div class="form-grid">
                 <div class="form-group"><label>Material</label><input type="text" id="pf-material"></div>
-                <div class="form-group"><label>Weight</label><input type="text" id="pf-weight" placeholder="e.g. 5.2g"></div>
+                <div class="form-group"><label>Weight</label><input type="text" id="pf-weight" placeholder="e.g. 5.2g">
+                </div>
             </div>
             <div style="display:flex; gap:var(--space-md);">
                 <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.9rem;">
@@ -286,10 +356,12 @@
         <h2>Update Tracking</h2>
         <form id="tracking-form">
             <input type="hidden" id="tracking-order-id">
-            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">Save tracking ID and optional slip image.</p>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">Save tracking ID and optional slip
+                image.</p>
             <div class="form-group">
                 <label>Tracking ID</label>
-                <input type="text" id="track-id-input" placeholder="AWB / Courier ID" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false">
+                <input type="text" id="track-id-input" placeholder="AWB / Courier ID" inputmode="text"
+                    autocapitalize="characters" autocomplete="off" spellcheck="false">
             </div>
             <div class="form-group">
                 <label>Tracking Slip Image</label>
@@ -307,127 +379,127 @@
 
 {% block extra_js %}
 <script>
-let revenueChart = null;
-let statusChart = null;
-let allCategories = [];
+    let revenueChart = null;
+    let statusChart = null;
+    let allCategories = [];
 
-// ─── Auth guard ─────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
-    const user = await API.bootstrapUser({ forceRefresh: true });
-    if (!user || !API.isAdmin()) {
-        Toast.error('Access denied. Admin only.');
-        setTimeout(() => window.location.href = '/', 1000);
-        return;
-    }
-    loadOverview();
-    loadAdminProducts();
-    loadAdminOrders();
-    loadAdminCategories();
-});
-
-// ─── Section navigation ────────────────────────
-function showSection(name) {
-    ['overview', 'products', 'orders', 'categories', 'traffic'].forEach(s => {
-        document.getElementById(`section-${s}`).classList.toggle('hidden', s !== name);
-        document.getElementById(`nav-${s}`).classList.toggle('active', s === name);
+    // ─── Auth guard ─────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+        const user = await API.bootstrapUser({ forceRefresh: true });
+        if (!user || !API.isAdmin()) {
+            Toast.error('Access denied. Admin only.');
+            setTimeout(() => window.location.href = '/', 1000);
+            return;
+        }
+        loadOverview();
+        loadAdminProducts();
+        loadAdminOrders();
+        loadAdminCategories();
     });
-    if (name === 'traffic' && !window._trafficLoaded) {
-        loadTrafficData();
-        window._trafficLoaded = true;
+
+    // ─── Section navigation ────────────────────────
+    function showSection(name) {
+        ['overview', 'products', 'orders', 'categories', 'traffic'].forEach(s => {
+            document.getElementById(`section-${s}`).classList.toggle('hidden', s !== name);
+            document.getElementById(`nav-${s}`).classList.toggle('active', s === name);
+        });
+        if (name === 'traffic' && !window._trafficLoaded) {
+            loadTrafficData();
+            window._trafficLoaded = true;
+        }
     }
-}
 
-function toggleAdminSidebar() {
-    document.getElementById('admin-sidebar').classList.toggle('active');
-}
+    function toggleAdminSidebar() {
+        document.getElementById('admin-sidebar').classList.toggle('active');
+    }
 
-function closeModal(id) {
-    document.getElementById(id).classList.remove('active');
-}
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
 
-function openModal(id) {
-    document.getElementById(id).classList.add('active');
-}
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+    }
 
-// ─── Overview / Analytics ──────────────────────
-async function loadOverview() {
-    try {
-        const data = await API.get('/store/admin/analytics/');
-        if (!data) return;
+    // ─── Overview / Analytics ──────────────────────
+    async function loadOverview() {
+        try {
+            const data = await API.get('/store/admin/analytics/');
+            if (!data) return;
 
-        document.getElementById('stat-revenue').textContent = formatPrice(data.total_revenue);
-        document.getElementById('stat-orders').textContent = data.total_orders;
-        document.getElementById('stat-pending').textContent = data.pending_orders;
-        document.getElementById('stat-products').textContent = data.total_products;
-        document.getElementById('stat-lowstock').textContent = data.low_stock_products;
+            document.getElementById('stat-revenue').textContent = formatPrice(data.total_revenue);
+            document.getElementById('stat-orders').textContent = data.total_orders;
+            document.getElementById('stat-pending').textContent = data.pending_orders;
+            document.getElementById('stat-products').textContent = data.total_products;
+            document.getElementById('stat-lowstock').textContent = data.low_stock_products;
 
-        // Revenue chart
-        const ctx1 = document.getElementById('revenue-chart').getContext('2d');
-        const labels = data.daily_revenue.map(d => {
-            const dt = new Date(d.date);
-            return dt.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
-        });
-        const revenues = data.daily_revenue.map(d => parseFloat(d.revenue));
+            // Revenue chart
+            const ctx1 = document.getElementById('revenue-chart').getContext('2d');
+            const labels = data.daily_revenue.map(d => {
+                const dt = new Date(d.date);
+                return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+            });
+            const revenues = data.daily_revenue.map(d => parseFloat(d.revenue));
 
-        if (revenueChart) revenueChart.destroy();
-        revenueChart = new Chart(ctx1, {
-            type: 'line',
-            data: {
-                labels: labels.length ? labels : ['No data'],
-                datasets: [{
-                    label: 'Revenue (₹)',
-                    data: revenues.length ? revenues : [0],
-                    borderColor: '#000000',
-                    backgroundColor: 'rgba(0, 0, 0, 0.06)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#000000',
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#525252' } },
-                    y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#525252', callback: v => '₹' + v.toLocaleString() } }
-                }
-            }
-        });
-
-        // Status chart
-        const ctx2 = document.getElementById('status-chart').getContext('2d');
-        const statusLabels = data.status_breakdown.map(s => s.status);
-        const statusCounts = data.status_breakdown.map(s => s.count);
-        const statusColors = { pending: '#F59E0B', confirmed: '#3B82F6', shipped: '#22C55E', cancelled: '#EF4444' };
-
-        if (statusChart) statusChart.destroy();
-        statusChart = new Chart(ctx2, {
-            type: 'doughnut',
-            data: {
-                labels: statusLabels.length ? statusLabels : ['No orders'],
-                datasets: [{
-                    data: statusCounts.length ? statusCounts : [1],
-                    backgroundColor: statusLabels.length ? statusLabels.map(s => statusColors[s] || '#A3A3A3') : ['#E5E5E5'],
-                    borderWidth: 0,
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: '#525252', padding: 15, font: { size: 12 } } }
+            if (revenueChart) revenueChart.destroy();
+            revenueChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: labels.length ? labels : ['No data'],
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: revenues.length ? revenues : [0],
+                        borderColor: '#000000',
+                        backgroundColor: 'rgba(0, 0, 0, 0.06)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#000000',
+                    }]
                 },
-                cutout: '65%',
-            }
-        });
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#525252' } },
+                        y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#525252', callback: v => '₹' + v.toLocaleString() } }
+                    }
+                }
+            });
 
-        // Top products
-        const topList = document.getElementById('top-products-list');
-        if (topList && data.top_products.length > 0) {
-            topList.innerHTML = data.top_products.map((p, i) => `
+            // Status chart
+            const ctx2 = document.getElementById('status-chart').getContext('2d');
+            const statusLabels = data.status_breakdown.map(s => s.status);
+            const statusCounts = data.status_breakdown.map(s => s.count);
+            const statusColors = { pending: '#F59E0B', confirmed: '#3B82F6', shipped: '#22C55E', cancelled: '#EF4444' };
+
+            if (statusChart) statusChart.destroy();
+            statusChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: statusLabels.length ? statusLabels : ['No orders'],
+                    datasets: [{
+                        data: statusCounts.length ? statusCounts : [1],
+                        backgroundColor: statusLabels.length ? statusLabels.map(s => statusColors[s] || '#A3A3A3') : ['#E5E5E5'],
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#525252', padding: 15, font: { size: 12 } } }
+                    },
+                    cutout: '65%',
+                }
+            });
+
+            // Top products
+            const topList = document.getElementById('top-products-list');
+            if (topList && data.top_products.length > 0) {
+                topList.innerHTML = data.top_products.map((p, i) => `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; ${i < data.top_products.length - 1 ? 'border-bottom:1px solid var(--gray-200);' : ''}">
                     <div style="display:flex; align-items:center; gap:var(--space-md);">
-                        <span style="color:var(--black); font-weight:700; width:24px;">#${i+1}</span>
+                        <span style="color:var(--black); font-weight:700; width:24px;">#${i + 1}</span>
                         <span>${escapeHTML(p.product_name)}</span>
                     </div>
                     <div style="display:flex; gap:var(--space-xl); color:var(--text-secondary); font-size:0.9rem;">
@@ -436,163 +508,163 @@ async function loadOverview() {
                     </div>
                 </div>
             `).join('');
-        } else if (topList) {
-            topList.innerHTML = '<p class="text-muted">No sales data yet</p>';
-        }
-    } catch (err) {
-        console.error('Analytics error:', err);
-    }
-}
-
-// ─── Traffic Analytics ─────────────────────────
-let trafficChart = null;
-let deviceChart = null;
-
-async function loadTrafficData() {
-    try {
-        const data = await API.get('/store/admin/traffic/');
-        if (!data) return;
-
-        document.getElementById('traffic-total').textContent = data.total_views.toLocaleString();
-        document.getElementById('traffic-unique').textContent = data.unique_visitors.toLocaleString();
-        document.getElementById('traffic-today').textContent = data.today_views.toLocaleString();
-        document.getElementById('traffic-toppage').textContent = data.top_page || '—';
-
-        // Daily visitors chart
-        const tCtx = document.getElementById('traffic-chart').getContext('2d');
-        const tLabels = data.daily_views.map(d => {
-            const dt = new Date(d.date);
-            return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-        });
-        if (trafficChart) trafficChart.destroy();
-        trafficChart = new Chart(tCtx, {
-            type: 'line',
-            data: {
-                labels: tLabels.length ? tLabels : ['No data'],
-                datasets: [
-                    {
-                        label: 'Page Views',
-                        data: data.daily_views.map(d => d.views),
-                        borderColor: '#000000',
-                        backgroundColor: 'rgba(0,0,0,0.06)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#000000',
-                    },
-                    {
-                        label: 'Unique Visitors',
-                        data: data.daily_views.map(d => d.unique),
-                        borderColor: '#60a5fa',
-                        backgroundColor: 'rgba(96,165,250,0.08)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#60a5fa',
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { position: 'top', labels: { color: '#525252', font: { size: 12 } } } },
-                scales: {
-                    x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#999' } },
-                    y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#999' }, beginAtZero: true }
-                }
+            } else if (topList) {
+                topList.innerHTML = '<p class="text-muted">No sales data yet</p>';
             }
-        });
+        } catch (err) {
+            console.error('Analytics error:', err);
+        }
+    }
 
-        // Top pages table
-        const tBody = document.querySelector('#top-pages-table tbody');
-        tBody.innerHTML = data.top_pages.length
-            ? data.top_pages.map((p, i) => `
+    // ─── Traffic Analytics ─────────────────────────
+    let trafficChart = null;
+    let deviceChart = null;
+
+    async function loadTrafficData() {
+        try {
+            const data = await API.get('/store/admin/traffic/');
+            if (!data) return;
+
+            document.getElementById('traffic-total').textContent = data.total_views.toLocaleString();
+            document.getElementById('traffic-unique').textContent = data.unique_visitors.toLocaleString();
+            document.getElementById('traffic-today').textContent = data.today_views.toLocaleString();
+            document.getElementById('traffic-toppage').textContent = data.top_page || '—';
+
+            // Daily visitors chart
+            const tCtx = document.getElementById('traffic-chart').getContext('2d');
+            const tLabels = data.daily_views.map(d => {
+                const dt = new Date(d.date);
+                return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+            });
+            if (trafficChart) trafficChart.destroy();
+            trafficChart = new Chart(tCtx, {
+                type: 'line',
+                data: {
+                    labels: tLabels.length ? tLabels : ['No data'],
+                    datasets: [
+                        {
+                            label: 'Page Views',
+                            data: data.daily_views.map(d => d.views),
+                            borderColor: '#000000',
+                            backgroundColor: 'rgba(0,0,0,0.06)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#000000',
+                        },
+                        {
+                            label: 'Unique Visitors',
+                            data: data.daily_views.map(d => d.unique),
+                            borderColor: '#60a5fa',
+                            backgroundColor: 'rgba(96,165,250,0.08)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#60a5fa',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top', labels: { color: '#525252', font: { size: 12 } } } },
+                    scales: {
+                        x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#999' } },
+                        y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#999' }, beginAtZero: true }
+                    }
+                }
+            });
+
+            // Top pages table
+            const tBody = document.querySelector('#top-pages-table tbody');
+            tBody.innerHTML = data.top_pages.length
+                ? data.top_pages.map((p, i) => `
                 <tr>
                     <td style="color:var(--gold); font-weight:700; width:28px;">${i + 1}</td>
                     <td class="page-path">${escapeHTML(p.path)}</td>
                     <td class="page-count">${p.count.toLocaleString()}</td>
                 </tr>`).join('')
-            : '<tr><td colspan="3" style="color:var(--text-muted); padding:1rem;">No data yet — browse the site first</td></tr>';
+                : '<tr><td colspan="3" style="color:var(--text-muted); padding:1rem;">No data yet — browse the site first</td></tr>';
 
-        // Device doughnut
-        const dCtx = document.getElementById('device-chart').getContext('2d');
-        const { mobile, desktop, tablet } = data.device_breakdown;
-        if (deviceChart) deviceChart.destroy();
-        deviceChart = new Chart(dCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Desktop', 'Mobile', 'Tablet'],
-                datasets: [{
-                    data: [desktop, mobile, tablet],
-                    backgroundColor: ['#262626', '#A3A3A3', '#E5E5E5'],
-                    borderWidth: 0,
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: '#525252', padding: 16, font: { size: 12 } } }
+            // Device doughnut
+            const dCtx = document.getElementById('device-chart').getContext('2d');
+            const { mobile, desktop, tablet } = data.device_breakdown;
+            if (deviceChart) deviceChart.destroy();
+            deviceChart = new Chart(dCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Desktop', 'Mobile', 'Tablet'],
+                    datasets: [{
+                        data: [desktop, mobile, tablet],
+                        backgroundColor: ['#262626', '#A3A3A3', '#E5E5E5'],
+                        borderWidth: 0,
+                    }]
                 },
-                cutout: '65%',
-            }
-        });
-    } catch (err) {
-        console.error('Traffic error:', err);
-    }
-}
-
-let allProducts = [];   // full product list for client-side sort/filter
-let allOrders = [];     // full order list for client-side sort/filter
-
-// ─── Products CRUD ─────────────────────────────
-async function loadAdminProducts() {
-    try {
-        const data = await API.get('/store/admin/products/');
-        if (!data) return;
-        allProducts = data.results || data;
-        applyProductFilters();
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-function applyProductFilters() {
-    const search = (document.getElementById('product-search')?.value || '').toLowerCase();
-    const sort = document.getElementById('product-sort')?.value || 'name-asc';
-
-    let filtered = allProducts.filter(p => {
-        const haystack = `${p.name} ${p.category_name || ''} ${p.material || ''}`.toLowerCase();
-        return haystack.includes(search);
-    });
-
-    // Sort
-    const [key, dir] = sort.split('-');
-    filtered.sort((a, b) => {
-        let va, vb;
-        switch (key) {
-            case 'name':     va = (a.name || '').toLowerCase(); vb = (b.name || '').toLowerCase(); break;
-            case 'price':    va = parseFloat(a.price) || 0; vb = parseFloat(b.price) || 0; break;
-            case 'stock':    va = a.stock ?? 0; vb = b.stock ?? 0; break;
-            case 'category': va = (a.category_name || '').toLowerCase(); vb = (b.category_name || '').toLowerCase(); break;
-            default:         va = (a.name || '').toLowerCase(); vb = (b.name || '').toLowerCase();
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#525252', padding: 16, font: { size: 12 } } }
+                    },
+                    cutout: '65%',
+                }
+            });
+        } catch (err) {
+            console.error('Traffic error:', err);
         }
-        if (va < vb) return dir === 'asc' ? -1 : 1;
-        if (va > vb) return dir === 'asc' ? 1 : -1;
-        return 0;
-    });
-
-    renderProducts(filtered);
-}
-
-function renderProducts(products) {
-    const countEl = document.getElementById('product-count');
-    if (countEl) countEl.textContent = `${products.length} of ${allProducts.length} products`;
-
-    const tbody = document.getElementById('products-tbody');
-    if (products.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">No products match your search</td></tr>';
-        return;
     }
-    tbody.innerHTML = products.map(p => `
+
+    let allProducts = [];   // full product list for client-side sort/filter
+    let allOrders = [];     // full order list for client-side sort/filter
+
+    // ─── Products CRUD ─────────────────────────────
+    async function loadAdminProducts() {
+        try {
+            const data = await API.get('/store/admin/products/');
+            if (!data) return;
+            allProducts = data.results || data;
+            applyProductFilters();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function applyProductFilters() {
+        const search = (document.getElementById('product-search')?.value || '').toLowerCase();
+        const sort = document.getElementById('product-sort')?.value || 'name-asc';
+
+        let filtered = allProducts.filter(p => {
+            const haystack = `${p.name} ${p.category_name || ''} ${p.material || ''}`.toLowerCase();
+            return haystack.includes(search);
+        });
+
+        // Sort
+        const [key, dir] = sort.split('-');
+        filtered.sort((a, b) => {
+            let va, vb;
+            switch (key) {
+                case 'name': va = (a.name || '').toLowerCase(); vb = (b.name || '').toLowerCase(); break;
+                case 'price': va = parseFloat(a.price) || 0; vb = parseFloat(b.price) || 0; break;
+                case 'stock': va = a.stock ?? 0; vb = b.stock ?? 0; break;
+                case 'category': va = (a.category_name || '').toLowerCase(); vb = (b.category_name || '').toLowerCase(); break;
+                default: va = (a.name || '').toLowerCase(); vb = (b.name || '').toLowerCase();
+            }
+            if (va < vb) return dir === 'asc' ? -1 : 1;
+            if (va > vb) return dir === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        renderProducts(filtered);
+    }
+
+    function renderProducts(products) {
+        const countEl = document.getElementById('product-count');
+        if (countEl) countEl.textContent = `${products.length} of ${allProducts.length} products`;
+
+        const tbody = document.getElementById('products-tbody');
+        if (products.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">No products match your search</td></tr>';
+            return;
+        }
+        tbody.innerHTML = products.map(p => `
         <tr>
             <td>
                 <div style="display:flex; align-items:center; gap:var(--space-md);">
@@ -615,203 +687,203 @@ function renderProducts(products) {
             </td>
         </tr>
     `).join('');
-}
-
-async function loadCategoryOptions() {
-    try {
-        const cats = await API.get('/store/categories/');
-        allCategories = cats || [];
-        const sel = document.getElementById('pf-category');
-        sel.innerHTML = allCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-    } catch {}
-}
-
-function openProductModal(product = null) {
-    loadCategoryOptions();
-    const form = document.getElementById('product-form');
-    form.reset();
-    document.getElementById('product-edit-id').value = '';
-    
-    // Reset preview
-    const preview = document.getElementById('pf-image-preview');
-    const img = preview.querySelector('img');
-    preview.style.display = 'none';
-    img.src = '';
-    document.getElementById('pf-image-file').value = '';
-
-    if (product) {
-        document.getElementById('product-modal-title').textContent = 'Edit Product';
-        document.getElementById('product-edit-id').value = product.id;
-        document.getElementById('pf-name').value = product.name;
-        document.getElementById('pf-desc').value = product.description;
-        document.getElementById('pf-price').value = product.price;
-        document.getElementById('pf-compare').value = product.compare_price || '';
-        document.getElementById('pf-stock').value = product.stock;
-        document.getElementById('pf-image').value = product.image_url || '';
-        document.getElementById('pf-material').value = product.material || '';
-        document.getElementById('pf-weight').value = product.weight || '';
-        document.getElementById('pf-active').checked = product.is_active;
-        document.getElementById('pf-featured').checked = product.is_featured;
-
-        // Show existing image preview if available
-        const existingImg = product.display_image || product.image_url;
-        if (existingImg) {
-            img.src = existingImg;
-            preview.style.display = 'block';
-        }
-
-        setTimeout(() => {
-            document.getElementById('pf-category').value = product.category;
-        }, 200);
-    } else {
-        document.getElementById('product-modal-title').textContent = 'Add Product';
     }
-    openModal('product-modal');
-}
 
-// Image preview logic — stores base64 for later submission
-let pendingImageBase64 = null;
+    async function loadCategoryOptions() {
+        try {
+            const cats = await API.get('/store/categories/');
+            allCategories = cats || [];
+            const sel = document.getElementById('pf-category');
+            sel.innerHTML = allCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        } catch { }
+    }
 
-document.getElementById('pf-image-file').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    const preview = document.getElementById('pf-image-preview');
-    const img = preview.querySelector('img');
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            pendingImageBase64 = e.target.result; // store the base64 data URL
-            img.src = pendingImageBase64;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    } else {
-        pendingImageBase64 = null;
+    function openProductModal(product = null) {
+        loadCategoryOptions();
+        const form = document.getElementById('product-form');
+        form.reset();
+        document.getElementById('product-edit-id').value = '';
+
+        // Reset preview
+        const preview = document.getElementById('pf-image-preview');
+        const img = preview.querySelector('img');
         preview.style.display = 'none';
-    }
-});
+        img.src = '';
+        document.getElementById('pf-image-file').value = '';
 
-document.getElementById('product-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const editId = document.getElementById('product-edit-id').value;
-    const btn = document.getElementById('product-submit-btn');
-    btn.disabled = true;
-    btn.textContent = 'Saving...';
+        if (product) {
+            document.getElementById('product-modal-title').textContent = 'Edit Product';
+            document.getElementById('product-edit-id').value = product.id;
+            document.getElementById('pf-name').value = product.name;
+            document.getElementById('pf-desc').value = product.description;
+            document.getElementById('pf-price').value = product.price;
+            document.getElementById('pf-compare').value = product.compare_price || '';
+            document.getElementById('pf-stock').value = product.stock;
+            document.getElementById('pf-image').value = product.image_url || '';
+            document.getElementById('pf-material').value = product.material || '';
+            document.getElementById('pf-weight').value = product.weight || '';
+            document.getElementById('pf-active').checked = product.is_active;
+            document.getElementById('pf-featured').checked = product.is_featured;
 
-    // Build JSON payload (no FormData / no multipart file upload)
-    const payload = {
-        name: document.getElementById('pf-name').value,
-        description: document.getElementById('pf-desc').value,
-        price: document.getElementById('pf-price').value,
-        stock: document.getElementById('pf-stock').value,
-        category: document.getElementById('pf-category').value,
-        material: document.getElementById('pf-material').value,
-        weight: document.getElementById('pf-weight').value,
-        is_active: document.getElementById('pf-active').checked,
-        is_featured: document.getElementById('pf-featured').checked,
-    };
+            // Show existing image preview if available
+            const existingImg = product.display_image || product.image_url;
+            if (existingImg) {
+                img.src = existingImg;
+                preview.style.display = 'block';
+            }
 
-    const comparePrice = document.getElementById('pf-compare').value;
-    if (comparePrice) payload.compare_price = comparePrice;
-
-    // Image priority: uploaded file (as base64) > typed URL > keep existing
-    if (pendingImageBase64) {
-        payload.image_url = pendingImageBase64;
-    } else {
-        const imageUrl = document.getElementById('pf-image').value;
-        if (imageUrl) payload.image_url = imageUrl;
-    }
-
-    let res;
-    if (editId) {
-        res = await API.patch(`/store/admin/products/${editId}/`, payload);
-    } else {
-        res = await API.post('/store/admin/products/', payload);
-    }
-
-    if (res && res.ok) {
-        Toast.success(editId ? 'Product updated!' : 'Product created!');
-        closeModal('product-modal');
-        loadAdminProducts();
-        pendingImageBase64 = null; // reset
-    } else {
-        Toast.error(JSON.stringify(res?.data) || 'Failed to save product.');
-    }
-    btn.disabled = false;
-    btn.textContent = 'Save Product';
-});
-
-async function editProduct(id) {
-    const res = await API.get(`/store/admin/products/${id}/`);
-    if (res) openProductModal(res);
-}
-
-async function deleteProduct(id, name) {
-    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
-    const res = await API.request(`/store/admin/products/${id}/`, { method: 'DELETE' });
-    if (res && res.ok) {
-        Toast.success('Product deleted');
-        loadAdminProducts();
-    } else {
-        Toast.error('Failed to delete product.');
-    }
-}
-
-// ─── Orders Management ────────────────────────
-async function loadAdminOrders() {
-    try {
-        const data = await API.get('/store/admin/orders/');
-        if (!data) return;
-        allOrders = data.results || data;
-        applyOrderFilters();
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-function applyOrderFilters() {
-    const search = (document.getElementById('order-search')?.value || '').toLowerCase();
-    const sort = document.getElementById('order-sort')?.value || 'date-desc';
-    const statusFilter = document.getElementById('order-status-filter')?.value || 'all';
-
-    let filtered = allOrders.filter(o => {
-        if (statusFilter !== 'all' && o.status !== statusFilter) return false;
-        const haystack = `${o.order_number || ''} ${o.shipping_address || ''} ${o.status || ''}`.toLowerCase();
-        return haystack.includes(search);
-    });
-
-    // Sort
-    const [key, dir] = sort.split('-');
-    filtered.sort((a, b) => {
-        let va, vb;
-        switch (key) {
-            case 'date':   va = new Date(a.created_at).getTime(); vb = new Date(b.created_at).getTime(); break;
-            case 'amount': va = parseFloat(a.total_amount) || 0; vb = parseFloat(b.total_amount) || 0; break;
-            case 'status': va = (a.status || '').toLowerCase(); vb = (b.status || '').toLowerCase(); break;
-            case 'order':  va = (a.order_number || '').toLowerCase(); vb = (b.order_number || '').toLowerCase(); break;
-            default:       va = new Date(a.created_at).getTime(); vb = new Date(b.created_at).getTime();
+            setTimeout(() => {
+                document.getElementById('pf-category').value = product.category;
+            }, 200);
+        } else {
+            document.getElementById('product-modal-title').textContent = 'Add Product';
         }
-        if (va < vb) return dir === 'asc' ? -1 : 1;
-        if (va > vb) return dir === 'asc' ? 1 : -1;
-        return 0;
+        openModal('product-modal');
+    }
+
+    // Image preview logic — stores base64 for later submission
+    let pendingImageBase64 = null;
+
+    document.getElementById('pf-image-file').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('pf-image-preview');
+        const img = preview.querySelector('img');
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                pendingImageBase64 = e.target.result; // store the base64 data URL
+                img.src = pendingImageBase64;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            pendingImageBase64 = null;
+            preview.style.display = 'none';
+        }
     });
 
-    renderOrders(filtered);
-}
+    document.getElementById('product-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const editId = document.getElementById('product-edit-id').value;
+        const btn = document.getElementById('product-submit-btn');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
 
-function renderOrders(orders) {
-    const countEl = document.getElementById('order-count');
-    if (countEl) countEl.textContent = `${orders.length} of ${allOrders.length} orders`;
+        // Build JSON payload (no FormData / no multipart file upload)
+        const payload = {
+            name: document.getElementById('pf-name').value,
+            description: document.getElementById('pf-desc').value,
+            price: document.getElementById('pf-price').value,
+            stock: document.getElementById('pf-stock').value,
+            category: document.getElementById('pf-category').value,
+            material: document.getElementById('pf-material').value,
+            weight: document.getElementById('pf-weight').value,
+            is_active: document.getElementById('pf-active').checked,
+            is_featured: document.getElementById('pf-featured').checked,
+        };
 
-    const tbody = document.getElementById('orders-tbody');
-    if (orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">No orders match your filters</td></tr>';
-        return;
+        const comparePrice = document.getElementById('pf-compare').value;
+        if (comparePrice) payload.compare_price = comparePrice;
+
+        // Image priority: uploaded file (as base64) > typed URL > keep existing
+        if (pendingImageBase64) {
+            payload.image_url = pendingImageBase64;
+        } else {
+            const imageUrl = document.getElementById('pf-image').value;
+            if (imageUrl) payload.image_url = imageUrl;
+        }
+
+        let res;
+        if (editId) {
+            res = await API.patch(`/store/admin/products/${editId}/`, payload);
+        } else {
+            res = await API.post('/store/admin/products/', payload);
+        }
+
+        if (res && res.ok) {
+            Toast.success(editId ? 'Product updated!' : 'Product created!');
+            closeModal('product-modal');
+            loadAdminProducts();
+            pendingImageBase64 = null; // reset
+        } else {
+            Toast.error(JSON.stringify(res?.data) || 'Failed to save product.');
+        }
+        btn.disabled = false;
+        btn.textContent = 'Save Product';
+    });
+
+    async function editProduct(id) {
+        const res = await API.get(`/store/admin/products/${id}/`);
+        if (res) openProductModal(res);
     }
-    tbody.innerHTML = orders.map(o => {
-        const dt = new Date(o.created_at);
-        const date = dt.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
-        const time = dt.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
-        return `
+
+    async function deleteProduct(id, name) {
+        if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+        const res = await API.request(`/store/admin/products/${id}/`, { method: 'DELETE' });
+        if (res && res.ok) {
+            Toast.success('Product deleted');
+            loadAdminProducts();
+        } else {
+            Toast.error('Failed to delete product.');
+        }
+    }
+
+    // ─── Orders Management ────────────────────────
+    async function loadAdminOrders() {
+        try {
+            const data = await API.get('/store/admin/orders/');
+            if (!data) return;
+            allOrders = data.results || data;
+            applyOrderFilters();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function applyOrderFilters() {
+        const search = (document.getElementById('order-search')?.value || '').toLowerCase();
+        const sort = document.getElementById('order-sort')?.value || 'date-desc';
+        const statusFilter = document.getElementById('order-status-filter')?.value || 'all';
+
+        let filtered = allOrders.filter(o => {
+            if (statusFilter !== 'all' && o.status !== statusFilter) return false;
+            const haystack = `${o.order_number || ''} ${o.shipping_address || ''} ${o.status || ''}`.toLowerCase();
+            return haystack.includes(search);
+        });
+
+        // Sort
+        const [key, dir] = sort.split('-');
+        filtered.sort((a, b) => {
+            let va, vb;
+            switch (key) {
+                case 'date': va = new Date(a.created_at).getTime(); vb = new Date(b.created_at).getTime(); break;
+                case 'amount': va = parseFloat(a.total_amount) || 0; vb = parseFloat(b.total_amount) || 0; break;
+                case 'status': va = (a.status || '').toLowerCase(); vb = (b.status || '').toLowerCase(); break;
+                case 'order': va = (a.order_number || '').toLowerCase(); vb = (b.order_number || '').toLowerCase(); break;
+                default: va = new Date(a.created_at).getTime(); vb = new Date(b.created_at).getTime();
+            }
+            if (va < vb) return dir === 'asc' ? -1 : 1;
+            if (va > vb) return dir === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        renderOrders(filtered);
+    }
+
+    function renderOrders(orders) {
+        const countEl = document.getElementById('order-count');
+        if (countEl) countEl.textContent = `${orders.length} of ${allOrders.length} orders`;
+
+        const tbody = document.getElementById('orders-tbody');
+        if (orders.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">No orders match your filters</td></tr>';
+            return;
+        }
+        tbody.innerHTML = orders.map(o => {
+            const dt = new Date(o.created_at);
+            const date = dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+            const time = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+            return `
             <tr>
                 <td><span style="font-weight:700;">${escapeHTML(o.order_number)}</span></td>
                 <td>${escapeHTML(o.shipping_address?.split(',')[0] || '—')}</td>
@@ -827,94 +899,94 @@ function renderOrders(orders) {
                     </div>
                 </td>
             </tr>`;
-    }).join('');
-}
-
-function openOrderStatusModal(orderId, currentStatus) {
-    document.getElementById('order-edit-id').value = orderId;
-    document.getElementById('order-status-select').value = currentStatus;
-    openModal('order-modal');
-}
-
-async function updateOrderStatus() {
-    const orderId = document.getElementById('order-edit-id').value;
-    const newStatus = document.getElementById('order-status-select').value;
-    const res = await API.patch(`/store/admin/orders/${orderId}/status/`, { status: newStatus });
-    if (res && res.ok) {
-        Toast.success(`Order updated to ${newStatus}`);
-        closeModal('order-modal');
-        loadAdminOrders();
-        loadOverview();
-    } else {
-        Toast.error(res?.data?.error || 'Failed to update order.');
+        }).join('');
     }
-}
 
-async function deleteOrder(id, orderNumber) {
-    if (!confirm(`Delete order ${orderNumber}? This will remove it permanently.`)) return;
-    const res = await API.request(`/store/admin/orders/${id}/`, { method: 'DELETE' });
-    if (res && res.ok) {
-        Toast.success('Order deleted');
-        loadAdminOrders();
-        loadOverview();
-    } else {
-        Toast.error('Failed to delete order.');
+    function openOrderStatusModal(orderId, currentStatus) {
+        document.getElementById('order-edit-id').value = orderId;
+        document.getElementById('order-status-select').value = currentStatus;
+        openModal('order-modal');
     }
-}
 
-function openTrackingModal(orderId) {
-    document.getElementById('tracking-form').reset();
-    document.getElementById('tracking-order-id').value = orderId;
-    openModal('tracking-modal');
-}
+    async function updateOrderStatus() {
+        const orderId = document.getElementById('order-edit-id').value;
+        const newStatus = document.getElementById('order-status-select').value;
+        const res = await API.patch(`/store/admin/orders/${orderId}/status/`, { status: newStatus });
+        if (res && res.ok) {
+            Toast.success(`Order updated to ${newStatus}`);
+            closeModal('order-modal');
+            loadAdminOrders();
+            loadOverview();
+        } else {
+            Toast.error(res?.data?.error || 'Failed to update order.');
+        }
+    }
 
-document.getElementById('tracking-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('track-submit-btn');
-    btn.disabled = true;
-    btn.textContent = 'Uploading...';
-    
-    const orderId = document.getElementById('tracking-order-id').value;
-    const file = document.getElementById('track-image-file').files[0];
-    const trackingId = document.getElementById('track-id-input').value.trim();
+    async function deleteOrder(id, orderNumber) {
+        if (!confirm(`Delete order ${orderNumber}? This will remove it permanently.`)) return;
+        const res = await API.request(`/store/admin/orders/${id}/`, { method: 'DELETE' });
+        if (res && res.ok) {
+            Toast.success('Order deleted');
+            loadAdminOrders();
+            loadOverview();
+        } else {
+            Toast.error('Failed to delete order.');
+        }
+    }
 
-    if (!file && !trackingId) {
-        Toast.error('Provide tracking ID or image.');
+    function openTrackingModal(orderId) {
+        document.getElementById('tracking-form').reset();
+        document.getElementById('tracking-order-id').value = orderId;
+        openModal('tracking-modal');
+    }
+
+    document.getElementById('tracking-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('track-submit-btn');
+        btn.disabled = true;
+        btn.textContent = 'Uploading...';
+
+        const orderId = document.getElementById('tracking-order-id').value;
+        const file = document.getElementById('track-image-file').files[0];
+        const trackingId = document.getElementById('track-id-input').value.trim();
+
+        if (!file && !trackingId) {
+            Toast.error('Provide tracking ID or image.');
+            btn.disabled = false;
+            btn.textContent = 'Upload';
+            return;
+        }
+
+        const formData = new FormData();
+        if (file) formData.append('tracking_image', file);
+        if (trackingId) formData.append('tracking_id', trackingId);
+
+        const res = await API.request(`/store/admin/orders/${orderId}/tracking/`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (res && res.ok) {
+            Toast.success('Tracking image uploaded.');
+            closeModal('tracking-modal');
+            loadAdminOrders();
+            loadOverview();
+        } else {
+            const err = await API.parseResponse(res);
+            Toast.error(err?.error || 'Failed to upload tracking image.');
+        }
         btn.disabled = false;
         btn.textContent = 'Upload';
-        return;
-    }
-
-    const formData = new FormData();
-    if (file) formData.append('tracking_image', file);
-    if (trackingId) formData.append('tracking_id', trackingId);
-
-    const res = await API.request(`/store/admin/orders/${orderId}/tracking/`, {
-        method: 'POST',
-        body: formData,
     });
 
-    if (res && res.ok) {
-        Toast.success('Tracking image uploaded.');
-        closeModal('tracking-modal');
-        loadAdminOrders();
-        loadOverview();
-    } else {
-        const err = await API.parseResponse(res);
-        Toast.error(err?.error || 'Failed to upload tracking image.');
-    }
-    btn.disabled = false;
-    btn.textContent = 'Upload';
-});
-
-// ─── Categories Management ─────────────────────
-async function loadAdminCategories() {
-    try {
-        const cats = await API.get('/store/categories/');
-        if (!cats) return;
-        allCategories = cats;
-        const container = document.getElementById('categories-list');
-        container.innerHTML = cats.map(c => `
+    // ─── Categories Management ─────────────────────
+    async function loadAdminCategories() {
+        try {
+            const cats = await API.get('/store/categories/');
+            if (!cats) return;
+            allCategories = cats;
+            const container = document.getElementById('categories-list');
+            container.innerHTML = cats.map(c => `
             <div class="util-card flex-wrap-mobile" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--space-md);">
                 <div>
                     <div style="font-weight:600; font-size:1.05rem;">${escapeHTML(c.name)}</div>
@@ -926,71 +998,70 @@ async function loadAdminCategories() {
                 </div>
             </div>
         `).join('');
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-function openCategoryModal(cat = null) {
-    document.getElementById('category-form').reset();
-    document.getElementById('cat-edit-id').value = '';
-    if (cat) {
-        document.getElementById('category-modal-title').textContent = 'Edit Category';
-        document.getElementById('cat-edit-id').value = cat.id;
-        document.getElementById('cf-name').value = cat.name;
-        document.getElementById('cf-desc').value = cat.description || '';
-    } else {
-        document.getElementById('category-modal-title').textContent = 'Add Category';
-    }
-    openModal('category-modal');
-}
-
-function editCategory(id, name, desc) {
-    openCategoryModal({ id, name, description: desc });
-}
-
-document.getElementById('category-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const editId = document.getElementById('cat-edit-id').value;
-    const data = {
-        name: document.getElementById('cf-name').value,
-        description: document.getElementById('cf-desc').value,
-    };
-
-    let res;
-    if (editId) {
-        res = await API.request(`/store/admin/categories/${editId}/`, {
-            method: 'PUT',
-            body: JSON.stringify(data),
-            headers: { 'Content-Type': 'application/json' }
-        });
-    } else {
-        res = await API.request('/store/admin/categories/', {
-            method: 'POST',
-            body: JSON.stringify(data),
-            headers: { 'Content-Type': 'application/json' }
-        });
+        } catch (err) {
+            console.error(err);
+        }
     }
 
-    if (res && res.ok) {
-        Toast.success(editId ? 'Category updated!' : 'Category created!');
-        closeModal('category-modal');
-        loadAdminCategories();
-    } else {
-        Toast.error('Failed to save category.');
+    function openCategoryModal(cat = null) {
+        document.getElementById('category-form').reset();
+        document.getElementById('cat-edit-id').value = '';
+        if (cat) {
+            document.getElementById('category-modal-title').textContent = 'Edit Category';
+            document.getElementById('cat-edit-id').value = cat.id;
+            document.getElementById('cf-name').value = cat.name;
+            document.getElementById('cf-desc').value = cat.description || '';
+        } else {
+            document.getElementById('category-modal-title').textContent = 'Add Category';
+        }
+        openModal('category-modal');
     }
-});
 
-async function deleteCategory(id, name) {
-    if (!confirm(`Delete category "${name}"? Products in this category may be affected.`)) return;
-    const res = await API.request(`/store/admin/categories/${id}/`, { method: 'DELETE' });
-    if (res && res.ok) {
-        Toast.success('Category deleted');
-        loadAdminCategories();
-    } else {
-        Toast.error('Failed to delete category. Remove associated products first.');
+    function editCategory(id, name, desc) {
+        openCategoryModal({ id, name, description: desc });
     }
-}
+
+    document.getElementById('category-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const editId = document.getElementById('cat-edit-id').value;
+        const data = {
+            name: document.getElementById('cf-name').value,
+            description: document.getElementById('cf-desc').value,
+        };
+
+        let res;
+        if (editId) {
+            res = await API.request(`/store/admin/categories/${editId}/`, {
+                method: 'PUT',
+                body: JSON.stringify(data),
+                headers: { 'Content-Type': 'application/json' }
+            });
+        } else {
+            res = await API.request('/store/admin/categories/', {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        if (res && res.ok) {
+            Toast.success(editId ? 'Category updated!' : 'Category created!');
+            closeModal('category-modal');
+            loadAdminCategories();
+        } else {
+            Toast.error('Failed to save category.');
+        }
+    });
+
+    async function deleteCategory(id, name) {
+        if (!confirm(`Delete category "${name}"? Products in this category may be affected.`)) return;
+        const res = await API.request(`/store/admin/categories/${id}/`, { method: 'DELETE' });
+        if (res && res.ok) {
+            Toast.success('Category deleted');
+            loadAdminCategories();
+        } else {
+            Toast.error('Failed to delete category. Remove associated products first.');
+        }
+    }
 </script>
 {% endblock %}
-

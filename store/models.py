@@ -235,9 +235,9 @@ class Order(models.Model):
 
         super().save(*args, **kwargs)
 
-        # ✅ Email notifications are now handled asynchronously via:
-        #    store/signals.py → post_save signal → Celery task
-        #    (see core/tasks.py → task_send_order_status_email)
+        # Email notifications are now handled asynchronously via:
+        # store/signals.py → post_save signal → Celery task
+        # (see core/tasks.py → task_send_order_status_email)
         #
         # The signal reads _original_status to detect changes and
         # dispatches the task with .delay() so SMTP never blocks the request.

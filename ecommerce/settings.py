@@ -24,10 +24,10 @@ load_dotenv(BASE_DIR / ".env")
 # CRITICAL: SECRET KEY & DEBUG MODE
 # ─────────────────────────────────────────────────────────────────────────────
 
-# 🔴 SECURITY REQUIREMENT: DEBUG must be False in production
+#SECURITY REQUIREMENT: DEBUG must be False in production
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
-# 🔴 SECURITY REQUIREMENT: SECRET_KEY MUST be set in environment
+#SECURITY REQUIREMENT: SECRET_KEY MUST be set in environment
 # Using a fallback for Vercel build/startup to prevent crashes.
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-6(3t2fzxqke&1i9$47p5#z9*40vk^2po@09z-m$12qk1g=+*ye")
 
@@ -64,17 +64,17 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    # ✅ Security middleware stack (order matters)
+    #Security middleware stack (order matters)
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",          # ✅ CSRF protection
+    "django.middleware.csrf.CsrfViewMiddleware",          #CSRF protection
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",  # ✅ Clickjacking
-    # ✅ Custom: Permissions-Policy, Referrer-Policy, CORP/COOP, X-Request-ID
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",  #Clickjacking
+    #Custom: Permissions-Policy, Referrer-Policy, CORP/COOP, X-Request-ID
     "core.middleware.SecurityHeadersMiddleware",
     # Traffic tracking (must be after AuthenticationMiddleware)
     "store.traffic_middleware.TrafficMiddleware",
@@ -96,7 +96,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
-            # ✅ Enforce template auto-escaping (XSS prevention)
+            #Enforce template auto-escaping (XSS prevention)
             "autoescape": True,
         },
     },
@@ -163,17 +163,17 @@ if os.getenv("DB_USE_POOLER", "false").lower() in ("1", "true", "yes"):
 # AUTHENTICATION & USER MODEL
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ✅ Custom user model with RBAC support
+#Custom user model with RBAC support
 AUTH_USER_MODEL = "accounts.User"
 
-# ✅ Password hashing: Argon2 (primary), bcrypt (fallback)
+#Password hashing: Argon2 (primary), bcrypt (fallback)
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.Argon2PasswordHasher",  # Industry standard
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
     "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
 ]
 
-# ✅ Strict password validation
+#Strict password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
@@ -186,13 +186,13 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# ✅ Session security
+#Session security
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 SESSION_CACHE_ALIAS = "default"
 SESSION_COOKIE_AGE = 3600  # 1 hour
 SESSION_COOKIE_SECURE = not DEBUG  # HTTPS only in production
-SESSION_COOKIE_HTTPONLY = True  # ✅ Prevent JS access (XSS protection)
-SESSION_COOKIE_SAMESITE = "Lax"  # ✅ Compatibility with Vercel/Supabase auth
+SESSION_COOKIE_HTTPONLY = True  #Prevent JS access (XSS protection)
+SESSION_COOKIE_SAMESITE = "Lax"  #Compatibility with Vercel/Supabase auth
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -200,18 +200,18 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # ─────────────────────────────────────────────────────────────────────────────
 
 REST_FRAMEWORK = {
-    # ✅ Authentication (JWT cookie/header auth with CSRF enforcement)
+    #Authentication (JWT cookie/header auth with CSRF enforcement)
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "accounts.authentication.CookieJWTAuthentication",
     ],
-    # ✅ Default to authenticated-only access (opt-in to AllowAny)
+    #Default to authenticated-only access (opt-in to AllowAny)
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
-    # ✅ API Pagination
+    #API Pagination
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 12,
-    # ✅ Global throttling (rate limiting)
+    #Global throttling (rate limiting)
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
@@ -220,7 +220,7 @@ REST_FRAMEWORK = {
         "anon": "50/minute",  # Tighter for anonymous users
         "user": "100/minute",
     },
-    # ✅ API versioning (future-proof)
+    #API versioning (future-proof)
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.AcceptHeaderVersioning",
 }
 
@@ -229,18 +229,18 @@ REST_FRAMEWORK = {
 # ─────────────────────────────────────────────────────────────────────────────
 
 SIMPLE_JWT = {
-    # ✅ Short-lived access tokens (30 minutes)
+    #Short-lived access tokens (30 minutes)
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
-    # ✅ Longer-lived refresh tokens (7 days)
+    #Longer-lived refresh tokens (7 days)
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-    # ✅ Rotate refresh tokens on each use (token freshness)
+    #Rotate refresh tokens on each use (token freshness)
     "ROTATE_REFRESH_TOKENS": True,
-    # ✅ Blacklist old tokens after rotation (prevent reuse)
+    #Blacklist old tokens after rotation (prevent reuse)
     "BLACKLIST_AFTER_ROTATION": True,
-    # ✅ Standard Bearer token scheme
+    #Standard Bearer token scheme
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
-    # ✅ Sign tokens with HS256 (default; use RS256 for external verification)
+    #Sign tokens with HS256 (default; use RS256 for external verification)
     "ALGORITHM": "HS256",
     "UPDATE_LAST_LOGIN": True,
     "LEEWAY": 30,
@@ -259,8 +259,8 @@ SIMPLE_JWT = {
 # ─────────────────────────────────────────────────────────────────────────────
 
 CSRF_COOKIE_SECURE = not DEBUG  # HTTPS only in production
-CSRF_COOKIE_HTTPONLY = True  # ✅ Prevent XSS access to CSRF token
-CSRF_COOKIE_SAMESITE = "Lax"  # ✅ Compatibility with cross-domain requests
+CSRF_COOKIE_HTTPONLY = True  #Prevent XSS access to CSRF token
+CSRF_COOKIE_SAMESITE = "Lax"  #Compatibility with cross-domain requests
 CSRF_TRUSTED_ORIGINS = (
     os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:8000").split(",")
 )
@@ -269,21 +269,21 @@ CSRF_TRUSTED_ORIGINS = (
 # SECURITY HEADERS
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ✅ Prevent browser MIME type sniffing
+#Prevent browser MIME type sniffing
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
-# ✅ Prevent clickjacking attacks
+#Prevent clickjacking attacks
 X_FRAME_OPTIONS = "DENY"
 
-# ✅ Enable browser XSS filter
+#Enable browser XSS filter
 SECURE_BROWSER_XSS_FILTER = True
 
-# ✅ Content Security Policy
+#Content Security Policy
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0  # 1 year in production
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_HSTS_PRELOAD = not DEBUG
 
-# ✅ HTTPS enforcement in production
+#HTTPS enforcement in production
 SECURE_SSL_REDIRECT = not DEBUG
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -310,7 +310,7 @@ USE_TZ = True
 # EMAIL CONFIGURATION (Secure)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ✅ Use console backend for development, SMTP for production
+#Use console backend for development, SMTP for production
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
@@ -354,7 +354,7 @@ STATIC_HOST = os.getenv("STATIC_HOST", "")
 if STATIC_HOST:
     STATIC_URL = f"{STATIC_HOST.rstrip('/')}/static/"
 
-# ✅ Use WhiteNoise for efficient static file serving (Django 4.2+ STORAGES API)
+#Use WhiteNoise for efficient static file serving (Django 4.2+ STORAGES API)
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -412,7 +412,7 @@ if os.getenv("USE_LOCAL_CACHE") == "true" or not os.getenv("REDIS_URL"):
     }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# LOGGING CONFIGURATION (Vercel Compatible)
+# LOGGING CONFIGURATION
 # ─────────────────────────────────────────────────────────────────────────────
 
 LOGGING = {
