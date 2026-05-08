@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.db.models import F, Sum
 from django.conf import settings
 from django.utils.text import slugify
 from django.utils import timezone
@@ -132,7 +133,15 @@ class Cart(models.Model):
 
     @property
     def total(self):
-        return sum(item.subtotal for item in self.items.all())
+        subtotal_expr = models.ExpressionWrapper(
+            F("quantity") * F("product__price"),
+            output_field=models.DecimalField(max_digits=12, decimal_places=2),
+        )
+        result = (
+            self.items.filter(product__stock__gt=0)
+            .aggregate(total=Sum(subtotal_expr))["total"]
+        )
+        return result or 0
 
     @property
     def item_count(self) -> int:
@@ -348,6 +357,11 @@ class PageView(models.Model):
     class Meta:
         db_table = "page_views"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "created_at"]),
+            models.Index(fields=["session_key", "created_at"]),
+            models.Index(fields=["created_at"]),
+        ]
 
     def __str__(self):
         return f"{self.path} @ {self.created_at:%Y-%m-%d %H:%M}"

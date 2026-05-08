@@ -1,5 +1,8 @@
 """Seed the database with sample jewelry products and categories."""
 
+import random
+from decimal import Decimal
+
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from store.models import Category, Product
@@ -160,11 +163,91 @@ PRODUCTS = [
     },
 ]
 
+RANDOM_CATEGORY_PROFILES = {
+    "Necklaces": {
+        "names": ["Pendant", "Layered Chain", "Choker", "Statement Necklace", "Solitaire Strand"],
+        "materials": ["Sterling Silver", "18K Gold Plating", "Rose Gold", "Pearl", "Kundan"],
+        "themes": ["celestial", "heritage", "minimal", "luxury", "festival"],
+    },
+    "Earrings": {
+        "names": ["Studs", "Hoops", "Drops", "Jhumkas", "Dangles"],
+        "materials": ["Sterling Silver", "14K Gold", "Gold Plating", "Pearl", "CZ Stones"],
+        "themes": ["everyday", "bridal", "party", "classic", "bold"],
+    },
+    "Bracelets": {
+        "names": ["Chain Bracelet", "Cuff", "Bangle", "Tennis Bracelet", "Charm Bracelet"],
+        "materials": ["Rose Gold", "Sterling Silver", "Gold Plating", "Sapphire", "Pearl"],
+        "themes": ["refined", "stackable", "sleek", "festive", "giftable"],
+    },
+    "Rings": {
+        "names": ["Ring", "Band", "Statement Ring", "Solitaire", "Stackable Ring"],
+        "materials": ["Platinum", "Sterling Silver", "14K Gold", "Emerald", "Diamond"],
+        "themes": ["romantic", "modern", "vintage", "bold", "luxury"],
+    },
+    "Anklets": {
+        "names": ["Anklet", "Payal", "Chain Anklet", "Charm Anklet", "Festival Anklet"],
+        "materials": ["Gold-filled", "Sterling Silver", "Pearl", "CZ Stones", "Rose Gold"],
+        "themes": ["delicate", "beach", "festive", "heritage", "lightweight"],
+    },
+}
+
+IMAGE_POOL = [
+    "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600",
+    "https://images.unsplash.com/photo-1515562141589-67f0d879ef44?w=600",
+    "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600",
+    "https://images.unsplash.com/photo-1630019852942-f89202989a59?w=600",
+    "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600",
+    "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=600",
+]
+
+
+def _build_random_product(category_name: str, index: int, rng: random.Random) -> dict:
+    profile = RANDOM_CATEGORY_PROFILES[category_name]
+    core_name = rng.choice(profile["names"])
+    material = rng.choice(profile["materials"])
+    theme = rng.choice(profile["themes"])
+    image_url = rng.choice(IMAGE_POOL)
+    price = Decimal(rng.randint(1499, 59999)).quantize(Decimal("0.01"))
+    compare_price = (price * Decimal(rng.uniform(1.10, 1.30))).quantize(Decimal("0.01"))
+
+    return {
+        "name": f"{theme.title()} {category_name[:-1]} {index}",
+        "description": (
+            f"A {theme} {core_name.lower()} crafted for the {category_name.lower()} collection. "
+            f"Finished in {material} with a balanced silhouette for everyday wear and gifting."
+        ),
+        "price": price,
+        "compare_price": compare_price,
+        "stock": rng.randint(6, 40),
+        "category": category_name,
+        "is_featured": rng.choice([True, False, False]),
+        "material": material,
+        "weight": f"{rng.uniform(2.5, 28.5):.1f}g",
+        "image_url": image_url,
+    }
+
 
 class Command(BaseCommand):
     help = "Seed the database with sample jewelry products"
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--random-items-per-category",
+            type=int,
+            default=2,
+            help="Number of generated products to create for each category.",
+        )
+        parser.add_argument(
+            "--random-seed",
+            type=int,
+            default=20260509,
+            help="Deterministic seed for random product generation.",
+        )
+
     def handle(self, *args, **options):
+        random_items_per_category = max(0, int(options["random_items_per_category"]))
+        rng = random.Random(int(options["random_seed"]))
+
         # Create admin user
         if not User.objects.filter(email="admin@iri.com").exists():
             admin = User.objects.create_superuser(
@@ -206,14 +289,27 @@ class Command(BaseCommand):
 
         # Create products
         for prod_data in PRODUCTS:
-            cat_name = prod_data.pop("category")
-            prod_data["category"] = cat_map[cat_name]
+            prod_defaults = prod_data.copy()
+            cat_name = prod_defaults.pop("category")
+            prod_defaults["category"] = cat_map[cat_name]
             _, created = Product.objects.get_or_create(
-                name=prod_data["name"],
-                defaults=prod_data,
+                name=prod_defaults["name"],
+                defaults=prod_defaults,
             )
             status = "Created" if created else "Exists"
-            self.stdout.write(f'  {status}: Product "{prod_data["name"]}"')
-            prod_data["category"] = cat_name  # Restore for re-runs
+            self.stdout.write(f'  {status}: Product "{prod_defaults["name"]}"')
+
+        if random_items_per_category:
+            for category_name in sorted(cat_map):
+                for index in range(1, random_items_per_category + 1):
+                    product_data = _build_random_product(category_name, index, rng)
+                    _, created = Product.objects.get_or_create(
+                        name=product_data["name"],
+                        defaults={**product_data, "category": cat_map[category_name]},
+                    )
+                    status = "Created" if created else "Exists"
+                    self.stdout.write(
+                        f'  {status}: Random Product "{product_data["name"]}" in {category_name}'
+                    )
 
         self.stdout.write(self.style.SUCCESS("\n✅ Database seeded successfully!"))

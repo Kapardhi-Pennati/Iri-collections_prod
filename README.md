@@ -60,6 +60,8 @@ A full-featured jewelry e-commerce platform built with Django, Django REST Frame
    python manage.py seed_data
    ```
 
+   The seed command now generates curated products plus random starter items for every category. Use `--random-items-per-category` to change the amount.
+
 5. Run server:
 
    ```bash

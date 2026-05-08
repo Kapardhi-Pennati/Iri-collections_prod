@@ -24,6 +24,8 @@
 <script>
     let cartState = null;
     let cartMutationInFlight = false;
+    let currentUser = null;
+    let isGuestSession = false;
 
     function cartContainer() {
         return document.getElementById('cart-content');
@@ -108,8 +110,8 @@
                     <span>${formatPrice(cart.total)}</span>
                 </div>
 
-                <a href="/checkout/" class="btn-brutalist btn-primary" style="width: 100%; margin-top: var(--space-lg); text-align: center;">
-                    SECURE CHECKOUT
+                <a href="${isGuestSession ? '/login/?next=/checkout/' : '/checkout/'}" class="btn-brutalist btn-primary" style="width: 100%; margin-top: var(--space-lg); text-align: center;">
+                    ${isGuestSession ? 'SIGN IN TO CHECKOUT' : 'SECURE CHECKOUT'}
                     <svg class="icon-svg" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </a>
 
@@ -122,8 +124,21 @@
     }
 
     async function loadCart() {
-        if (!API.isLoggedIn()) { renderLoginRequired(); return; }
         try {
+            let user = await API.bootstrapUser();
+            if (!user) {
+                const guestRes = await API.post('/auth/guest-session/', {});
+                if (!guestRes.ok) {
+                    renderLoginRequired();
+                    return;
+                }
+                API.setUser(guestRes.data.user);
+                user = guestRes.data.user;
+            }
+
+            currentUser = user;
+            isGuestSession = !!user?.is_guest;
+
             const data = await API.get('/store/cart/');
             renderCart(data);
         } catch {

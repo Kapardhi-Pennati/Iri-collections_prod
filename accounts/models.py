@@ -65,6 +65,10 @@ class Address(models.Model):
 
     class Meta:
         db_table = "addresses"
+        indexes = [
+            models.Index(fields=["user", "street_hash", "pincode_hash"]),
+            models.Index(fields=["user", "is_default"]),
+        ]
 
     def __str__(self):
         return f"{self.user.email} - {self.city} ({self.pincode})"

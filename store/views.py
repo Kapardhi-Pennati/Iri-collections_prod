@@ -80,6 +80,15 @@ class IsCustomerRole(IsCustomerUser):
     pass
 
 
+def _get_or_create_wishlist(user):
+    """Get or create user's wishlist with prefetched products."""
+    wishlist = Wishlist.objects.prefetch_related('products').filter(user=user).first()
+    if wishlist:
+        return wishlist
+    wishlist, _ = Wishlist.objects.get_or_create(user=user)
+    return Wishlist.objects.prefetch_related('products').get(pk=wishlist.pk)
+
+
 def _parse_product_id(raw_value) -> tuple:
     """
     Parse and validate a product_id from request data.
@@ -107,8 +116,12 @@ def _parse_product_id(raw_value) -> tuple:
 
 def _cart_queryset():
     return Cart.objects.select_related("user").prefetch_related(
-        "items__product__category"
+        "items__product"
     )
+
+
+def _order_queryset():
+    return Order.objects.select_related("transaction").prefetch_related("items__product")
 
 
 def _get_or_create_cart(user):
@@ -155,12 +168,21 @@ def _merge_session_cart_with_user_cart(user, session_items: list = None) -> Cart
 
 
 class CategoryListView(generics.ListAPIView):
-    queryset = Category.objects.annotate(
-        product_count=Count("products", filter=Q(products__is_active=True))
-    )
     serializer_class = CategorySerializer
     permission_classes = [AllowAny]
     pagination_class = None
+
+    def get_queryset(self):
+        cache_key = "categories:list:v1"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+        
+        qs = Category.objects.annotate(
+            product_count=Count("products", filter=Q(products__is_active=True))
+        ).order_by("name")
+        cache.set(cache_key, list(qs), 300)
+        return qs
 
 
 class ProductListView(generics.ListAPIView):
@@ -229,7 +251,12 @@ def _deduct_order_stock(order):
     """
     order_items = list(order.items.select_related("product").all())
     product_ids = [it.product_id for it in order_items if it.product_id]
-    product_map = {p.id: p for p in Product.objects.select_for_update().filter(id__in=product_ids)}
+    product_map = {
+        p.id: p
+        for p in Product.objects.select_for_update()
+        .only("id", "name", "stock")
+        .filter(id__in=product_ids)
+    }
 
     for item in order_items:
         if not item.product_id:
@@ -259,7 +286,7 @@ def _restore_order_stock(order):
     for item in order.items.select_related("product").all():
         if not item.product_id:
             continue
-        product = Product.objects.select_for_update().get(pk=item.product_id)
+        product = Product.objects.select_for_update().only("id", "stock").get(pk=item.product_id)
         product.stock += item.quantity
         product.save(update_fields=["stock"])
 
@@ -305,7 +332,7 @@ class CartView(APIView):
         cart = Cart.objects.select_for_update().get(pk=cart.pk)
 
         try:
-            product = Product.objects.select_for_update().select_related("category").get(
+            product = Product.objects.select_for_update().only("id", "name", "stock").get(
                 id=product_id,
                 is_active=True,
             )
@@ -381,7 +408,6 @@ class CartView(APIView):
         try:
             item = (
                 CartItem.objects.select_for_update()
-                .select_related("product__category")
                 .get(id=item_id, cart=cart)
             )
         except CartItem.DoesNotExist:
@@ -390,7 +416,7 @@ class CartView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        product = Product.objects.select_for_update().get(pk=item.product_id)
+        product = Product.objects.select_for_update().only("id", "name", "stock").get(pk=item.product_id)
         reservation = (
             StockReservation.objects.select_for_update()
             .filter(user=request.user, product=product, order__isnull=True)
@@ -601,7 +627,7 @@ class OrderCreateView(APIView):
         try:
             cart = (
                 Cart.objects.select_for_update()
-                .prefetch_related("items__product__category")
+                .prefetch_related("items__product")
                 .get(user=request.user)
             )
         except Cart.DoesNotExist:
@@ -621,7 +647,7 @@ class OrderCreateView(APIView):
         normalized_phone = serializer.validated_data["phone"]
 
         product_ids = [item.product_id for item in cart_items if item.product_id]
-        products = Product.objects.select_for_update().filter(id__in=product_ids)
+        products = Product.objects.select_for_update().only("id", "name", "price", "stock").filter(id__in=product_ids)
         product_map = {p.id: p for p in products}
 
         order_items_data = []
@@ -782,11 +808,7 @@ class OrderCreateView(APIView):
         )
 
         return Response(
-            OrderSerializer(
-                Order.objects.select_related("transaction")
-                .prefetch_related("items")
-                .get(pk=order.pk)
-            ).data,
+            OrderSerializer(_order_queryset().get(pk=order.pk)).data,
             status=status.HTTP_201_CREATED,
         )
         
@@ -1101,7 +1123,7 @@ class WishlistView(APIView):
     permission_classes = [IsCustomerRole]
     
     def get(self, request):
-        wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
+        wishlist = _get_or_create_wishlist(request.user)
         return Response(ProductSerializer(wishlist.products.filter(is_active=True), many=True).data)
     
     def post(self, request):
@@ -1110,7 +1132,7 @@ class WishlistView(APIView):
             return product_id  # product_id is the error Response when ok=False
         try:
             product = Product.objects.get(id=product_id, is_active=True)
-            wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
+            wishlist = _get_or_create_wishlist(request.user)
             wishlist.products.add(product)
             audit_log(
                 action="WISHLIST_ADD",
@@ -1127,7 +1149,7 @@ class WishlistView(APIView):
         ok, product_id = _parse_product_id(raw_id)
         if not ok:
             return product_id
-        wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
+        wishlist = _get_or_create_wishlist(request.user)
         wishlist.products.remove(product_id)
         audit_log(
             action="WISHLIST_REMOVE",
@@ -1155,7 +1177,7 @@ class WishlistToggleView(APIView):
         except Product.DoesNotExist:
             return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
+        wishlist = _get_or_create_wishlist(request.user)
 
         if wishlist.products.filter(id=product.id).exists():
             wishlist.products.remove(product)
@@ -1183,11 +1205,7 @@ class OrderListView(generics.ListAPIView):
     permission_classes = [IsCustomerRole]
 
     def get_queryset(self):
-        return (
-            Order.objects.filter(user=self.request.user)
-            .select_related("transaction")
-            .prefetch_related("items")
-        )
+        return _order_queryset().filter(user=self.request.user)
 
 
 class OrderDetailView(generics.RetrieveAPIView):
@@ -1195,11 +1213,7 @@ class OrderDetailView(generics.RetrieveAPIView):
     permission_classes = [IsCustomerRole]
 
     def get_queryset(self):
-        return (
-            Order.objects.filter(user=self.request.user)
-            .select_related("transaction")
-            .prefetch_related("items")
-        )
+        return _order_queryset().filter(user=self.request.user)
 
 
 # ─── Admin: Products CRUD ──────────────────────────────────────
@@ -1239,22 +1253,14 @@ class AdminCategoryViewSet(viewsets.ModelViewSet):
 
 # ─── Admin: Orders & Analytics ────────────────────────────────
 class AdminOrderListView(generics.ListAPIView):
-    queryset = (
-        Order.objects.all()
-        .select_related("user", "transaction")
-        .prefetch_related("items")
-    )
+    queryset = _order_queryset()
     serializer_class = OrderSerializer
     permission_classes = [IsAdminRole]
     pagination_class = None  # Show ALL orders in admin dashboard
 
 
 class AdminOrderDetailView(generics.RetrieveDestroyAPIView):
-    queryset = (
-        Order.objects.all()
-        .select_related("user", "transaction")
-        .prefetch_related("items")
-    )
+    queryset = _order_queryset()
     serializer_class = OrderSerializer
     permission_classes = [IsAdminRole]
 
@@ -1422,14 +1428,20 @@ class AdminAnalyticsView(APIView):
         thirty_days_ago = now - timedelta(days=30)
 
         # ── Stat card numbers ──────────────────────────────────────
-        total_revenue = (
-            Order.objects.filter(status__in=["confirmed", "shipped"])
-            .aggregate(total=Sum("total_amount"))["total"] or 0
+        order_stats = Order.objects.aggregate(
+            total_revenue=Sum("total_amount", filter=Q(status__in=["confirmed", "shipped"])),
+            total_orders=Count("id"),
+            pending_orders=Count("id", filter=Q(status="pending")),
         )
-        total_orders = Order.objects.count()
-        pending_orders = Order.objects.filter(status="pending").count()
-        total_products = Product.objects.filter(is_active=True).count()
-        low_stock = Product.objects.filter(stock__lte=5, is_active=True).count()
+        product_stats = Product.objects.aggregate(
+            total_products=Count("id", filter=Q(is_active=True)),
+            low_stock=Count("id", filter=Q(is_active=True, stock__lte=5)),
+        )
+        total_revenue = order_stats["total_revenue"] or 0
+        total_orders = order_stats["total_orders"] or 0
+        pending_orders = order_stats["pending_orders"] or 0
+        total_products = product_stats["total_products"] or 0
+        low_stock = product_stats["low_stock"] or 0
 
         # ── Daily revenue (last 30 days) ───────────────────────────
         daily_revenue_qs = (

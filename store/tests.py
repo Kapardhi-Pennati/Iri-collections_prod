@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework.test import APIClient
@@ -86,3 +87,24 @@ class OrderStatusSecurityTests(TestCase):
         self.txn.refresh_from_db()
         self.assertEqual(self.order.status, "pending")
         self.assertEqual(self.txn.status, "rejected")
+
+
+class SeedDataRandomGenerationTests(TestCase):
+    def test_seed_data_generates_random_items_for_every_category(self):
+        call_command(
+            "seed_data",
+            random_items_per_category=1,
+            random_seed=12345,
+            verbosity=0,
+        )
+
+        expected_categories = {"Necklaces", "Earrings", "Bracelets", "Rings", "Anklets"}
+        category_names = set(Category.objects.values_list("name", flat=True))
+        self.assertTrue(expected_categories.issubset(category_names))
+
+        for category_name in expected_categories:
+            self.assertGreater(
+                Product.objects.filter(category__name=category_name).count(),
+                0,
+                msg=f"Expected seeded products for category {category_name}",
+            )
