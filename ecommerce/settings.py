@@ -6,7 +6,7 @@ except ImportError:
 
 """
 SECURE DJANGO SETTINGS - Production & Development
-All security standards enforced (OWASP Top 10, Django Best Practices)
+
 """
 
 import os
@@ -34,6 +34,12 @@ SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-6(3t2fzxqke&1i9$47p5#z9*40
 if DEBUG:
     logger = logging.getLogger(__name__)
     logger.warning("⚠️  DEBUG MODE ENABLED - Never use in production!")
+
+PII_ENCRYPTION_KEY = os.getenv("PII_ENCRYPTION_KEY", "")
+if not PII_ENCRYPTION_KEY:
+    logger = logging.getLogger(__name__)
+    logger.warning("PII_ENCRYPTION_KEY missing; deriving fallback from SECRET_KEY. Configure explicit key in environment.")
+    PII_ENCRYPTION_KEY = base64.urlsafe_b64encode(SECRET_KEY.encode("utf-8")[:32].ljust(32, b"0")).decode("utf-8")
 
 # ALLOWED_HOSTS configuration
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
