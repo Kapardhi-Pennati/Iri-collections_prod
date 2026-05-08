@@ -5,7 +5,7 @@ class Migration(migrations.Migration):
     """Remove encryption from order PII fields — revert to plain text."""
 
     dependencies = [
-        ("store", "0011_checkout_reference_tracking_indexes"),
+        ("store", "0012_encrypt_order_pii"),
     ]
 
     operations = [
