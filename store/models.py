@@ -77,6 +77,25 @@ class Product(models.Model):
                 slug = f"{base_slug}-{counter}"
                 counter += 1
             self.slug = slug
+        
+        # Auto-generate SKU if not provided
+        if not self.sku:
+            import re
+            from django.utils.text import slugify as dj_slugify
+            seed = self.slug or self.name
+            seed_normalized = dj_slugify(seed).replace('-', '')[:8].upper()
+            candidate = f"IRI-{seed_normalized}"
+            candidate = re.sub(r'[^A-Za-z0-9\-]', '', candidate).upper()
+            
+            # Ensure uniqueness
+            final_sku = candidate
+            counter = 1
+            while Product.objects.filter(sku=final_sku).exclude(pk=self.pk).exists():
+                counter += 1
+                final_sku = f"{candidate}-{counter}"
+            
+            self.sku = final_sku
+        
         super().save(*args, **kwargs)
 
     def __str__(self):

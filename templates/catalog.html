@@ -70,9 +70,14 @@
             document.getElementById('results-count').textContent = `${data.count || 0} PRODUCTS FOUND`;
 
             if (data && data.results && data.results.length > 0) {
-                // When viewing ALL products with default sorting, jumble the results
-                if (!currentCategory && !currentSort) {
-                    data.results = data.results.sort(() => Math.random() - 0.5);
+                // When viewing ALL products with default sorting, shuffle the results
+                if (!currentCategory && !currentSort && !currentSearch) {
+                    // Fisher-Yates shuffle for true randomization
+                    let arr = data.results;
+                    for (let i = arr.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [arr[i], arr[j]] = [arr[j], arr[i]];
+                    }
                 }
                 grid.innerHTML = data.results.map(p => productCardHTML(p)).join('');
                 initLazyLoading();
@@ -152,22 +157,32 @@
             e.target.style.background = 'var(--text-primary)';
             e.target.style.color = 'var(--text-inverted)';
             currentCategory = e.target.dataset.category;
+            currentSearch = ''; // Clear search when changing category
+            searchInput.value = ''; // Sync input field
             currentPage = 1;
             loadProducts(1);
         });
 
         let searchTimer;
-        document.getElementById('search-input').addEventListener('input', (e) => {
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', (e) => {
             clearTimeout(searchTimer);
+            // Capture value immediately to avoid closure issues
+            const inputValue = e.target.value.trim();
             searchTimer = setTimeout(() => {
-                currentSearch = e.target.value;
-                currentPage = 1;
-                loadProducts(1);
-            }, 400);
+                // Only reload if value actually changed
+                if (currentSearch !== inputValue) {
+                    currentSearch = inputValue;
+                    currentPage = 1;
+                    loadProducts(1);
+                }
+            }, 300);
         });
 
         document.getElementById('sort-select').addEventListener('change', (e) => {
             currentSort = e.target.value;
+            currentSearch = ''; // Clear search when changing sort
+            searchInput.value = ''; // Sync input field
             currentPage = 1;
             loadProducts(1);
         });

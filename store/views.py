@@ -205,8 +205,12 @@ class ProductListView(generics.ListAPIView):
         if category:
             qs = qs.filter(category__slug=category)
         if search:
-            # Allow searching by name or SKU
-            qs = qs.filter(Q(name__icontains=search) | Q(sku__icontains=search))
+            # Allow searching by name, description, or SKU
+            qs = qs.filter(
+                Q(name__icontains=search)
+                | Q(description__icontains=search)
+                | Q(sku__icontains=search)
+            )
         if featured in ("true", "1", "yes"):
             qs = qs.filter(is_featured=True)
         if sort == "price_low":
