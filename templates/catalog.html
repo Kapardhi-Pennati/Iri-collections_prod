@@ -55,8 +55,14 @@
     let currentSearch = '';
     let currentSort = '';
     let currentPage = 1;
+    let lastRequestKey = '';
+    const MIN_SEARCH_LENGTH = 2;
 
     async function loadProducts(page = 1) {
+        const requestKey = `${page}|${currentCategory}|${currentSearch}|${currentSort}`;
+        if (requestKey === lastRequestKey) return;
+        lastRequestKey = requestKey;
+
         const grid = document.getElementById('products-grid');
         grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted);">RELOADING...</div>';
 
@@ -160,6 +166,7 @@
             currentSearch = ''; // Clear search when changing category
             searchInput.value = ''; // Sync input field
             currentPage = 1;
+            lastRequestKey = '';
             loadProducts(1);
         });
 
@@ -167,16 +174,14 @@
         const searchInput = document.getElementById('search-input');
         searchInput.addEventListener('input', (e) => {
             clearTimeout(searchTimer);
-            // Capture value immediately to avoid closure issues
-            const inputValue = e.target.value.trim();
+            const value = e.target.value.trim();
             searchTimer = setTimeout(() => {
-                // Only reload if value actually changed
-                if (currentSearch !== inputValue) {
-                    currentSearch = inputValue;
-                    currentPage = 1;
-                    loadProducts(1);
-                }
-            }, 300);
+                if (currentSearch === value) return;
+                currentSearch = value;
+                currentPage = 1;
+                lastRequestKey = '';
+                loadProducts(1);
+            }, 150);
         });
 
         document.getElementById('sort-select').addEventListener('change', (e) => {
@@ -184,6 +189,7 @@
             currentSearch = ''; // Clear search when changing sort
             searchInput.value = ''; // Sync input field
             currentPage = 1;
+            lastRequestKey = '';
             loadProducts(1);
         });
 

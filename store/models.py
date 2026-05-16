@@ -35,7 +35,7 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, db_index=True)
     sku = models.CharField(max_length=64, blank=True, db_index=True)
     slug = models.SlugField(max_length=220, unique=True, blank=True)
     description = models.TextField()
