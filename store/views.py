@@ -861,7 +861,7 @@ class OrderConfirmPaymentView(APIView):
 
         # Idempotency: if already paid, just return success
         if _order_stock_deducted(order):
-            display = order.order_number or f"PENDING-{str(order.checkout_reference)[:8].upper()}"
+            display = order.order_number
             return Response({
                 "message": "Payment already confirmed. Awaiting admin approval.",
                 "order_number": display,
@@ -886,7 +886,7 @@ class OrderConfirmPaymentView(APIView):
             txn.status = "paid"
             txn.save(update_fields=["status"])
 
-        display = order.order_number or f"PENDING-{str(order.checkout_reference)[:8].upper()}"
+        display = order.order_number
 
         audit_log(
             action="PAYMENT_CONFIRMED_BY_CUSTOMER",
@@ -1011,15 +1011,13 @@ class OrderCancelView(APIView):
         # Release any remaining order reservations
         StockReservation.objects.filter(order=order).delete()
 
-        # Delete associated transaction if any
-        Transaction.objects.filter(order=order).delete()
+        # Mark associated transaction as rejected (soft — preserve audit trail)
+        Transaction.objects.filter(order=order).exclude(status="rejected").update(status="rejected")
 
-        # Cancel and delete the order
+        # Soft-cancel the order (preserve items and order for audit trail)
         order_number = order.order_number
         order.status = "cancelled"
         order.save(update_fields=["status"])
-        order.items.all().delete()
-        order.delete()
 
         audit_log(
             action="ORDER_CANCELLED_BY_CUSTOMER",

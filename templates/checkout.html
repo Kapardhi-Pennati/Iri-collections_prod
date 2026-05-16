@@ -189,6 +189,22 @@
                 </div>
             </div>
         </div>
+
+        <!-- PASSWORD MODAL (for guest account conversion) -->
+        <div id="password-modal" class="menu-overlay">
+            <div class="util-card util-card--static" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; z-index: 1001; text-align: center;">
+                <h3 style="margin-bottom: 1rem;">CREATE ACCOUNT</h3>
+                <p style="font-family: var(--font-mono); font-size: 0.8rem; margin-bottom: var(--space-md); color: var(--text-secondary);">Set a password to save your account for future orders.</p>
+                <div style="margin-bottom: var(--space-md);">
+                    <input type="password" id="pw-new" class="brutalist-input" placeholder="PASSWORD (MIN 8 CHARS)" minlength="8" style="font-family: var(--font-mono); font-weight: 700; margin-bottom: var(--space-sm);">
+                    <input type="password" id="pw-confirm" class="brutalist-input" placeholder="CONFIRM PASSWORD" minlength="8" style="font-family: var(--font-mono); font-weight: 700;">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-brutalist btn-secondary" id="pw-cancel-btn" style="flex: 1;">CANCEL</button>
+                    <button type="button" class="btn-brutalist btn-primary" id="pw-submit-btn" style="flex: 1;">CREATE ACCOUNT</button>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}
@@ -439,7 +455,7 @@ async function proceedToPayment() {
         });
         if (res.ok) {
             createdOrder = res.data;
-            const orderRef = createdOrder.order_number || `PENDING-${(createdOrder.checkout_reference || '').substring(0, 8).toUpperCase()}`;
+            const orderRef = createdOrder.order_number;
             document.getElementById('payment-amount-display').textContent = formatPrice(createdOrder.total_amount);
             document.getElementById('payment-order-ref').textContent = `ORDER #${createdOrder.id} // ${orderRef}`;
             updatePaymentQRCode(createdOrder.total_amount, createdOrder.id, orderRef);
@@ -543,20 +559,19 @@ async function executeCancelOrder() {
 async function convertGuestCheckoutAccount() {
     if (!isGuestSession) return;
 
+    const result = await showPasswordModal();
+    if (!result) return;
+
     const email = document.getElementById('ship-email').value.trim();
     const fullName = document.getElementById('ship-name').value.trim();
     const phone = document.getElementById('ship-phone').value.trim();
-    const password = window.prompt('Set a password for your new account (min 8 characters):');
-    if (!password) return;
-    const confirmPassword = window.prompt('Confirm password:');
-    if (!confirmPassword) return;
 
     const res = await API.post('/auth/convert-guest/', {
         email,
         full_name: fullName,
         phone,
-        password,
-        password2: confirmPassword,
+        password: result.password,
+        password2: result.confirm,
     });
 
     if (!res.ok) {
@@ -568,6 +583,44 @@ async function convertGuestCheckoutAccount() {
     isGuestSession = false;
     document.getElementById('guest-convert-wrap').classList.add('hidden');
     Toast.success('ACCOUNT CREATED');
+}
+
+function showPasswordModal() {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('password-modal');
+        const pwNew = document.getElementById('pw-new');
+        const pwConfirm = document.getElementById('pw-confirm');
+        const submitBtn = document.getElementById('pw-submit-btn');
+        const cancelBtn = document.getElementById('pw-cancel-btn');
+
+        modal.classList.add('active');
+        pwNew.value = '';
+        pwConfirm.value = '';
+        pwNew.focus();
+
+        const cleanup = () => {
+            modal.classList.remove('active');
+            submitBtn.onclick = null;
+            cancelBtn.onclick = null;
+        };
+
+        cancelBtn.onclick = () => { cleanup(); resolve(null); };
+
+        submitBtn.onclick = () => {
+            const password = pwNew.value;
+            const confirm = pwConfirm.value;
+            if (!password || password.length < 8) {
+                Toast.error('PASSWORD MUST BE AT LEAST 8 CHARACTERS');
+                return;
+            }
+            if (password !== confirm) {
+                Toast.error('PASSWORDS DO NOT MATCH');
+                return;
+            }
+            cleanup();
+            resolve({ password, confirm });
+        };
+    });
 }
 </script>
 {% endblock %}

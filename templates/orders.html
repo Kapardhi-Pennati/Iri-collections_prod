@@ -10,7 +10,9 @@
         </div>
 
         <div id="orders-list">
-            <div style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted); font-family: var(--font-mono);">LOADING ORDERS...</div>
+            <div
+                style="text-align: center; padding: 80px; font-weight: 600; color: var(--text-muted); font-family: var(--font-mono);">
+                LOADING ORDERS...</div>
         </div>
     </div>
 </section>
@@ -19,34 +21,34 @@
 
 {% block extra_js %}
 <script>
-let orderAutoRefreshTimer = null;
+    let orderAutoRefreshTimer = null;
 
-async function loadOrders() {
-    if (!API.isLoggedIn()) { window.location.href = '/login/'; return; }
-    try {
-        const data = await API.get('/store/orders/');
-        const container = document.getElementById('orders-list');
-        if (!data || !data.results || data.results.length === 0) {
-            container.innerHTML = `
+    async function loadOrders() {
+        if (!API.isLoggedIn()) { window.location.href = '/login/'; return; }
+        try {
+            const data = await API.get('/store/orders/');
+            const container = document.getElementById('orders-list');
+            if (!data || !data.results || data.results.length === 0) {
+                container.innerHTML = `
             <div class="util-card util-card--static" style="padding: 80px; text-align: center;">
                 <svg class="icon-svg" style="width: 40px; height: 40px; color: var(--text-muted); margin-bottom: var(--space-md);"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
                     <h3 style="font-size: 1.8rem; margin-bottom: 8px;">NO ORDERS</h3>
                     <p style="font-weight: 500; color: var(--text-muted); margin-bottom: var(--space-md);">You haven't placed any orders yet.</p>
                     <a href="/catalog/" class="btn-brutalist btn-primary">START SHOPPING</a>
                 </div>`;
-            return;
-        }
+                return;
+            }
 
-        container.innerHTML = data.results.map(order => {
-            const date = new Date(order.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }).toUpperCase();
-            const itemsList = order.items.map(i => `
+            container.innerHTML = data.results.map(order => {
+                const date = new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
+                const itemsList = order.items.map(i => `
                 <div style="display:flex; justify-content:space-between; padding:8px 0; font-weight: 600; font-size: 0.85rem;">
                     <span>${i.product_name.toUpperCase()} (x${i.quantity})</span>
                     <span>${formatPrice(i.subtotal)}</span>
                 </div>
             `).join('');
 
-            return `
+                return `
                 <div class="util-card util-card--static" style="margin-bottom: var(--space-lg); padding: var(--space-lg); background: var(--gray-100);">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md); border-bottom: var(--border-width) solid var(--border-color); padding-bottom: 12px;">
                         <div>
@@ -76,20 +78,19 @@ async function loadOrders() {
                     </div>
                 </div>
             `;
-        }).join('');
-    } catch (err) {
-        console.error(err);
+            }).join('');
+        } catch (err) {
+            console.error(err);
+        }
     }
-}
 
-document.addEventListener('DOMContentLoaded', async () => {
-    await loadOrders();
-    orderAutoRefreshTimer = setInterval(loadOrders, 15000);
-});
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadOrders();
+        orderAutoRefreshTimer = setInterval(loadOrders, 15000);
+    });
 
-window.addEventListener('beforeunload', () => {
-    if (orderAutoRefreshTimer) clearInterval(orderAutoRefreshTimer);
-});
+    window.addEventListener('beforeunload', () => {
+        if (orderAutoRefreshTimer) clearInterval(orderAutoRefreshTimer);
+    });
 </script>
 {% endblock %}
-

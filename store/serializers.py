@@ -150,7 +150,6 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "order_number",
-            "checkout_reference",
             "total_amount",
             "shipping_fee",
             "status",
@@ -171,8 +170,7 @@ class OrderSerializer(serializers.ModelSerializer):
         upi_id = getattr(settings, "UPI_ID", "your-upi-id@paytm")
         name = getattr(settings, "UPI_DISPLAY_NAME", "Iri Collections")
         # Format: upi://pay?pa=VPA&pn=NAME&am=AMOUNT&cu=INR&tn=NOTES
-        reference = obj.order_number or f"PENDING-{str(obj.checkout_reference)[:8].upper()}"
-        return f"upi://pay?pa={upi_id}&pn={name}&am={obj.total_amount}&cu=INR&tn=Order-{reference}"
+        return f"upi://pay?pa={upi_id}&pn={name}&am={obj.total_amount}&cu=INR&tn=Order-{obj.order_number}"
 
     def get_status(self, obj):
         # Backward compatibility: legacy rows may still have "delivered".
@@ -182,7 +180,7 @@ class OrderSerializer(serializers.ModelSerializer):
         return obj.status
 
     def get_order_number(self, obj):
-        return obj.order_number or f"PENDING-{str(obj.checkout_reference)[:8].upper()}"
+        return obj.order_number or f"ORDER-{obj.pk}"
 
 
 class OrderCreateSerializer(serializers.Serializer):

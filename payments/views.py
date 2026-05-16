@@ -9,24 +9,26 @@ import qrcode
 from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpResponse
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+
+from core.throttling import CheckoutThrottle
 
 logger = logging.getLogger("payments")
 
 
 class GenerateUPIQRView(APIView):
-    permission_classes = [AllowAny]
-    throttle_classes = []
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [CheckoutThrottle]
 
     def get(self, request) -> HttpResponse:
         amount = request.query_params.get("amount", "0")
         try:
             amount_val = float(amount)
-            if amount_val < 0:
+            if amount_val < 0 or amount_val > 999999:
                 amount_val = 0
             amount = f"{amount_val:.2f}"
-        except ValueError:
+        except (ValueError, OverflowError):
             amount = "0.00"
 
         upi_id = str(getattr(settings, "UPI_ID", "your-upi-id@paytm")).strip()

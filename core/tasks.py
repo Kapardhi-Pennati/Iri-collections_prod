@@ -100,3 +100,40 @@ def task_send_otp_email(self, email: str, otp_code: str) -> bool:
     from core.services.email_service import send_otp_email
 
     return send_otp_email(email=email, otp_code=otp_code)
+
+
+@shared_task(bind=True, max_retries=1)
+def task_cleanup_stale_guest_users(self) -> int:
+    """
+    Delete guest user accounts older than 24 hours that never placed an order.
+
+    Should be scheduled via celery beat (e.g. daily at 3 AM):
+        'cleanup-stale-guests': {
+            'task': 'core.tasks.task_cleanup_stale_guest_users',
+            'schedule': crontab(hour=3, minute=0),
+        }
+    """
+    from django.contrib.auth import get_user_model
+    from django.utils import timezone
+    from datetime import timedelta
+
+    User = get_user_model()
+    cutoff = timezone.now() - timedelta(hours=24)
+
+    stale_guests = User.objects.filter(
+        is_guest=True,
+        date_joined__lt=cutoff,
+    ).exclude(
+        orders__isnull=False,  # Keep guests who actually placed orders
+    )
+
+    count = stale_guests.count()
+    if count > 0:
+        # Delete related carts and reservations first
+        from store.models import Cart, StockReservation
+        StockReservation.objects.filter(user__in=stale_guests).delete()
+        Cart.objects.filter(user__in=stale_guests).delete()
+        stale_guests.delete()
+        logger.info("Cleaned up %d stale guest accounts.", count)
+
+    return count

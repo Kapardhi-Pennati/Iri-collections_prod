@@ -239,7 +239,7 @@ class Order(models.Model):
         self._original_status = self.status
 
     def save(self, *args, **kwargs):
-        if self.status in {"confirmed", "shipped"} and not self.order_number:
+        if not self.order_number:
             self.order_number = f"IRI-{uuid.uuid4().hex[:8].upper()}"
 
         super().save(*args, **kwargs)
@@ -252,9 +252,10 @@ class Order(models.Model):
         # dispatches the task with .delay() so SMTP never blocks the request.
 
     def __str__(self):
-        return self.order_number or f"PENDING-{str(self.checkout_reference)[:8].upper()}"
+        return self.order_number or f"ORDER-{self.pk}"
 
     def finalize_order_number(self) -> str:
+        """Ensure order_number is set (idempotent)."""
         if not self.order_number:
             self.order_number = f"IRI-{uuid.uuid4().hex[:8].upper()}"
             self.save(update_fields=["order_number"])

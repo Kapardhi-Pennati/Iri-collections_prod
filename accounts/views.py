@@ -553,12 +553,7 @@ class LoginView(APIView):
                 severity="WARNING",
             )
             return Response(
-                {
-                    "error": (
-                        f"Invalid credentials. "
-                        f"{remaining} attempt(s) remaining before lockout."
-                    )
-                },
+                {"error": "Invalid credentials."},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
