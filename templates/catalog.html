@@ -70,6 +70,10 @@
             document.getElementById('results-count').textContent = `${data.count || 0} PRODUCTS FOUND`;
 
             if (data && data.results && data.results.length > 0) {
+                // When viewing ALL products with default sorting, jumble the results
+                if (!currentCategory && !currentSort) {
+                    data.results = data.results.sort(() => Math.random() - 0.5);
+                }
                 grid.innerHTML = data.results.map(p => productCardHTML(p)).join('');
                 initLazyLoading();
                 renderPagination(data);

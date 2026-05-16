@@ -445,6 +445,7 @@ function productCardHTML(product) {
             <div class="product-info">
                 <div style="font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em;">${escapeHTML(product.category_name || 'JEWELRY')}</div>
                 <h3 style="font-size: 0.95rem; margin-bottom: 8px;">${escapeHTML(product.name)}</h3>
+                ${product.sku ? `<div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; margin-bottom:6px;">SKU: ${escapeHTML(product.sku)}</div>` : ''}
                 <div style="display:flex; align-items:center; justify-content:space-between;">
                     <div style="display:flex; align-items:baseline; gap:6px;">
                         <div class="product-price">${formatPrice(product.price)}</div>

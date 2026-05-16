@@ -48,6 +48,9 @@
                     <div style="margin-bottom: var(--space-md);">
                         <label class="form-label">EMAIL ADDRESS</label>
                         <input type="email" id="ship-email" class="brutalist-input" placeholder="you@example.com" required>
+                        <div style="margin-top: 6px; font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em;">
+                            GUEST CHECKOUT REQUIRES A REAL EMAIL FOR OTP DELIVERY.
+                        </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); margin-bottom: var(--space-md);">
                         <div>
@@ -252,9 +255,16 @@ async function loadCheckoutCart() {
             document.getElementById('checkout-content').innerHTML = '<div class="util-card util-card--static" style="padding:80px; text-align:center;"><h3 style="margin-bottom:8px;">CART IS EMPTY</h3><a href="/catalog/" class="btn-brutalist btn-primary" style="margin-top:var(--space-md);">SHOP NOW</a></div>';
             return;
         }
-        document.getElementById('ship-email').value = user.email || '';
-        document.getElementById('ship-name').value = user.full_name || '';
-        document.getElementById('ship-phone').value = user.phone || '';
+        const emailField = document.getElementById('ship-email');
+        const nameField = document.getElementById('ship-name');
+        const phoneField = document.getElementById('ship-phone');
+
+        const guestPlaceholderEmail = typeof user.email === 'string' && user.email.endsWith('@checkout.local');
+        const guestPlaceholderName = typeof user.full_name === 'string' && user.full_name.trim().toLowerCase() === 'guest checkout';
+
+        emailField.value = isGuestSession && guestPlaceholderEmail ? '' : (user.email || '');
+        nameField.value = isGuestSession && guestPlaceholderName ? '' : (user.full_name || '');
+        phoneField.value = user.phone || '';
 
         if (isGuestSession) {
             document.getElementById('save-address').checked = false;

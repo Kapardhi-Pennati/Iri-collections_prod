@@ -11,6 +11,7 @@ import hashlib
 from datetime import timedelta
 
 from rest_framework import generics, status, viewsets
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -188,6 +189,11 @@ class CategoryListView(generics.ListAPIView):
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]
+    class StandardPagination(PageNumberPagination):
+        page_size = 24
+        page_size_query_param = 'page_size'
+        max_page_size = 100
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         qs = Product.objects.filter(is_active=True).select_related("category")
@@ -199,7 +205,8 @@ class ProductListView(generics.ListAPIView):
         if category:
             qs = qs.filter(category__slug=category)
         if search:
-            qs = qs.filter(name__icontains=search)
+            # Allow searching by name or SKU
+            qs = qs.filter(Q(name__icontains=search) | Q(sku__icontains=search))
         if featured in ("true", "1", "yes"):
             qs = qs.filter(is_featured=True)
         if sort == "price_low":
@@ -511,31 +518,40 @@ class CheckoutOTPRequestView(APIView):
                     {"error": "Valid email is required for guest checkout."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            if (
-                request.user.email != normalized_email
-                and request.user.__class__.objects.filter(email=normalized_email).exclude(id=request.user.id).exists()
-            ):
-                return Response(
-                    {"error": "Email already in use. Login or use another email."},
-                    status=status.HTTP_409_CONFLICT,
-                )
 
             raw_phone = str(request.data.get("phone", "")).strip()
-            if raw_phone:
-                phone_ok, normalized_phone = InputValidator.validate_phone(raw_phone)
-                if not phone_ok:
-                    return Response(
-                        {"error": "Enter a valid phone number."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                request.user.phone = normalized_phone
 
-            request.user.email = normalized_email
-            request.user.full_name = (
-                escape(str(request.data.get("full_name", "")).strip())[:150]
-                or request.user.full_name
-            )
-            request.user.save(update_fields=["email", "full_name", "phone"])
+            # Use a DB row lock to avoid TOCTOU races when converting a guest account
+            # into a real user email. Select the user `FOR UPDATE`, perform the
+            # uniqueness check while locked, then save.
+            with transaction.atomic():
+                UserModel = request.user.__class__
+                user = UserModel.objects.select_for_update().get(pk=request.user.pk)
+
+                if (
+                    user.email != normalized_email
+                    and UserModel.objects.filter(email=normalized_email).exclude(id=user.id).exists()
+                ):
+                    return Response(
+                        {"error": "Email already in use. Login or use another email."},
+                        status=status.HTTP_409_CONFLICT,
+                    )
+
+                if raw_phone:
+                    phone_ok, normalized_phone = InputValidator.validate_phone(raw_phone)
+                    if not phone_ok:
+                        return Response(
+                            {"error": "Enter a valid phone number."},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    user.phone = normalized_phone
+
+                user.email = normalized_email
+                user.full_name = (
+                    escape(str(request.data.get("full_name", "")).strip())[:150]
+                    or user.full_name
+                )
+                user.save(update_fields=["email", "full_name", "phone"])
 
         otp_code = generate_secure_otp(length=6)
         cache.set(_checkout_otp_key(request.user.id), otp_code, timeout=300)

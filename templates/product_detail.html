@@ -64,6 +64,7 @@ function renderProduct(p) {
                     <span class="badge" style="background: var(--black); color: var(--white);">DIRECTLY SOURCED</span>
                 </div>
                 <h1 style="font-size: clamp(2rem, 5vw, 3rem); margin-bottom: var(--space-md);">${p.name}</h1>
+                ${p.sku ? `<div style="font-size:0.9rem; color:var(--text-muted); font-weight:600; margin-bottom:8px;">SKU: ${p.sku}</div>` : ''}
 
                 <div style="display: flex; gap: var(--space-md); align-items: center; margin-bottom: var(--space-lg); flex-wrap: wrap;">
                     <div class="product-price" style="font-size: 2.2rem;">${formatPrice(p.price)}</div>

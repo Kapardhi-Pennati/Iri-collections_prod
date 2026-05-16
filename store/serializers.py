@@ -19,6 +19,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = (
+            "sku",
             "id",
             "name",
             "slug",
@@ -46,6 +47,7 @@ class ProductAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = (
+            "sku",
             "id",
             "name",
             "slug",

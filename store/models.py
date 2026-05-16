@@ -36,6 +36,7 @@ class Category(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=200)
+    sku = models.CharField(max_length=64, blank=True, db_index=True)
     slug = models.SlugField(max_length=220, unique=True, blank=True)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -213,7 +214,8 @@ class Order(models.Model):
     status = models.CharField(
         max_length=12, choices=STATUS_CHOICES, default="pending", db_index=True
     )
-    shipping_address = models.TextField()
+    # Limit shipping address length at the DB level to match API validation
+    shipping_address = models.CharField(max_length=500)
     phone = models.TextField(blank=True)
     notes = models.TextField(blank=True)
     tracking_image = models.ImageField(upload_to="tracking/", blank=True, null=True)
